@@ -84,3 +84,6 @@ Format: ID — date — decision — reason — alternatives considered.
 - SPEC 11.4.2 requires this target before test data is examined. No test split has been run when this entry is written.
 - Value: 0.01 on authentic clips, in `config/default.yaml` → `evaluation.target_false_contradicted_rate`. The team must confirm or change it before the real-data calibration (H5); a change after the test run must be logged here with a reason.
 - Calibration also requires zero VERIFIED results with a wrong time (|error| > 2 s) on the calibration split.
+
+## D-020 — 2026-10-26 — Scope of the placeholder-marker scan in the final check
+- `scripts/final_check.py` item 5 searches the repository for the placeholder marker of R8. Two files must contain the marker word to do their job: `eval/calibrate_thresholds.py` (writes it when calibration used SYNTHETIC data only) and `scripts/final_check.py` (searches for it). Both are excluded from the scan; everything else, including `config/` and `docs/`, is scanned. `data/`, `work/`, `results/`, `.venv/` and `node_modules/` are not repository content and are skipped.
