@@ -5,25 +5,25 @@ R1: exactly three verdicts. R4: the only location field is `zone`.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class Verdict(str, Enum):
+class Verdict(StrEnum):
     VERIFIED = "VERIFIED"
     CONTRADICTED = "CONTRADICTED"
     INCONCLUSIVE = "INCONCLUSIVE"
 
 
-class LifecycleState(str, Enum):
+class LifecycleState(StrEnum):
     DRAFT = "DRAFT"
     PENDING_REVIEW = "PENDING_REVIEW"
     FINAL = "FINAL"
 
 
-class Reason(str, Enum):
+class Reason(StrEnum):
     SIGNAL_ABSENT = "SIGNAL_ABSENT"
     SIGNAL_WEAK = "SIGNAL_WEAK"
     READOUT_FROM_SIDECAR = "READOUT_FROM_SIDECAR"
