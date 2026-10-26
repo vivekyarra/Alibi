@@ -7,11 +7,10 @@ gaps (grey) and matched segments (green). The overlay is labeled as not itself e
 
 from __future__ import annotations
 
-from fractions import Fraction
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import av
 import cv2
 import numpy as np
 
@@ -101,17 +100,8 @@ def render_overlay(job: Job, out_path: Path, scale: int = 2) -> Path | None:
         cv2.putText(fr, LABEL, (4, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1, cv2.LINE_AA)
         vw.write(np.vstack([fr, _strip(job, W, float(tm.t_s[i]))]))
     vw.release()
-    # re-encode to H.264 for browser playback
-    with av.open(str(tmp)) as src, av.open(str(out_path), "w") as dst:
-        st = dst.add_stream("libx264", rate=Fraction(round(fps * 1000), 1000))
-        st.width, st.height, st.pix_fmt = W, H + STRIP_H, "yuv420p"
-        st.options = {"crf": "20", "preset": "veryfast"}
-        for fr in src.decode(video=0):
-            img = fr.to_ndarray(format="bgr24")
-            nf = av.VideoFrame.from_ndarray(img, format="bgr24")
-            for pkt in st.encode(nf):
-                dst.mux(pkt)
-        for pkt in st.encode():
-            dst.mux(pkt)
+    # re-encode to H.264 for browser playback (ffmpeg CLI; per-frame conversion in Python is slow)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp), "-c:v", "libx264", "-preset", "veryfast",
+                    "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out_path)], check=True)
     tmp.unlink(missing_ok=True)
     return out_path
