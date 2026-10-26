@@ -16,6 +16,10 @@ zones:
     nominal_hz: 60
     timezone: America/New_York
     description: US Eastern Interconnection
+  - id: CN
+    nominal_hz: 50
+    timezone: Asia/Shanghai
+    description: China (State Grid) synchronous area; used for public EV-ENFD reference data
   - id: SIM50
     nominal_hz: 50
     timezone: UTC
