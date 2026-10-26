@@ -71,3 +71,16 @@ Format: ID — date — decision — reason — alternatives considered.
 
 ## D-016 — 2026-10-26 — Readout direction from physical plausibility
 - Per-frame fits cannot tell the readout direction. The wrong direction gives a track offset from f0 by the flicker alias rate (|2f0 − fps·round(2f0/fps)| at the frame level, 10 Hz for 100 Hz at 30 fps). Orientation candidates are ranked first by plausibility (|mean flicker − f0| ≤ 2 Hz, i.e. grid deviation ≤ 1 Hz) and then by band SNR.
+
+## D-017 — 2026-10-26 — Calibration LED frequency 200 Hz
+- The Capture exposure is 1 ms (D-012). A 1000 Hz LED completes one cycle inside one exposure, so its bands average out. At 200 Hz the period is 5 ms, the exposure attenuation is sinc(200 × 0.001) ≈ 0.94, and a 25 ms readout shows about 5 bands per frame ("several bands", SPEC 10.5).
+- Alternatives: shorter exposure for calibration clips only (extra Capture mode, not in SPEC).
+
+## D-018 — 2026-10-26 — Motion analysis grid and static-camera rule
+- Optical flow runs on the analysis grid reduced to at most 160 px width (`engine.motion.downscale_width`), DIS preset ULTRAFAST. Motion levels are reported in analysis-grid pixels.
+- Homographies are applied only when the median per-frame camera displacement exceeds `camera_static_px = 0.05` px and the accumulated displacement exceeds 1 px. Chained per-frame homographies drift on a fixed camera; warping a fixed scene only adds interpolation error.
+
+## D-019 — 2026-10-26 — Target maximum false-CONTRADICTED rate: 1 % (written before any test data)
+- SPEC 11.4.2 requires this target before test data is examined. No test split has been run when this entry is written.
+- Value: 0.01 on authentic clips, in `config/default.yaml` → `evaluation.target_false_contradicted_rate`. The team must confirm or change it before the real-data calibration (H5); a change after the test run must be logged here with a reason.
+- Calibration also requires zero VERIFIED results with a wrong time (|error| > 2 s) on the calibration split.
