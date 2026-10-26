@@ -216,7 +216,8 @@ class Job:
         mc = self.E["motion"]
         with self._timed("S4_motion"):
             self.motion = s4.analyze_motion(self.stack.lin, mc["residual_limit_px"], mc["high_motion_px"],
-                                            mc["max_features"], strictness, mc["strict_residual_limit_px"])
+                                            mc["max_features"], strictness, mc["strict_residual_limit_px"],
+                                            mc["camera_static_px"], mc["downscale_width"])
         with self._timed("S5_segment"):
             if self.seg is None:
                 sc = self.E["segmentation"]
