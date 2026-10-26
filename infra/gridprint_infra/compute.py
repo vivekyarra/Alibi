@@ -18,6 +18,7 @@ from aws_cdk import aws_applicationautoscaling as appscaling
 from aws_cdk import aws_autoscaling as autoscaling
 from aws_cdk import aws_cloudwatch as cw
 from aws_cdk import aws_ec2 as ec2
+from aws_cdk import aws_ecr as ecr
 from aws_cdk import aws_ecr_assets as ecr_assets
 from aws_cdk import aws_ecs as ecs
 from aws_cdk import aws_iam as iam
@@ -27,7 +28,7 @@ from constructs import Construct
 
 from .ai import AiStack
 from .auth import AuthStack
-from .config import PREFIX, REPO, InfraConfig
+from .config import PREFIX, REPO, InfraConfig, prebuilt_image
 from .data import DataStack
 from .runtime_env import WORKER_COMMAND, service_env
 from .storage import StorageStack
@@ -66,6 +67,17 @@ def engine_image(scope: Construct, cid: str, platform: ecr_assets.Platform) -> e
         exclude=ENGINE_CONTEXT,
         ignore_mode=IgnoreMode.DOCKER,
     )
+
+
+def container_image(scope: Construct, cid: str, uri: str | None,
+                    asset: ecr_assets.DockerImageAsset | None) -> ecs.ContainerImage:
+    """Pre-built ECR image (infra/build_images.py) when available, else the local Docker build asset."""
+    if uri:
+        repo_name, tag = uri.split("/", 1)[1].split(":", 1)
+        repo = ecr.Repository.from_repository_name(scope, cid, repo_name)
+        return ecs.ContainerImage.from_ecr_repository(repo, tag)
+    assert asset is not None
+    return ecs.ContainerImage.from_docker_image_asset(asset)
 
 
 def ubuntu_ecs_agent_user_data(region: str) -> list[str]:
@@ -172,10 +184,12 @@ class ComputeStack(Stack):
         if self.uses_cool_ami:
             env["PYTHONPATH"] = f"{cfg.cool_pythonpath}:/app:/app/engine"
             env["LD_LIBRARY_PATH"] = cfg.cool_ld_library_path
-        self.worker_image = engine_image(self, "EngineImageArm64", ecr_assets.Platform.LINUX_ARM64)
+        prebuilt = prebuilt_image("engine_arm64")
+        self.worker_image = None if prebuilt else engine_image(self, "EngineImageArm64",
+                                                               ecr_assets.Platform.LINUX_ARM64)
         container = self.task_def.add_container(
             "engine",
-            image=ecs.ContainerImage.from_docker_image_asset(self.worker_image),
+            image=container_image(self, "EngineRepo", prebuilt, self.worker_image),
             command=WORKER_COMMAND,
             cpu=WORKER_CPU_UNITS,
             memory_limit_mib=WORKER_MEMORY_MIB,

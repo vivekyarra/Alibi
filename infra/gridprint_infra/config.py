@@ -99,3 +99,11 @@ def foundation_model_id(model_or_profile_id: str) -> str:
 
 # Prefix for every physical resource name (stacks, tables, IoT names, dashboard, KMS alias); `aws.resource_prefix`.
 PREFIX = load().resource_prefix
+
+
+def prebuilt_image(key: str) -> str | None:
+    """ECR image URI built by infra/build_images.py (no local Docker needed), or None to build locally."""
+    import json
+
+    f = REPO / "infra" / "image_uris.json"
+    return json.loads(f.read_text()).get(key) if f.exists() else None

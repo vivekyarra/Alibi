@@ -18,8 +18,8 @@ from aws_cdk import aws_logs as logs
 from constructs import Construct
 
 from .auth import AuthStack
-from .compute import API_CONTEXT, METRIC_NAMESPACE, ComputeStack
-from .config import REPO, InfraConfig
+from .compute import API_CONTEXT, METRIC_NAMESPACE, ComputeStack, container_image
+from .config import REPO, InfraConfig, prebuilt_image
 from .data import DataStack
 from .runtime_env import API_COMMAND, service_env
 from .storage import StorageStack
@@ -31,7 +31,8 @@ class ApiStack(Stack):
     def __init__(self, scope: Construct, cid: str, *, cfg: InfraConfig, vpc: ec2.IVpc, storage: StorageStack,
                  data: DataStack, compute: ComputeStack, auth: AuthStack, **kwargs) -> None:
         super().__init__(scope, cid, **kwargs)
-        image = ecr_assets.DockerImageAsset(
+        prebuilt = prebuilt_image("api_arm64")
+        image = None if prebuilt else ecr_assets.DockerImageAsset(
             self, "ApiImageArm64",
             directory=str(REPO),
             file=str(Path("infra") / "docker" / "api.Dockerfile"),
@@ -53,7 +54,7 @@ class ApiStack(Stack):
                                                  operating_system_family=ecs.OperatingSystemFamily.LINUX),
             circuit_breaker=ecs.DeploymentCircuitBreaker(rollback=True),
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
-                image=ecs.ContainerImage.from_docker_image_asset(image),
+                image=container_image(self, "ApiRepo", prebuilt, image),
                 container_port=API_PORT,
                 log_driver=ecs.LogDrivers.aws_logs(stream_prefix="api", log_group=self.log_group,
                                                    mode=ecs.AwsLogDriverMode.NON_BLOCKING),
