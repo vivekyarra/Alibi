@@ -138,7 +138,12 @@ def _schedule(cfg: SimConfig) -> tuple[np.ndarray, np.ndarray, list[dict[str, An
     if cfg.jitter_ms > 0:
         rng = np.random.default_rng(cfg.seed + 7)
         pts_a = pts_a + rng.normal(0, cfg.jitter_ms * 1e-3, len(pts_a))
-        pts_a = np.maximum.accumulate(pts_a + np.arange(len(pts_a)) * 1e-6)
+        # keep timestamps strictly increasing by at least two 90 kHz ticks and non-negative, so the
+        # container never receives duplicate or negative PTS (which would drop frames)
+        tick = 2.0 / 90000
+        for i in range(1, len(pts_a)):
+            pts_a[i] = max(pts_a[i], pts_a[i - 1] + tick)
+        pts_a -= min(0.0, float(pts_a[0]))
     return cap_a, pts_a, events
 
 
