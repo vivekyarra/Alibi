@@ -28,6 +28,7 @@ COPY config ./config
 COPY engine ./engine
 COPY agent ./agent
 COPY mcp_server ./mcp_server
+COPY node/ingest ./node/ingest
 COPY api ./api
 COPY scripts/fetch_models.py ./scripts/fetch_models.py
 # DNN models (S5, S12) are downloaded from opencv_zoo at build time; licenses and SHA-256 are recorded

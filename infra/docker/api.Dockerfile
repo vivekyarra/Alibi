@@ -19,10 +19,13 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
 
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --group agent --no-install-project
 
 COPY config ./config
 COPY engine ./engine
+COPY agent ./agent
+COPY mcp_server ./mcp_server
+COPY node/ingest ./node/ingest
 COPY api ./api
 
 ENV PATH=/opt/venv/bin:$PATH \

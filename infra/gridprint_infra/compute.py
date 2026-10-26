@@ -45,8 +45,8 @@ def docker_context(dockerfile: str, paths: list[str]) -> list[str]:
 
 
 ENGINE_CONTEXT = docker_context("engine.Dockerfile",
-                                ["config", "engine", "agent", "mcp_server", "api", "models"])
-API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "api"])
+                                ["config", "engine", "agent", "mcp_server", "api", "node", "scripts"])
+API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "agent", "mcp_server", "node", "api"])
 
 # Engineering constants for the worker task on c8g.2xlarge (8 vCPU, 16 GiB). Headroom is left for the
 # ECS agent and the OS. Documented in docs/agent_notes/infra.md.
