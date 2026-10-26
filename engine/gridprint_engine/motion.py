@@ -75,7 +75,7 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
     homs = np.stack([inv_ref @ H for H in to0]).astype(np.float64)
     homs /= homs[:, 2:3, 2:3]
 
-    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_ULTRAFAST)
+    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_ULTRAFAST)  # type: ignore[attr-defined]
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
     grid = np.stack([xx, yy, np.ones_like(xx)], -1).reshape(-1, 3)
     static = np.ones((k, h, w), bool)

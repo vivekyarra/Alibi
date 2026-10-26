@@ -88,7 +88,8 @@ def render_overlay(job: Job, out_path: Path, scale: int = 2) -> Path | None:
     lim = float(np.percentile(vals[vals > 0], 99)) if (vals > 0).any() else 1.0
     W, H = w * scale, h * scale
     tmp = out_path.with_suffix(".mp4v.mp4")
-    vw = cv2.VideoWriter(str(tmp), cv2.VideoWriter_fourcc(*"mp4v"), fps, (W, H + STRIP_H))
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
+    vw = cv2.VideoWriter(str(tmp), fourcc, fps, (W, H + STRIP_H))
     for i in range(k):
         g = cv2.cvtColor(stack.gray8[i], cv2.COLOR_GRAY2BGR)
         v = np.clip((bandpass_frame(mm, i, alias, fps) / max(lim, 1e-9)) * 127 + 128, 0, 255).astype(np.uint8)

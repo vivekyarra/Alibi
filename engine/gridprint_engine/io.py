@@ -219,7 +219,7 @@ def decode_frames(path: Path, transfer: str, max_h: int, max_w: int, saturation_
     lin_l: list[np.ndarray] = []
     val_l: list[np.ndarray] = []
     g_l: list[np.ndarray] = []
-    sat_acc = None
+    sat_acc: np.ndarray | None = None
     order: list[float] = []
     with av.open(str(path)) as c:
         s = c.streams.video[0]
@@ -244,6 +244,8 @@ def decode_frames(path: Path, transfer: str, max_h: int, max_w: int, saturation_
     lin_a = np.stack(lin_l)[idx]
     assert lin_a.dtype == np.float32
     k = len(lin_l)
+    if sat_acc is None:
+        raise ValueError("video has no decodable frames")
     return FrameStack(
         lin=lin_a, valid=np.stack(val_l)[idx], sat=(sat_acc / max(k, 1)).astype(np.float32),
         gray8=np.stack(g_l)[idx],

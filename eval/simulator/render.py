@@ -11,8 +11,8 @@ import hashlib
 import json
 import subprocess
 from dataclasses import asdict, dataclass, field
-from fractions import Fraction
 from datetime import UTC, datetime
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -198,11 +198,11 @@ def simulate(cfg: SimConfig, out_dir: Path, name: str) -> dict[str, Any]:
                   "x264-params": f"transfer={trc}:colorprim=bt709:colormatrix=bt709"}
     noise_rng = np.random.default_rng(cfg.seed + 99)
     t_abs0 = cfg.start_utc
-    for k, (tc, tp) in enumerate(zip(cap_t, pts, strict=True)):
+    for tc, tp in zip(cap_t, pts, strict=True):
         # camera pose
         dx = cfg.camera_motion_px * np.sin(2 * np.pi * tc / 4.0)
         dy = 0.5 * cfg.camera_motion_px * np.sin(2 * np.pi * tc / 5.3)
-        m = np.float32([[1, 0, margin + dx], [0, 1, margin + dy]])
+        m = np.array([[1, 0, margin + dx], [0, 1, margin + dy]], dtype=np.float32)
         alb = cv2.warpAffine(world, m, (ws, hs), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP)
         for o in objs:
             x = (o["x"] + o["vx"] * tc * cfg.fps) % (ws + o["w"]) - o["w"]

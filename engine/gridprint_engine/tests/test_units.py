@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from gridprint_engine import color, continuity, enf, match, phase, readout, rowsignal
 from gridprint_engine.schemas import CaptureSidecar, GapEvent, Reason
 
