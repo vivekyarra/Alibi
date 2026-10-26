@@ -132,7 +132,8 @@ def match_track(tau: np.ndarray, track_hz: np.ndarray, ref_t: np.ndarray, ref_f:
                     smargin = sp["rho1"] - (sp["rho2"] if not np.isnan(sp["rho2"]) else 0.0)
                     passes = sp["rho1"] >= m["rho1_min"] and smargin >= m["margin_min"]
                     segs.append(SegmentMatch(start_s=float(start), end_s=float(start + seg_len),
-                                             offset_s=sp["best"], rho1=sp["rho1"], passes=bool(passes)))
+                                             offset_s=sp["best"], rho1=sp["rho1"], margin=float(smargin),
+                                             passes=bool(passes)))
                 else:
                     segs.append(SegmentMatch(start_s=float(start), end_s=float(start + seg_len),
                                              offset_s=None, rho1=None, passes=False))

@@ -100,6 +100,7 @@ class SegmentMatch(BaseModel):
     end_s: float
     offset_s: float | None
     rho1: float | None
+    margin: float | None = None
     passes: bool
 
 
