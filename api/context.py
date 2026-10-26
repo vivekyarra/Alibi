@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from gridprint_engine.adapters import (
     GridLogAdapter,
     JobStoreAdapter,

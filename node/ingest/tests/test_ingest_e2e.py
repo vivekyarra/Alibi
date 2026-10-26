@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import numpy as np
-from gridprint_engine.adapters import LocalGridLog
 
+from gridprint_engine.adapters import LocalGridLog
 from node.ingest import data_quality
 from node.ingest import simulated_publisher as sp
 
