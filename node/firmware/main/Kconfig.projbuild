@@ -1,0 +1,81 @@
+menu "GRIDPRINT Node"
+
+    config GRIDPRINT_WIFI_SSID
+        string "Wi-Fi SSID"
+        default ""
+
+    config GRIDPRINT_WIFI_PASSWORD
+        string "Wi-Fi password"
+        default ""
+
+    config GRIDPRINT_IOT_ENDPOINT
+        string "AWS IoT Core data endpoint (from node/firmware/certs/endpoint.txt)"
+        default ""
+        help
+            Host name only, for example xxxxxxxxxxxx-ats.iot.us-east-1.amazonaws.com.
+
+    config GRIDPRINT_ZONE
+        string "Grid zone id (config/zones.yaml)"
+        default "IN"
+
+    config GRIDPRINT_NODE_ID
+        string "Node id (IoT thing name and MQTT client id)"
+        default "node-01"
+
+    config GRIDPRINT_NOMINAL_HZ
+        int "Nominal grid frequency (Hz)"
+        range 50 60
+        default 50
+
+    config GRIDPRINT_ZC_GPIO
+        int "Zero-crossing input GPIO"
+        default 27
+
+    config GRIDPRINT_PPS_GPIO
+        int "GPS PPS input GPIO"
+        default 26
+
+    config GRIDPRINT_GPS_UART_NUM
+        int "GPS UART number"
+        range 1 2
+        default 2
+
+    config GRIDPRINT_GPS_RX_GPIO
+        int "ESP32 RX GPIO (connect to GPS TX)"
+        default 16
+
+    config GRIDPRINT_GPS_TX_GPIO
+        int "ESP32 TX GPIO (connect to GPS RX)"
+        default 17
+
+    config GRIDPRINT_GPS_BAUD
+        int "GPS UART baud rate"
+        default 9600
+
+    config GRIDPRINT_NMEA_PPS_OFFSET_S
+        int "Seconds to add to the RMC time to label the PPS edge before it"
+        range -1 1
+        default 0
+        help
+            Most modules send the RMC sentence for a second after the PPS edge that starts that second.
+            Check this with node/SELFTEST.md step 6 and change it only if the check fails.
+
+    config GRIDPRINT_BUFFER_SECONDS
+        int "Offline buffer size (seconds of samples kept in RAM)"
+        range 60 7200
+        default 1800
+
+    config GRIDPRINT_BACKFILL_RATE
+        int "Maximum messages per second while back-filling"
+        range 1 50
+        default 20
+
+    config GRIDPRINT_NTP_FALLBACK
+        bool "Use SNTP time (quality=ntp) when there is no GPS lock"
+        default y
+
+    config GRIDPRINT_NTP_SERVER
+        string "SNTP server"
+        default "pool.ntp.org"
+
+endmenu

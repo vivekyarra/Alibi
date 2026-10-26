@@ -1,0 +1,65 @@
+%% GRIDPRINT agent workflow (SPEC Part 9): perception -> decision -> action, with B1-B6.
+flowchart TB
+  START(["Job from SQS"]) --> P0
+
+  subgraph PERCEPTION["Perception: OpenCV 5 stage outputs (MCP tool results)"]
+    P0["probe_video<br/>timestamps, jitter, gaps, HDR flag,<br/>axis info, compression"]
+    P1["estimate_readout<br/>readout time, source, confidence"]
+    P2["analyze_motion<br/>motion_level, static fraction"]
+    P3["propose_patches<br/>ranked patches, band SNR"]
+    P4["extract_flicker<br/>band SNR, per-frame stats, track"]
+    P5["match_reference<br/>rho1, rho2, margin, offset"]
+    P6["check_continuity<br/>EDIT_CANDIDATE, DROPPED_FRAMES_EXPLAINED"]
+    P7["face_region_check<br/>EXPERIMENTAL stats"]
+  end
+
+  subgraph DECISION["Decision: planner + policies"]
+    PL{"Planner<br/>Bedrock Claude or<br/>deterministic fallback"}
+    POL["policies.py<br/>iteration and tool-call budget,<br/>compute_verdict last,<br/>no FINAL while PENDING_REVIEW,<br/>no edits to thresholds or verdicts"]
+    PL --- POL
+  end
+
+  subgraph ACTION["Action"]
+    A1["Re-run a stage with new arguments"]
+    A2["request_user_input<br/>camera model, original file,<br/>claimed time, longer clip"]
+    A3["compute_verdict<br/>deterministic S13"]
+    A4["request_human_review"]
+    A5["render_report"]
+  end
+
+  TRACE[("Trace per step<br/>S3 JSON + DynamoDB TraceIndex<br/>live in web UI")]
+
+  P0 --> P1 --> PL
+  P2 --> PL
+  P3 --> PL
+  P4 --> PL
+  P5 --> PL
+  P6 --> PL
+  P7 --> PL
+
+  PL -->|"B1: SIGNAL_WEAK after first extraction<br/>re-select patches, switch axis or nominal Hz"| A1
+  PL -->|"B2: readout unknown<br/>blind estimation"| A1
+  PL -->|"B2: blind estimate low confidence"| A2
+  PL -->|"B3: HIGH_MOTION<br/>stricter motion or low-motion frames"| A1
+  PL -->|"B4: HIGH_COMPRESSION and weak signal"| A2
+  PL -->|"B5: no usable signal after budget<br/>BUDGET_EXHAUSTED"| A3
+  PL -->|"analysis complete"| A3
+
+  A1 -->|new stage output| P2
+  A1 --> P3
+  A1 --> P4
+  A2 --> WAIT(["Job waits for user answer<br/>POST /v1/jobs/{id}/input"])
+  WAIT --> P0
+
+  A3 -->|VERIFIED or INCONCLUSIVE| A5
+  A3 -->|"B6: CONTRADICTED<br/>state PENDING_REVIEW"| A4
+  A4 --> HUMAN{"Human reviewer<br/>approve or reject"}
+  HUMAN -->|approve: REVIEWER_APPROVED| A5
+  HUMAN -->|reject: INCONCLUSIVE, REVIEWER_REJECTED| A5
+  A5 --> DONE(["FINAL report"])
+
+  PL -.-> TRACE
+  A1 -.-> TRACE
+  A2 -.-> TRACE
+  A3 -.-> TRACE
+  A4 -.-> TRACE
