@@ -1,0 +1,205 @@
+"""GRIDPRINT Node ingest Lambda (SPEC 10.4): IoT rule -> Lambda -> DynamoDB `GridLog`.
+
+IoT rule SQL (set by the infra stack):
+    SELECT *, topic(2) AS topic_zone, topic(3) AS topic_node FROM 'gridprint/+/+'
+
+Table layout:
+    pk  (string)  "<zone>#<YYYYMMDD>"  (UTC day)
+    t   (number)  epoch second (UTC)
+    freq     median of all node readings for this second (convenience copy)
+    node     comma-separated node ids that reported this second
+    quality  "gps" only if every reading is "gps"; otherwise the first non-gps quality
+    source   "node", "sim" or an importer name such as "neso"
+    readings map node_id -> {freq, quality, source}  (authoritative; readers take the median)
+    version  optimistic-locking counter
+
+Table name: env GRIDLOG_TABLE, or GRIDPRINT_GRIDLOG_TABLE (set by the infra IoT stack).
+This is the only place in the ingest path that touches AWS at runtime (boto3 is imported lazily).
+The module has no dependency on the engine package, so it deploys as a single file.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import math
+import os
+import re
+import statistics
+import time
+from collections.abc import Callable, Iterable
+from datetime import UTC, datetime
+from decimal import Decimal
+from typing import Any
+
+LOG = logging.getLogger("gridprint.ingest")
+LOG.setLevel(logging.INFO)
+
+QUALITIES = ("gps", "ntp")
+NODE_SOURCES = ("node", "sim")
+ZONE_RE = re.compile(r"^[A-Z0-9][A-Z0-9-]{0,15}$")
+NODE_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+FREQ_MIN_HZ = 40.0  # plausibility band covering 50 Hz and 60 Hz grids (DECISIONS in agent notes)
+FREQ_MAX_HZ = 70.0
+T_MIN_UTC = 1577836800  # 2020-01-01T00:00:00Z
+FUTURE_SLACK_S = 300
+MAX_RETRIES = 8
+
+
+class ValidationError(ValueError):
+    pass
+
+
+def day_key(zone: str, t_utc_s: int) -> str:
+    return f"{zone}#{datetime.fromtimestamp(int(t_utc_s), tz=UTC).strftime('%Y%m%d')}"
+
+
+def validate(msg: Any, now_s: float | None = None) -> dict[str, Any]:
+    """Return a normalized message or raise ValidationError. Never coerces bad data into good data."""
+    if not isinstance(msg, dict):
+        raise ValidationError("payload is not a JSON object")
+    for k in ("zone", "node_id", "t_utc_s", "freq_hz", "quality", "gps_lock"):
+        if k not in msg:
+            raise ValidationError(f"missing field {k}")
+    zone, node = msg["zone"], msg["node_id"]
+    if not isinstance(zone, str) or not ZONE_RE.match(zone):
+        raise ValidationError("bad zone")
+    if not isinstance(node, str) or not NODE_RE.match(node):
+        raise ValidationError("bad node_id")
+    allowed = [z for z in os.environ.get("ALLOWED_ZONES", "").split(",") if z]
+    if allowed and zone not in allowed:
+        raise ValidationError(f"zone {zone} not allowed")
+    if "topic_zone" in msg and msg["topic_zone"] != zone:
+        raise ValidationError("zone does not match topic")
+    if "topic_node" in msg and msg["topic_node"] != node:
+        raise ValidationError("node_id does not match topic")
+    t = msg["t_utc_s"]
+    if isinstance(t, bool) or not isinstance(t, int | float) or not float(t).is_integer():
+        raise ValidationError("t_utc_s must be a whole number of seconds")
+    t = int(t)
+    now = time.time() if now_s is None else now_s
+    if t < T_MIN_UTC or t > now + FUTURE_SLACK_S:
+        raise ValidationError("t_utc_s out of range")
+    f = msg["freq_hz"]
+    if isinstance(f, bool) or not isinstance(f, int | float) or not math.isfinite(float(f)):
+        raise ValidationError("freq_hz must be a finite number")
+    f = float(f)
+    if not FREQ_MIN_HZ <= f <= FREQ_MAX_HZ:
+        raise ValidationError("freq_hz out of range")
+    q = msg["quality"]
+    if q not in QUALITIES:
+        raise ValidationError(f"quality must be one of {QUALITIES}")
+    lock = msg["gps_lock"]
+    if not isinstance(lock, bool):
+        raise ValidationError("gps_lock must be a boolean")
+    if q == "gps" and not lock:
+        raise ValidationError("quality=gps requires gps_lock=true")
+    src = msg.get("source", "node")
+    if src not in NODE_SOURCES:
+        raise ValidationError(f"source must be one of {NODE_SOURCES}")
+    return {"zone": zone, "node_id": node, "t_utc_s": t, "freq_hz": f, "quality": q, "gps_lock": lock,
+            "source": src}
+
+
+def summarize(readings: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Top-level attributes from the per-node readings map (median across nodes, SPEC 10.4)."""
+    nodes = sorted(readings)
+    freqs = [float(readings[n]["freq"]) for n in nodes]
+    quals = [str(readings[n]["quality"]) for n in nodes]
+    srcs = [str(readings[n]["source"]) for n in nodes]
+    quality = "gps" if all(q == "gps" for q in quals) else next(q for q in quals if q != "gps")
+    return {"freq": statistics.median(freqs), "node": ",".join(nodes), "quality": quality,
+            "source": srcs[0] if len(set(srcs)) == 1 else "mixed"}
+
+
+def _is_conditional_failure(exc: Exception) -> bool:
+    resp = getattr(exc, "response", None)
+    return isinstance(resp, dict) and resp.get("Error", {}).get("Code") == "ConditionalCheckFailedException"
+
+
+def _dec(x: float) -> Decimal:
+    return Decimal(f"{x:.6f}")
+
+
+class DynamoWriter:
+    """Upsert one node reading into the `GridLog` table with optimistic locking.
+
+    `table` is a boto3 `Table` resource (or a test double in node/ingest/tests).
+    """
+
+    def __init__(self, table: Any):
+        self.table = table
+
+    def __call__(self, m: dict[str, Any]) -> None:
+        self.upsert(m["zone"], m["t_utc_s"], m["node_id"], m["freq_hz"], m["quality"], m["source"])
+
+    def upsert(self, zone: str, t: int, node: str, freq: float, quality: str, source: str) -> None:
+        key = {"pk": day_key(zone, t), "t": int(t)}
+        for _ in range(MAX_RETRIES):
+            cur = self.table.get_item(Key=key, ConsistentRead=True).get("Item")
+            readings = {k: dict(v) for k, v in (cur or {}).get("readings", {}).items()}
+            readings[node] = {"freq": _dec(freq), "quality": quality, "source": source}
+            top = summarize(readings)
+            item = {**key, "readings": readings, "freq": _dec(top["freq"]), "node": top["node"],
+                    "quality": top["quality"], "source": top["source"],
+                    "version": int(cur["version"]) + 1 if cur else 1}
+            try:
+                if cur is None:
+                    self.table.put_item(Item=item, ConditionExpression="attribute_not_exists(pk)")
+                else:
+                    self.table.put_item(Item=item, ConditionExpression="#v = :v",
+                                        ExpressionAttributeNames={"#v": "version"},
+                                        ExpressionAttributeValues={":v": cur["version"]})
+                return
+            except Exception as exc:  # botocore ClientError
+                if _is_conditional_failure(exc):
+                    continue
+                raise
+        raise RuntimeError(f"too many write conflicts for {key}")
+
+
+def _messages(event: Any) -> Iterable[Any]:
+    if isinstance(event, list):
+        return event
+    if isinstance(event, dict) and isinstance(event.get("messages"), list):
+        return event["messages"]
+    if isinstance(event, str | bytes):
+        return _messages(json.loads(event))
+    return [event]
+
+
+def handle(event: Any, writer: Callable[[dict[str, Any]], None],
+           now_s: float | None = None) -> dict[str, Any]:
+    """Validate each message and pass valid ones to `writer`. Invalid messages are logged and counted;
+    they are not retried (a retry would not make them valid)."""
+    ok, rejected = 0, []
+    for raw in _messages(event):
+        try:
+            m = validate(raw, now_s)
+        except ValidationError as e:
+            rejected.append(str(e))
+            LOG.warning("rejected message: %s", e)
+            continue
+        writer(m)
+        ok += 1
+    return {"written": ok, "rejected": rejected}
+
+
+_TABLE: Any = None
+
+
+def _table() -> Any:
+    global _TABLE
+    if _TABLE is None:
+        import boto3  # AWS import lives only in the ingest/adapter layer
+
+        name = os.environ.get("GRIDLOG_TABLE") or os.environ["GRIDPRINT_GRIDLOG_TABLE"]
+        _TABLE = boto3.resource("dynamodb").Table(name)
+    return _TABLE
+
+
+def lambda_handler(event: Any, context: Any) -> dict[str, Any]:
+    return handle(event, DynamoWriter(_table()))
+
+
+handler = lambda_handler  # the IoT stack configures the Lambda entry point as `handler.handler`
