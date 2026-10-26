@@ -29,7 +29,9 @@ COPY engine ./engine
 COPY agent ./agent
 COPY mcp_server ./mcp_server
 COPY api ./api
-COPY models ./models
+COPY scripts/fetch_models.py ./scripts/fetch_models.py
+# DNN models (S5, S12) are downloaded from opencv_zoo at build time; licenses and SHA-256 are recorded
+RUN /opt/venv/bin/python scripts/fetch_models.py
 
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONPATH=/app:/app/engine

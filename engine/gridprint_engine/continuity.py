@@ -73,9 +73,9 @@ def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[
     z = np.where((nl >= min_side_frames) & (nr >= min_side_frames), np.abs(jump) / sigma, 0.0)
     # local maxima of z within ±jump_window_s (a single jump raises z at its neighbours too)
     peak = np.zeros(len(z), bool)
-    for i in np.flatnonzero(z > 3.0):
-        near = np.abs(tb - tb[i]) <= jump_window_s
-        peak[i] = z[i] >= z[near].max()
+    for cand in np.flatnonzero(z > 3.0):
+        near = np.abs(tb - tb[cand]) <= jump_window_s
+        peak[cand] = z[cand] >= z[near].max()
     sig_thr = float(thr["edit_significance_sigma"])
     min_rad = float(thr["edit_min_rad"])
     gap_at = {g.frame_index: g for g in gaps}
