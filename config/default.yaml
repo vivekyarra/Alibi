@@ -1,0 +1,80 @@
+# GRIDPRINT default configuration. Engineering constants are documented in docs/DECISIONS.md.
+# Verdict thresholds are NOT here; they live in config/thresholds.yaml (R8).
+aws:
+  profile: gridprint
+  region: us-east-1            # DECISIONS D-005
+bedrock:
+  enabled: false               # turned on after V6 is verified with the gridprint profile (H1)
+  # Inference-profile ID as listed by AWS (see docs/VERIFICATION.md V6). Re-check with
+  # `aws bedrock list-inference-profiles --profile gridprint` before enabling.
+  model_id: global.anthropic.claude-sonnet-4-6
+  max_tokens: 1024
+limits:
+  max_file_bytes: 524288000    # 500 MiB
+  max_duration_s: 600
+  allowed_containers: [mp4, mov]
+  decode_timeout_s: 300
+  presign_expiry_s: 900
+  upload_retention_hours: 24
+  results_retention_days: 30
+engine:
+  version: 0.1.0
+  analysis_max_width: 640       # frames are downscaled along the non-row axis only (rows keep sensor index)
+  timestamp_jitter_p95_limit_ms: 4.0
+  gap_factor: 1.5
+  axis_ambiguity_margin: 1.2    # SNR ratio below which axis is ambiguous
+  saturation_cutoff: 0.98       # code value (0..1) at/above which a pixel is invalid
+  noise_floor: 0.02             # code value (0..1) at/below which a pixel is invalid
+  readout_min_s: 0.004
+  readout_search_steps: 120
+  readout_estimated_min_coherence: 0.5
+  motion:
+    downscale_width: 320
+    max_features: 400
+    residual_limit_px: 1.0      # per-pixel flow deviation from homography -> dynamic
+    high_motion_px: 1.5         # median residual flow above this -> HIGH_MOTION
+    strict_residual_limit_px: 0.5
+  patches:
+    grid: [8, 8]
+    min_static_fraction: 0.8
+    min_mean_linear: 0.01
+    max_saturation_fraction: 0.05
+  rowsignal:
+    window_frames: 15
+    min_pixels_per_row: 4
+    detrend_order: 2
+  phase:
+    window_s: 4.0
+    hop_s: 1.0
+    estimator_agreement_hz: 0.01
+    dft_virtual_rate_factor: 1   # virtual grid sample period = row time
+  match:
+    min_search_window_s: 600
+    sidecar_window_s: 3600
+    max_search_window_s: 172800
+    exclusion_s: 10
+    segment_length_s: 30
+    segment_offset_tolerance_s: 3
+    claim_min_tolerance_s: 60
+  continuity:
+    smooth_window_s: 4.0
+  facecheck:
+    model_path: models/face_detection_yunet_2023mar.onnx
+    score_threshold: 0.8
+  overlay:
+    alpha: 0.6
+  compression:
+    high_bits_per_pixel: 0.04   # bitrate/(w*h*fps) below this -> HIGH_COMPRESSION
+agent:
+  max_iterations: 6
+  max_tool_calls: 30
+  planner: fallback             # fallback | bedrock
+grid:
+  live_samples: 120
+  freshness_limit_s: 120
+capture:
+  exposure_ns: 1000000          # 1 ms; one 100 Hz flicker period is 10 ms (DECISIONS D-012)
+  fps: 30
+  bitrate_bps: 40000000
+calibration:
+  led_frequency_hz: 1000.0

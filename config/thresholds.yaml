@@ -1,0 +1,16 @@
+# PROVISIONAL — development placeholders. Must be replaced by eval/calibrate_thresholds.py (R8).
+provenance:
+  status: PROVISIONAL
+  generated_by: hand-written placeholder
+signal:
+  snr_absent_db: 3.0
+  snr_weak_db: 8.0
+match:
+  min_track_s: 20
+  rho1_min: 0.7
+  margin_min: 0.15
+continuity:
+  edit_significance_sigma: 6.0
+  edit_min_rad: 0.6
+facecheck:
+  ratio_anomaly: 0.5

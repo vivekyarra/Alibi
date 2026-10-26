@@ -1,0 +1,3 @@
+# Readout times per device/mode. Written by calibration_rig/fit_readout.py (needs H3).
+# Key: "<device_model>|<width>x<height>|<fps>"
+profiles: {}

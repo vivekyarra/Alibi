@@ -1,0 +1,26 @@
+# Grid zones. The only location output GRIDPRINT gives is one of these ids (R4).
+zones:
+  - id: IN
+    nominal_hz: 50
+    timezone: Asia/Kolkata
+    description: India national synchronous grid
+  - id: CE
+    nominal_hz: 50
+    timezone: Europe/Berlin
+    description: Continental Europe synchronous area
+  - id: GB
+    nominal_hz: 50
+    timezone: Europe/London
+    description: Great Britain synchronous area
+  - id: US-EI
+    nominal_hz: 60
+    timezone: America/New_York
+    description: US Eastern Interconnection
+  - id: SIM50
+    nominal_hz: 50
+    timezone: UTC
+    description: Synthetic 50 Hz zone used only by the simulator and tests
+  - id: SIM60
+    nominal_hz: 60
+    timezone: UTC
+    description: Synthetic 60 Hz zone used only by the simulator and tests
