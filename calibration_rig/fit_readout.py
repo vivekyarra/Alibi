@@ -45,6 +45,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROFILES = ROOT / "config" / "camera_profiles.yaml"
 DEFAULT_RESULTS = ROOT / "results" / "calibration"
 MIN_PERIOD_ROWS = 3.0     # below this the bands are too fine to measure (and may alias)
+MIN_MODULATION = 1e-4    # band amplitude as a fraction of the mean level; below this the frame is flat
 MIN_SNR = 8.0             # peak / median spectrum magnitude in the search band
 MIN_FRAMES = 10           # accepted frames needed for a profile entry
 PAD_FACTOR = 8            # zero padding of the row profile before the DFT
@@ -129,6 +130,9 @@ def band_period_rows(gray: np.ndarray, min_period: float = MIN_PERIOD_ROWS,
     i = int(np.argmax(band))
     k = k_lo + i
     floor = float(np.median(band))
+    # a flat (band-free) frame has no modulation at all: reject it instead of dividing 0 by 0
+    if band[i] * 2.0 / max(float(np.hanning(n).sum()), 1e-12) < MIN_MODULATION:
+        return None
     snr = float(band[i] / floor) if floor > 0 else float("inf")
     if k <= k_lo or k >= k_hi:
         return None
