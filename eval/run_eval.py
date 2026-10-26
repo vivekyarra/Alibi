@@ -50,9 +50,14 @@ def _agent_metrics(history: list[Any], trace: Any) -> dict[str, Any]:
             "review_requested": any(s.tool == "request_human_review" for s in history)}
 
 
-def run_clip(item: dict[str, Any], data_dir: str, out_dir: str, planner_kind: str) -> dict[str, Any]:
+def run_clip(item: dict[str, Any], data_dir: str, out_dir: str, planner_kind: str,
+             threads: int = 0) -> dict[str, Any]:
     import sys
 
+    import cv2
+
+    if threads:
+        cv2.setNumThreads(threads)  # avoid oversubscription when several clips run in parallel
     sys.path[:0] = [str(REPO), str(REPO / "engine")]
     from gridprint_engine.adapters import LocalGridLog, LocalJobStore
     from gridprint_engine.config import settings
@@ -143,7 +148,8 @@ def main() -> None:
     todo = [m for m in items if not (clips / f"{m['name']}.json").exists()]
     print(f"{len(items)} clips selected, {len(todo)} to run, {a.workers} workers")
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(run_clip, m, str(data), str(out), a.planner): m for m in todo}
+        threads = max(1, (os.cpu_count() or 1) // a.workers)
+        futs = {ex.submit(run_clip, m, str(data), str(out), a.planner, threads): m for m in todo}
         for f in as_completed(futs):
             m = futs[f]
             try:
