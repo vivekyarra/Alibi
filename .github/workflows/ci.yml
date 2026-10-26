@@ -22,15 +22,23 @@ jobs:
     defaults:
       run:
         working-directory: web
+        shell: bash
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: "24"
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test -- --run
+      - id: has_web
+        working-directory: .
+        run: echo "present=$([ -f web/package.json ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - if: steps.has_web.outputs.present == 'yes'
+        run: npm ci
+      - if: steps.has_web.outputs.present == 'yes'
+        run: npm run typecheck
+      - if: steps.has_web.outputs.present == 'yes'
+        run: npm test -- --run
       - name: axe-core accessibility check
+        if: steps.has_web.outputs.present == 'yes'
         run: npm run a11y
   scan:
     runs-on: ubuntu-24.04

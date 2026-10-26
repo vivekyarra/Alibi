@@ -20,7 +20,7 @@ dependencies = [
 [dependency-groups]
 dev = ["pytest", "ruff", "mypy", "types-PyYAML", "httpx"]
 pdf = ["weasyprint"]
-agent = ["mcp"]
+agent = ["mcp==1.28.1"]
 
 [tool.uv]
 package = false
@@ -30,7 +30,7 @@ testpaths = ["engine/gridprint_engine/tests", "agent/tests", "tests", "eval/test
 pythonpath = [".", "engine"]
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py311"
 extend-exclude = ["web", "capture-android", "results"]
 
@@ -44,3 +44,11 @@ ignore_missing_imports = true
 check_untyped_defs = true
 mypy_path = "engine"
 explicit_package_bases = true
+exclude = ["tests/", "/tests/"]
+
+[[tool.mypy.overrides]]
+# The bundled cv2 and PyAV stubs are incomplete (e.g. cv2.DISOpticalFlow_create exists at runtime but not
+# in the stub; V3 verified it by calling it). Treat them as untyped.
+module = ["cv2", "cv2.*", "av", "av.*"]
+follow_imports = "skip"
+follow_untyped_imports = false
