@@ -8,7 +8,7 @@ timestamps leave none. Change points: robust z-score of r_k (DECISIONS D-014).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -25,6 +25,7 @@ class ContinuityResult:
     residual_t: np.ndarray
     residual_rad: np.ndarray
     reasons: list[Reason]
+    boundaries: list[dict[str, float]] = field(default_factory=list)  # raw candidates (z > 3) for calibration
 
 
 def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[GapEvent],
@@ -69,4 +70,8 @@ def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[
         reasons.append(Reason.EDIT_CANDIDATE)
     if any(e.kind == "DROPPED_FRAMES_EXPLAINED" for e in events):
         reasons.append(Reason.DROPPED_FRAMES_EXPLAINED)
-    return ContinuityResult(events, mid, res, reasons)
+    raw = [{"t_s": float(t[j + 1]), "z": float(z[j]), "rad": float(abs(res[j])),
+            "gap": bool(int(idx[j + 1]) in gap_at)} for j in np.flatnonzero(z > 3.0)]
+    raw += [{"t_s": float(t[j + 1]), "z": float(z[j]), "rad": float(abs(res[j])), "gap": True}
+            for j in range(len(res)) if int(idx[j + 1]) in gap_at and z[j] <= 3.0]
+    return ContinuityResult(events, mid, res, reasons, raw)

@@ -175,11 +175,10 @@ class DftEstimate:
     fill_fraction: float
 
 
-def dft_estimate(rs: np.ndarray, mask: np.ndarray, t_rows: np.ndarray, f0: float, rate_factor: float,
-                 search_hz: float = 1.5) -> DftEstimate:
-    """Cross-check estimator (SPEC 8.9.4): uniform virtual time grid, idle gaps zero-filled with a
-    known mask (never interpolated), Hann window, cv2.dft, parabolic peak interpolation."""
-    fs = rate_factor * f0
+def virtual_time_grid(rs: np.ndarray, mask: np.ndarray, t_rows: np.ndarray,
+                      fs: float) -> tuple[np.ndarray, np.ndarray]:
+    """Average row samples into uniform time bins of 1/fs. Bins with no row sample (inter-frame idle gaps,
+    dropped frames) are exactly zero and flagged in the returned mask; nothing is interpolated."""
     t0 = float(t_rows[mask].min()) if mask.any() else 0.0
     bins = np.floor((t_rows - t0) * fs).astype(np.int64)
     bsel = bins[mask]
@@ -188,7 +187,17 @@ def dft_estimate(rs: np.ndarray, mask: np.ndarray, t_rows: np.ndarray, f0: float
     cnts = np.bincount(bsel, minlength=n).astype(np.float64)
     filled = cnts > 0
     x = np.zeros(n, np.float64)
-    x[filled] = sums[filled] / cnts[filled]  # empty bins (idle gaps, dropped frames) stay exactly 0
+    x[filled] = sums[filled] / cnts[filled]
+    return x, filled
+
+
+def dft_estimate(rs: np.ndarray, mask: np.ndarray, t_rows: np.ndarray, f0: float, rate_factor: float,
+                 search_hz: float = 1.5) -> DftEstimate:
+    """Cross-check estimator (SPEC 8.9.4): uniform virtual time grid, idle gaps zero-filled with a
+    known mask (never interpolated), Hann window, cv2.dft, parabolic peak interpolation."""
+    fs = rate_factor * f0
+    x, filled = virtual_time_grid(rs, mask, t_rows, fs)
+    n = len(x)
     x[filled] -= x[filled].mean()
     x *= np.hanning(n)
     nfft = cv2.getOptimalDFTSize(4 * n)
