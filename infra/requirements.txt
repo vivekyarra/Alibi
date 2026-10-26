@@ -1,0 +1,7 @@
+# CDK v2 Python libraries for infra/ (SPEC Part 7). Versions checked 2026-10-26 with
+# `npm view aws-cdk-lib version` -> 2.274.0 and `npm view constructs version` -> 10.8.1,
+# and installed into the project venv with `uv pip install aws-cdk-lib constructs`.
+# The CDK CLI runs through `npx aws-cdk@2` (scripts/tasks.py).
+aws-cdk-lib==2.274.0
+constructs==10.8.1
+pyyaml
