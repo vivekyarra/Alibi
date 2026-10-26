@@ -94,3 +94,8 @@ Format: ID — date — decision — reason — alternatives considered.
 - Found by `engine/gridprint_engine/tests/test_video.py`: on a fixed 160×120 clip the chained per-frame homographies accumulated several pixels of false drift over 1,200 frames, the warp smeared the scene, and band SNR fell from 11.5 dB to −2.6 dB (all three clips SIGNAL_ABSENT).
 - Each frame is now registered directly to the middle frame (features from the reference, pyramidal LK, `findHomography` with USAC_MAGSAC); chaining is a fallback for frames whose direct registration fails. Warping is used only when the 90th-percentile corner displacement exceeds 1 px.
 - Continuity (S11) skips tracks marked SIGNAL_ABSENT and uses only frames whose own fit SNR is at least 1 (0 dB) (`engine.continuity.min_frame_snr`). Without this, noise-level phases produced edit candidates on clips with no signal.
+
+## D-023 — 2026-10-26 — Continuity: two-sided line fits replace single frame differences
+- Found by the video integration test: a re-timed 1 s cut gave a true phase jump of 0.44 rad at the cut, but the single-difference detector (D-014) reached only z = 3.8 because per-frame phase noise was about 0.1 rad.
+- New detector: at each frame boundary, fit a line to the phase on each side (frames within `engine.continuity.jump_window_s` = 1 s, at least 8 frames per side), evaluate both at the boundary, and take the wrapped difference as the jump. Its standard error comes from the two fits; z = |jump|/σ. Local maxima within ±1 s are the change points. Thresholds `edit_significance_sigma` and `edit_min_rad` stay in `thresholds.yaml`.
+- Gap rule unchanged: a boundary with an S1 gap whose jump is not significant is DROPPED_FRAMES_EXPLAINED.

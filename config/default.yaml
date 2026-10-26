@@ -60,7 +60,7 @@ engine:
     segment_offset_tolerance_s: 3
     claim_min_tolerance_s: 60
   continuity:
-    smooth_window_s: 4.0
+    jump_window_s: 1.0           # frames on each side of a boundary for the two line fits (D-023)
     min_frame_snr: 1.0            # linear; frames below 0 dB fit SNR are left out of the phase series (D-022)
   segmentation:
     model_path: models/human_segmentation_pphumanseg_2023mar.onnx
