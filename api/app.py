@@ -195,20 +195,40 @@ def create_app(ctx: Context | None = None, start_job: Any = None) -> FastAPI:
         ctx.store.put("Jobs", rv["job_id"], job)
         return {"review_id": review_id, "verdict": v.value, "lifecycle_state": st.value}
 
+    def demo_available(c: dict[str, Any]) -> bool:
+        if ctx.mode == "aws":  # demo inputs are seeded to the results bucket by scripts/seed_aws.py
+            return bool(c.get("seeded", True))
+        return (REPO / c["video"]).exists()
+
+    def demo_input(c: dict[str, Any], field: str, job_id: str) -> Path | None:
+        rel = c.get(field)
+        if not rel:
+            return None
+        if ctx.mode == "aws":
+            dst = ctx.workdir / job_id / Path(rel).name
+            return ctx.storage.get_file(f"demo/{Path(rel).name}", dst)
+        return REPO / rel
+
     @app.get("/v1/demo-cases")
     def demo_cases() -> list[dict[str, Any]]:
         return [{k: c[k] for k in ("id", "title", "description", "expected_verdict")} for c in load_demo_cases()
-                if (REPO / c["video"]).exists()]
+                if demo_available(c)]
 
     @app.post("/v1/demo-cases/{case_id}/run")
     def run_demo(case_id: str) -> dict[str, Any]:
         case = next((c for c in load_demo_cases() if c["id"] == case_id), None)
-        if case is None or not (REPO / case["video"]).exists():
+        if case is None or not demo_available(case):
             raise HTTPException(404, "unknown demo case")
         job_id = uuid.uuid4().hex[:12]
         key = f"uploads/{job_id}/input.mp4"
-        ctx.storage.put_file(key, REPO / case["video"])
-        sidecar = json.loads((REPO / case["sidecar"]).read_text()) if case.get("sidecar") else None
+        try:
+            video = demo_input(case, "video", job_id)
+            side_p = demo_input(case, "sidecar", job_id)
+        except Exception as e:
+            raise HTTPException(404, "demo input not available") from e
+        assert video is not None
+        ctx.storage.put_file(key, video)
+        sidecar = json.loads(side_p.read_text()) if side_p else None
         ctx.store.put("Jobs", job_id, {"job_id": job_id, "status": "queued", "upload_key": key,
                                        "claim": case.get("claim") or {}, "sidecar": sidecar, "demo_case": case_id,
                                        "created": datetime.now(tz=UTC).isoformat()})
