@@ -84,3 +84,8 @@ Format: ID — date — decision — reason — alternatives considered.
 - SPEC 11.4.2 requires this target before test data is examined. No test split has been run when this entry is written.
 - Value: 0.01 on authentic clips, in `config/default.yaml` → `evaluation.target_false_contradicted_rate`. The team must confirm or change it before the real-data calibration (H5); a change after the test run must be logged here with a reason.
 - Calibration also requires zero VERIFIED results with a wrong time (|error| > 2 s) on the calibration split.
+
+## D-021 — 2026-10-26 — Deployment account and neutral resource names
+- The owner chose the AWS account behind the local `kittu` CLI credentials for the deployment; the CLI profile `gridprint` (the only profile the code uses) now holds those credentials. Account 643700104680, region `us-east-1`.
+- At the owner's request every physical AWS resource name in that account uses a neutral prefix, `aws.resource_prefix: orchard` (stacks `Orchard*`, tables `orchard-*`, IoT topic `orchard/<zone>/<node>`, dashboard, KMS alias). Code and documents keep the product name.
+- Bedrock in that account returns "account is currently being verified" and the Claude models are not yet authorized (`get-foundation-model-availability`: `authorizationStatus NOT_AUTHORIZED`). Per V6, the deterministic fallback planner runs (`bedrock.enabled: false`) until access is granted; `scripts/verify_aws.py` re-checks it.

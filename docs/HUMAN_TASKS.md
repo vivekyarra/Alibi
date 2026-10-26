@@ -65,6 +65,16 @@ Status values: `BLOCKED-HUMAN` (waiting for a person), `DONE` (validated by scri
 
 ## H5 — Record the real dataset — BLOCKED-HUMAN
 
+### H5-a — Download the public ENF video datasets (needs your login; the agent cannot create accounts)
+Both sets have real rolling-shutter videos plus a recorded mains reference.
+1. EV-ENFD (Xu et al., CVPR 2023, code MIT): open the TeraBox link in https://github.com/xlx-creater/E-ENF (README, "Data").
+   Download the video sequences and the `ENF_Reference` folder (each `.wav` is one hour of grid voltage).
+2. Choi, Wong, Su, Wu rolling-shutter set: log in at https://ieee-dataport.org/documents/rolling-shutter-videos-enf-extraction
+   and download `vids.zip` (and `mats.zip` if offered).
+3. Upload the downloaded archives unchanged to your Google Drive folder `GRIDPRINT-data/` and tell the agent.
+   The agent copies them to `data/public/` (git-ignored), converts the mains `.wav` references to 1 s GridLog
+   entries, and runs the evaluation on them.
+
 Follow `eval/DATASET.md` (shot list, manifest template, consent form template). Validate with:
 ```bash
 make validate-dataset
