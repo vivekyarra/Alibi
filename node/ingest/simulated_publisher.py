@@ -26,8 +26,8 @@ from typing import Any  # noqa: E402
 
 import numpy as np  # noqa: E402
 import yaml  # noqa: E402
-from gridprint_engine.adapters import LocalGridLog  # noqa: E402
 
+from gridprint_engine.adapters import LocalGridLog  # noqa: E402
 from node.ingest.handler import handle  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]

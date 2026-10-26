@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import boto3
+
 from gridprint_engine.adapters import JobStoreAdapter, StorageAdapter
 
 TABLES = {"Jobs": "JOBS_TABLE", "Reviews": "REVIEWS_TABLE", "TraceIndex": "TRACE_TABLE"}

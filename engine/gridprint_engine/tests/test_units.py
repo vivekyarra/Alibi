@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from gridprint_engine import color, continuity, enf, match, phase, readout, rowsignal
 from gridprint_engine.schemas import CaptureSidecar, GapEvent, Reason
 
@@ -246,6 +247,7 @@ def test_motion_static_scene_with_moving_bands_is_static():
 
 def test_motion_camera_pan_gives_homographies():
     import cv2
+
     from gridprint_engine import motion
 
     rng = np.random.default_rng(5)

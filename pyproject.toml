@@ -39,6 +39,10 @@ extend-exclude = ["web", "capture-android", "results"]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E741"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["gridprint_engine", "agent", "api", "mcp_server", "eval", "node", "scripts", "bench",
+                     "calibration_rig", "infra", "gridprint_infra"]
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true

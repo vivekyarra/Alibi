@@ -39,6 +39,7 @@ import av  # noqa: E402
 import cv2  # noqa: E402
 import numpy as np  # noqa: E402
 import yaml  # noqa: E402
+
 from gridprint_engine.readout import profile_key  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]

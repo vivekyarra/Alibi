@@ -12,10 +12,10 @@ from typing import Any
 import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse
-from gridprint_engine.schemas import AnalysisResult, CaptureSidecar, Claim
 from pydantic import BaseModel, ValidationError
 
 from api.context import Context
+from gridprint_engine.schemas import AnalysisResult, CaptureSidecar, Claim
 
 REPO = Path(__file__).resolve().parents[1]
 

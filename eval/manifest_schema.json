@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GRIDPRINT real dataset manifest",
+  "type": "object",
+  "required": ["dataset_version", "clips"],
+  "properties": {
+    "dataset_version": {"type": "string"},
+    "clips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["clip_id", "file", "sha256", "phone_model", "app", "lighting", "motion", "duration_s",
+                     "compression", "recorded_day", "session_id", "zone", "gt_start_utc", "gt_uncertainty_s",
+                     "has_sidecar", "people_present", "consent_ids", "split", "class"],
+        "properties": {
+          "clip_id": {"type": "string"},
+          "file": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "phone_model": {"type": "string"},
+          "used_for_calibration_rig": {"type": "boolean"},
+          "app": {"enum": ["capture", "stock"]},
+          "lighting": {"enum": ["fluorescent", "led_low_cost", "led_quality", "incandescent", "daylight", "dc_lamp"]},
+          "motion": {"enum": ["tripod", "handheld_still", "handheld_walking", "people_moving"]},
+          "duration_s": {"type": "number"},
+          "compression": {"type": "string", "pattern": "^(original|whatsapp|youtube|instagram|ffmpeg_[a-z0-9_]+)$"},
+          "recorded_day": {"type": "string", "format": "date"},
+          "session_id": {"type": "string"},
+          "zone": {"type": "string"},
+          "gt_start_utc": {"type": "string"},
+          "gt_uncertainty_s": {"type": "number"},
+          "has_sidecar": {"type": "boolean"},
+          "sidecar": {"type": ["string", "null"]},
+          "people_present": {"type": "boolean"},
+          "consent_ids": {"type": "array", "items": {"type": "string"}},
+          "split": {"enum": ["calibration", "test"]},
+          "class": {"enum": ["authentic-with-mains-light", "authentic-without-mains-light", "edited", "synthetic"]},
+          "derived_from": {"type": ["string", "null"]},
+          "edits": {"type": "array"}
+        }
+      }
+    }
+  }
+}

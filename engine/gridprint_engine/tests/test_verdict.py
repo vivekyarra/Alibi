@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from gridprint_engine.schemas import LifecycleState, Reason, Verdict
 from gridprint_engine.verdict import VerdictInputs, apply_review, decide, finalize_without_review
 

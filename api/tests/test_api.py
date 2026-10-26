@@ -8,11 +8,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
-from gridprint_engine.adapters import LocalGridLog
-from gridprint_engine.schemas import AnalysisResult, LifecycleState, Reason, Verdict
 
 from api.app import create_app
 from api.context import Context
+from gridprint_engine.adapters import LocalGridLog
+from gridprint_engine.schemas import AnalysisResult, LifecycleState, Reason, Verdict
 
 MP4_HEAD = b"\x00\x00\x00\x18ftypisom" + b"\x00" * 64
 
