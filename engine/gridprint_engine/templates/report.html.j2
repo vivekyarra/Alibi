@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRIDPRINT report {{ r.job_id }}</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #1a1a1a; background: #ffffff;
+         max-width: 900px; margin: 0 auto; padding: 16px; line-height: 1.5; }
+  h1, h2, h3 { line-height: 1.25; }
+  .verdict { border: 3px solid #1a1a1a; border-radius: 8px; padding: 12px 16px; display: flex; gap: 16px;
+             align-items: center; }
+  .icon { font-size: 40px; font-weight: 700; width: 56px; height: 56px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center; border: 3px solid currentColor; }
+  .VERIFIED { color: #0b5d1e; } .CONTRADICTED { color: #8a1010; } .INCONCLUSIVE { color: #3d3d3d; }
+  .state { font-weight: 700; }
+  table { border-collapse: collapse; width: 100%; } td, th { border: 1px solid #757575; padding: 4px 8px;
+  text-align: left; vertical-align: top; }
+  .limits { border: 2px solid #1a1a1a; background: #f2f2f2; padding: 8px 16px; margin: 16px 0; }
+  .exp { border: 2px dashed #3d3d3d; padding: 8px 16px; }
+  img { max-width: 100%; height: auto; }
+  code { font-size: 0.9em; word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+<h1>GRIDPRINT analysis report</h1>
+<section aria-labelledby="h-verdict">
+<h2 id="h-verdict">Verdict</h2>
+<div class="verdict {{ r.verdict }}" role="status">
+  <span class="icon" aria-hidden="true">{{ icon }}</span>
+  <div>
+    <div style="font-size:1.6em;font-weight:700">{{ r.verdict }}</div>
+    <div>{{ verdict_text }}</div>
+    <div class="state">Report state: {{ r.lifecycle_state }}{% if r.lifecycle_state == "PENDING_REVIEW" %} — waiting for human review. This report is not final.{% endif %}</div>
+  </div>
+</div>
+</section>
+
+<section aria-labelledby="h-summary">
+<h2 id="h-summary">Summary</h2>
+<table>
+<tr><th scope="row">Estimated recording start (UTC)</th><td>{% if r.time_estimate_iso %}{{ r.time_estimate_iso }} ± {{ "%.1f"|format(r.time_uncertainty_s or 0) }} s{% else %}Not determined{% endif %}</td></tr>
+<tr><th scope="row">Grid zone</th><td>{{ r.zone or "Not determined" }}</td></tr>
+<tr><th scope="row">Reasons</th><td><ul>{% for x in reasons %}<li><code>{{ x.code }}</code> — {{ x.text }}</li>{% endfor %}</ul></td></tr>
+{% if r.match %}<tr><th scope="row">Match</th><td>peak correlation {{ fmt(r.match.rho1) }}, next peak {{ fmt(r.match.rho2) }}, track length {{ "%.0f"|format(r.match.track_length_s) }} s</td></tr>{% endif %}
+</table>
+</section>
+
+<section aria-labelledby="h-plots">
+<h2 id="h-plots">Key plots</h2>
+{% for p in plots %}<figure><img src="{{ p.file }}" alt="{{ p.alt }}"><figcaption>{{ p.caption }}</figcaption></figure>{% endfor %}
+</section>
+
+<section class="limits" aria-labelledby="h-limits">
+<h2 id="h-limits">Limitations</h2>
+<ul>
+<li>GRIDPRINT reads the grid frequency from the flicker of mains-powered lights. It is not a deepfake classifier and it is not cryptographic proof.</li>
+<li>A missing signal is never evidence that a video is fake. Many phones hide the flicker ("anti-banding"), and daylight or battery lights do not flicker.</li>
+<li>A time estimate is possible only inside the time range of the reference log for the zone.</li>
+<li>Location output is limited to the grid zone. GRIDPRINT gives no finer location.</li>
+<li>Thresholds come from calibration data. Results outside the calibrated conditions carry more risk of error.</li>
+<li>A CONTRADICTED verdict needs approval by a human reviewer before the report is final.</li>
+</ul>
+</section>
+
+{% if r.face_region %}
+<section class="exp" aria-labelledby="h-face">
+<h2 id="h-face">Face-region check (EXPERIMENTAL)</h2>
+<p>Status: {{ r.face_region.status }}{% if r.face_region.ratio is not none %}; face/background band ratio {{ fmt(r.face_region.ratio) }}, significance {{ fmt(r.face_region.significance) }}{% endif %}. This check is experimental. It is never the only basis for a CONTRADICTED verdict.</p>
+</section>
+{% endif %}
+
+{% if r.reviewer %}
+<section aria-labelledby="h-review">
+<h2 id="h-review">Reviewer decision</h2>
+<p>{{ r.reviewer.decision }} by {{ r.reviewer.name }} at {{ r.reviewer.time_utc }}. Note: {{ r.reviewer.note }}</p>
+</section>
+{% endif %}
+
+<section aria-labelledby="h-prov">
+<h2 id="h-prov">Provenance</h2>
+<table>
+<tr><th scope="row">File SHA-256</th><td><code>{{ r.file_sha256 }}</code></td></tr>
+<tr><th scope="row">Engine version</th><td>{{ r.engine_version }}</td></tr>
+<tr><th scope="row">Config hash</th><td><code>{{ r.config_hash }}</code></td></tr>
+<tr><th scope="row">Thresholds hash</th><td><code>{{ r.thresholds_hash }}</code></td></tr>
+<tr><th scope="row">Job</th><td><code>{{ r.job_id }}</code></td></tr>
+</table>
+</section>
+
+<section aria-labelledby="h-appendix">
+<h2 id="h-appendix">Appendix</h2>
+<h3>Continuity events</h3>
+{% if r.continuity_events %}<table><tr><th scope="col">Kind</th><th scope="col">Time in video (s)</th><th scope="col">Phase jump (rad)</th><th scope="col">Significance</th></tr>
+{% for e in r.continuity_events %}<tr><td>{{ e.kind }}</td><td>{{ "%.2f"|format(e.t_s) }}</td><td>{{ "%.3f"|format(e.magnitude_rad) }}</td><td>{{ "%.1f"|format(e.significance) }}</td></tr>{% endfor %}</table>
+{% else %}<p>None.</p>{% endif %}
+<h3>Quality metrics</h3>
+<table>{% for k, v in quality %}<tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</table>
+<h3>Stage timings (s)</h3>
+<table>{% for k, v in r.stage_timings_s.items() %}<tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</table>
+</section>
+</main>
+</body>
+</html>
