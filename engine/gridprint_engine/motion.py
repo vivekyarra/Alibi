@@ -53,9 +53,15 @@ def band_suppressed(lin: np.ndarray) -> np.ndarray:
 
 def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: float,
                    max_features: int, strictness: str = "normal",
-                   strict_residual_limit_px: float = 0.5) -> MotionResult:
-    gray8 = band_suppressed(lin)
+                   strict_residual_limit_px: float = 0.5, camera_static_px: float = 0.05,
+                   downscale_width: int = 160) -> MotionResult:
+    full = band_suppressed(lin)
+    k, H, W = full.shape
+    f = max(1, int(np.ceil(W / downscale_width)))
+    gray8 = full if f == 1 else np.stack([cv2.resize(g, (W // f, H // f), interpolation=cv2.INTER_AREA)
+                                          for g in full])
     k, h, w = gray8.shape
+    scale = np.diag([float(f), float(f), 1.0])  # analysis-grid coords = scale @ motion-grid coords
     limit = strict_residual_limit_px if strictness == "strict" else residual_limit_px
     step = [np.eye(3)]
     for i in range(1, k):
@@ -69,7 +75,7 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
     homs = np.stack([inv_ref @ H for H in to0]).astype(np.float64)
     homs /= homs[:, 2:3, 2:3]
 
-    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_FAST)
+    dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_ULTRAFAST)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
     grid = np.stack([xx, yy, np.ones_like(xx)], -1).reshape(-1, 3)
     static = np.ones((k, h, w), bool)
@@ -88,8 +94,13 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
         static[i - 1] &= dyn == 0
         resid_med.append(float(np.median(r)))
         cam_med.append(float(np.median(np.linalg.norm(hflow, axis=2))))
-    level = float(np.median(resid_med)) if resid_med else 0.0
-    cam = float(np.median(cam_med)) if cam_med else 0.0
+    level = float(np.median(resid_med)) * f if resid_med else 0.0
+    cam = float(np.median(cam_med)) * f if cam_med else 0.0
+    if f > 1:  # back to the analysis grid
+        static = np.stack([cv2.resize(s_.astype(np.uint8), (W, H), interpolation=cv2.INTER_NEAREST) > 0
+                           for s_ in static])
+        homs = np.stack([scale @ Hm @ np.linalg.inv(scale) for Hm in homs])
+        h, w = H, W
     max_disp = 0.0
     corners = np.array([[0, 0, 1], [w - 1, 0, 1], [0, h - 1, 1], [w - 1, h - 1, 1]], np.float64)
     for H in homs:
@@ -100,8 +111,11 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
     if strictness == "strict" and resid_med:
         rm = np.array([resid_med[0]] + resid_med)
         subset = np.flatnonzero(rm <= np.percentile(rm, 50))
+    # Chained per-frame homographies drift slowly even for a fixed camera. Warping is used only when the
+    # camera visibly moves (median per-frame displacement) and the accumulated displacement is real.
+    moving = cam > camera_static_px and max_disp > 1.0
     return MotionResult(
-        homs=homs if max_disp > 0.5 else None,
+        homs=homs if moving else None,
         static=static,
         motion_level_px=level,
         camera_motion_px=cam,
