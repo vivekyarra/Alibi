@@ -1,0 +1,12 @@
+menu "GRIDPRINT calibration rig"
+
+    config RIG_LED_FREQUENCY_HZ
+        int "LED frequency (Hz); must equal calibration.led_frequency_hz in config/default.yaml"
+        range 100 5000
+        default 200
+
+    config RIG_LED_GPIO
+        int "LED driver GPIO"
+        default 18
+
+endmenu
