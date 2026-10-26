@@ -1,0 +1,54 @@
+# Demo cases (SPEC 14.2). All run through the real pipeline via POST /v1/demo-cases/{id}/run.
+# `source: synthetic` inputs come from eval/make_demo_inputs.py and are labeled SYNTHETIC in the title.
+# `source: human` inputs are recorded by people (H4, H5, H7) and placed at the listed path.
+cases:
+  - id: capture-verified
+    title: "Capture clip with sensor sidecar (SYNTHETIC stand-in until H5)"
+    description: "Expected VERIFIED with an estimated recording time."
+    expected_verdict: VERIFIED
+    source: synthetic
+    video: data/demo/capture-verified.mp4
+    sidecar: data/demo/capture-verified.sidecar.json
+  - id: cut-1s
+    title: "Same clip with a 1 s cut (SYNTHETIC)"
+    description: "Expected CONTRADICTED, then human review."
+    expected_verdict: CONTRADICTED
+    source: synthetic
+    video: data/demo/cut-1s.mp4
+  - id: insertion
+    title: "Insertion from another time (SYNTHETIC)"
+    description: "Expected CONTRADICTED with SEGMENT_OFFSET_INCONSISTENT."
+    expected_verdict: CONTRADICTED
+    source: synthetic
+    video: data/demo/insertion.mp4
+  - id: dropped-frames
+    title: "Dropped frames with original timestamps (SYNTHETIC)"
+    description: "Expected VERIFIED with DROPPED_FRAMES_EXPLAINED."
+    expected_verdict: VERIFIED
+    source: synthetic
+    video: data/demo/dropped-frames.mp4
+    sidecar: data/demo/dropped-frames.sidecar.json
+  - id: generated-room
+    title: "Synthetic room video from a video generator (H5)"
+    description: "Expected INCONCLUSIVE (SIGNAL_ABSENT). A missing signal alone does not mean fake."
+    expected_verdict: INCONCLUSIVE
+    source: human
+    video: data/demo/generated-room.mp4
+  - id: daylight-only
+    title: "Daylight-only room (SYNTHETIC stand-in until H5)"
+    description: "Expected INCONCLUSIVE."
+    expected_verdict: INCONCLUSIVE
+    source: synthetic
+    video: data/demo/daylight-only.mp4
+  - id: agent-recovery
+    title: "Agent recovery: weak first pass, patches re-selected (SYNTHETIC)"
+    description: "Expected first pass SIGNAL_WEAK; the agent re-selects patches and the signal locks."
+    expected_verdict: VERIFIED
+    source: synthetic
+    video: data/demo/agent-recovery.mp4
+  - id: face-composite
+    title: "Face composite of a consenting team member (EXPERIMENTAL, H7)"
+    description: "Shows the experimental face-region check. Never the only basis for CONTRADICTED."
+    expected_verdict: CONTRADICTED
+    source: human
+    video: data/demo/face-composite.mp4
