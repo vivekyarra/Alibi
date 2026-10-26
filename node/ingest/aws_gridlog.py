@@ -15,7 +15,7 @@ from gridprint_engine.adapters import GridLogAdapter
 from node.ingest.handler import DynamoWriter, day_key
 
 DAY_S = 86400
-DEFAULT_TABLE = os.environ.get("GRIDPRINT_GRIDLOG_TABLE", "gridprint-GridLog")  # infra data stack name
+DEFAULT_TABLE = os.environ.get("GRIDLOG_TABLE") or os.environ.get("GRIDPRINT_GRIDLOG_TABLE") or "gridprint-GridLog"
 
 
 def _query_all(table: Any, **kw: Any) -> list[dict[str, Any]]:

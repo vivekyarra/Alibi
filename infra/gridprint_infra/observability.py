@@ -28,7 +28,7 @@ from constructs import Construct
 
 from .api import ApiStack
 from .compute import METRIC_NAMESPACE, ComputeStack
-from .config import InfraConfig
+from .config import PREFIX, InfraConfig
 from .iot import IotStack
 
 STAGES = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12", "S13", "S14", "S15"]
@@ -46,7 +46,7 @@ class ObservabilityStack(Stack):
                  iot: IotStack, **kwargs) -> None:
         super().__init__(scope, cid, **kwargs)
         # Subscriptions (email of the on-call person) are added by a human (H1).
-        self.alarm_topic = sns.Topic(self, "Alarms", display_name="GRIDPRINT alarms",
+        self.alarm_topic = sns.Topic(self, "Alarms", display_name=f"{PREFIX} alarms",
                                      enforce_ssl=True)
         action = cw_actions.SnsAction(self.alarm_topic)
 
@@ -88,7 +88,7 @@ class ObservabilityStack(Stack):
             a.add_alarm_action(action)
         self.alarms = alarms
 
-        dash = cw.Dashboard(self, "Dashboard", dashboard_name="gridprint")
+        dash = cw.Dashboard(self, "Dashboard", dashboard_name=PREFIX)
         dash.add_widgets(
             cw.GraphWidget(title="Jobs", left=[m("JobsCreated"), m("JobsCompleted")],
                            right=[compute.queue.metric_approximate_number_of_messages_visible(),

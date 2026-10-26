@@ -17,7 +17,7 @@ from aws_cdk import custom_resources as cr
 from constructs import Construct
 
 from .api import ApiStack
-from .config import REPO, InfraConfig
+from .config import PREFIX, REPO, InfraConfig
 from .storage import StorageStack
 
 WEB_DIST = REPO / "web" / "dist"
@@ -72,7 +72,7 @@ class WebStack(Stack):
             scope="CLOUDFRONT",
             default_action=wafv2.CfnWebACL.DefaultActionProperty(allow={}),
             visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
-                cloud_watch_metrics_enabled=True, metric_name="gridprint-web", sampled_requests_enabled=True),
+                cloud_watch_metrics_enabled=True, metric_name=f"{PREFIX}-web", sampled_requests_enabled=True),
             rules=[
                 rate_rule("rate-all-per-ip", 0, cfg.waf_rate_limit_5min),
                 rate_rule("rate-job-create-per-ip", 1, cfg.waf_job_create_limit_5min,
@@ -121,7 +121,7 @@ class WebStack(Stack):
                     "MaxAgeSeconds": 3000,
                 }]},
             },
-            physical_resource_id=cr.PhysicalResourceId.of("gridprint-uploads-cors"),
+            physical_resource_id=cr.PhysicalResourceId.of(f"{PREFIX}-uploads-cors"),
         )
         cr.AwsCustomResource(
             self, "UploadsCors",

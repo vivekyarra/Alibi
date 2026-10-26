@@ -27,7 +27,7 @@ from constructs import Construct
 
 from .ai import AiStack
 from .auth import AuthStack
-from .config import REPO, InfraConfig
+from .config import PREFIX, REPO, InfraConfig
 from .data import DataStack
 from .runtime_env import WORKER_COMMAND, service_env
 from .storage import StorageStack
@@ -53,7 +53,7 @@ WORKER_CPU_UNITS = 7168
 WORKER_MEMORY_MIB = 13312
 JOB_VISIBILITY_TIMEOUT_S = 1800   # > limits.decode_timeout_s plus analysis time
 DLQ_MAX_RECEIVES = 3
-METRIC_NAMESPACE = "GRIDPRINT"
+METRIC_NAMESPACE = PREFIX.capitalize()
 ARM64_CONSTRAINT = "attribute:ecs.cpu-architecture == arm64"
 
 
@@ -113,7 +113,7 @@ class ComputeStack(Stack):
             user_data = ec2.UserData.for_linux()
 
         self.host_sg = ec2.SecurityGroup(self, "WorkerHostSg", vpc=vpc, allow_all_outbound=True,
-                                         description="GRIDPRINT worker hosts: no inbound")
+                                         description=f"{PREFIX} worker hosts: no inbound")
         launch_template = ec2.LaunchTemplate(
             self, "WorkerLaunchTemplate",
             instance_type=ec2.InstanceType(cfg.worker_instance_type),

@@ -6,6 +6,8 @@ from aws_cdk import RemovalPolicy, Stack
 from aws_cdk import aws_dynamodb as ddb
 from constructs import Construct
 
+from .config import PREFIX
+
 
 class DataStack(Stack):
     def __init__(self, scope: Construct, cid: str, **kwargs) -> None:
@@ -14,7 +16,7 @@ class DataStack(Stack):
         def table(name: str, pk: str, sk: tuple[str, ddb.AttributeType] | None = None) -> ddb.Table:
             return ddb.Table(
                 self, name,
-                table_name=f"gridprint-{name}",
+                table_name=f"{PREFIX}-{name}",
                 partition_key=ddb.Attribute(name=pk, type=ddb.AttributeType.STRING),
                 sort_key=ddb.Attribute(name=sk[0], type=sk[1]) if sk else None,
                 billing_mode=ddb.BillingMode.PAY_PER_REQUEST,

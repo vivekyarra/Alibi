@@ -7,7 +7,7 @@ from aws_cdk import aws_kms as kms
 from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
-from .config import InfraConfig
+from .config import PREFIX, InfraConfig
 
 
 class StorageStack(Stack):
@@ -15,7 +15,7 @@ class StorageStack(Stack):
         super().__init__(scope, cid, **kwargs)
         self.key = kms.Key(
             self, "DataKey",
-            alias="alias/gridprint-data",
+            alias=f"alias/{PREFIX}-data",
             enable_key_rotation=True,
             removal_policy=RemovalPolicy.DESTROY,   # `make destroy` removes everything (SPEC 10.6)
             pending_window=Duration.days(7),

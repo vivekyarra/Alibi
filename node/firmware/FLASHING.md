@@ -92,3 +92,8 @@ Topic `gridprint/<zone>/<node_id>`, QoS 1, one message per UTC second:
 
 `quality` is `gps` (PPS-disciplined timing) or `ntp` (SNTP fallback, larger timing uncertainty;
 `gps_lock` is then false). The ingest Lambda (`node/ingest/handler.py`) rejects any other value.
+
+## MQTT topic prefix
+
+The Node publishes to `<prefix>/<zone>/<node_id>`. Set "MQTT topic prefix" in `idf.py menuconfig` to the value
+of `aws.resource_prefix` in `config/default.yaml` (default `orchard`). `node/provision.py` prints the exact topic.
