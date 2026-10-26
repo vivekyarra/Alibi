@@ -1,0 +1,86 @@
+%% GRIDPRINT architecture (SPEC Part 5). Source of truth: SPEC.md.
+flowchart LR
+  subgraph Clients
+    CAP["GRIDPRINT Capture<br/>Android, Camera2<br/>video + sidecar JSON"]
+    WEB["GRIDPRINT Verify<br/>web app (React)"]
+    REV["Reviewer<br/>(login)"]
+  end
+
+  subgraph Edge["AWS edge"]
+    WAF["AWS WAF<br/>rate limits"]
+    CF["Amazon CloudFront"]
+    S3W["Amazon S3<br/>static web"]
+  end
+
+  subgraph Core["AWS core (region pinned in config)"]
+    COG["Amazon Cognito<br/>reviewer group"]
+    API["API: FastAPI<br/>ECS Fargate linux/arm64"]
+    S3U["Amazon S3 uploads<br/>SSE-KMS, presigned URLs"]
+    SQS["Amazon SQS<br/>jobs queue"]
+    DDB["Amazon DynamoDB<br/>Jobs, Reviews, TraceIndex"]
+    S3R["Amazon S3 results<br/>report PDF/JSON, overlay MP4,<br/>plots, agent trace"]
+    BR["Amazon Bedrock<br/>Claude planner (pinned model ID)"]
+    CW["Amazon CloudWatch<br/>logs, metrics, dashboards, alarms"]
+  end
+
+  subgraph Worker["Engine worker task: ECS on Graviton c8g, linux/arm64"]
+    direction TB
+    ORCH["Agent orchestrator<br/>planner: Bedrock or fallback<br/>policies, trace"]
+    MCPC["MCP client"]
+    MCPS["MCP server gridprint-engine<br/>(stdio)"]
+    subgraph ENG["GRIDPRINT Engine: OpenCV 5 + COOL"]
+      direction TB
+      S1["S1 ingest and timing<br/>PyAV PTS, VideoCapture"]
+      S2["S2 linear light<br/>cv2.LUT"]
+      S3["S3 readout time"]
+      S4["S4 motion<br/>goodFeaturesToTrack, calcOpticalFlowPyrLK,<br/>findHomography USAC_MAGSAC, DISOpticalFlow"]
+      S5["S5 foreground mask<br/>cv2.dnn.readNet PP-HumanSeg"]
+      S6["S6 light patches<br/>warpPerspective"]
+      S7["S7 row signal<br/>warpPerspective, float32"]
+      S8["S8 phase and frequency<br/>cv2.solve, cv2.dft"]
+      S9["S9 clock-bias removal"]
+      S10["S10 reference matching"]
+      S11["S11 continuity"]
+      S12["S12 face region EXPERIMENTAL<br/>FaceDetectorYN"]
+      S13["S13 verdict (deterministic)"]
+      S14["S14 band overlay<br/>applyColorMap, VideoWriter"]
+      S15["S15 report"]
+      S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9 --> S10 --> S11 --> S12 --> S13 --> S14 --> S15
+    end
+    ADP["Adapters<br/>StorageAdapter, GridLogAdapter, JobStoreAdapter"]
+    ORCH --> MCPC -->|tool calls| MCPS --> ENG
+    ENG --> ADP
+  end
+
+  subgraph Reference["Reference grid data"]
+    NODE["GRIDPRINT Node<br/>ESP32 + GPS PPS<br/>plug-in AC-to-AC adapter"]
+    IOT["AWS IoT Core<br/>MQTT over TLS"]
+    LAM["AWS Lambda<br/>ingest"]
+    GL["Amazon DynamoDB<br/>GridLog"]
+    NODE -->|1 sample per UTC second| IOT -->|topic rule| LAM --> GL
+  end
+
+  CAP -->|presigned upload| S3U
+  CAP --> API
+  WEB --> WAF --> CF --> S3W
+  CF --> API
+  REV --> COG
+  COG --> API
+  API --> S3U
+  API --> SQS
+  API <--> DDB
+  SQS --> ORCH
+  ORCH <-->|Converse with tools| BR
+  ADP --> S3U
+  ADP --> S3R
+  ADP --> DDB
+  ADP -->|read| GL
+  API --> S3R
+  API -->|live grid tile| GL
+
+  API -.-> CW
+  ORCH -.-> CW
+  LAM -.-> CW
+
+  X86["Benchmark only:<br/>x86 instance, linux/amd64 image,<br/>stock OpenCV 5 (config A)"]
+  X86 -. same engine code and inputs .- ENG

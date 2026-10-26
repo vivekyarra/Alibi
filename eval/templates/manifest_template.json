@@ -1,0 +1,49 @@
+{
+  "_comment": "EXAMPLE manifest for eval/DATASET.md. Both entries are fake placeholders marked EXAMPLE. Replace them with real entries. Do not keep EXAMPLE entries in data/dataset/manifest.json.",
+  "clips": [
+    {
+      "_example": "EXAMPLE - fake placeholder entry, not a real clip",
+      "clip_id": "S20990101-01-C001",
+      "file": "S20990101-01/S20990101-01-C001.mp4",
+      "sha256": "EXAMPLE0000000000000000000000000000000000000000000000000000000000",
+      "phone_model": "EXAMPLE-PHONE-A",
+      "app": "capture",
+      "lighting": "fluorescent",
+      "motion": "tripod",
+      "duration_s": 30,
+      "compression": "original",
+      "recorded_day": "2099-01-01",
+      "session_id": "S20990101-01",
+      "zone": "IN",
+      "gt_start_utc": "2099-01-01T00:00:00Z",
+      "gt_uncertainty_s": 0,
+      "has_sidecar": true,
+      "people_present": false,
+      "consent_ids": [],
+      "split": "calibration",
+      "class": "authentic-with-mains-light"
+    },
+    {
+      "_example": "EXAMPLE - fake placeholder entry, not a real clip",
+      "clip_id": "S20990101-01-C001__whatsapp",
+      "file": "S20990101-01/S20990101-01-C001__whatsapp.mp4",
+      "sha256": "EXAMPLE1111111111111111111111111111111111111111111111111111111111",
+      "phone_model": "EXAMPLE-PHONE-A",
+      "app": "capture",
+      "lighting": "fluorescent",
+      "motion": "tripod",
+      "duration_s": 30,
+      "compression": "whatsapp",
+      "recorded_day": "2099-01-01",
+      "session_id": "S20990101-01",
+      "zone": "IN",
+      "gt_start_utc": "2099-01-01T00:00:00Z",
+      "gt_uncertainty_s": 0,
+      "has_sidecar": false,
+      "people_present": true,
+      "consent_ids": ["EXAMPLE-CONSENT-001"],
+      "split": "calibration",
+      "class": "authentic-with-mains-light"
+    }
+  ]
+}
