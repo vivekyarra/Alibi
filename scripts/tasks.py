@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
 PY_DIRS = ["engine", "agent", "mcp_server", "api", "eval", "bench", "scripts", "node/ingest",
-           "calibration_rig", "infra"]
+           "calibration_rig", "infra", "capture-android"]
 
 
 def run(cmd: list[str], cwd: Path = ROOT, env: dict[str, str] | None = None) -> None:
