@@ -225,3 +225,32 @@ def test_dropped_frames_with_true_timestamps_not_flagged():
     res = continuity.check_continuity(t, phi, gaps, 4.0, THR["continuity"])
     assert not any(e.kind == "EDIT_CANDIDATE" for e in res.events)
     assert Reason.DROPPED_FRAMES_EXPLAINED in res.reasons
+
+
+# ---------------------------------------------------------------- S4 motion
+def test_motion_static_scene_with_moving_bands_is_static():
+    from gridprint_engine import motion
+
+    rng = np.random.default_rng(4)
+    import cv2
+
+    scene = cv2.GaussianBlur(rng.uniform(0.2, 0.8, (240, 320)).astype(np.float32), (0, 0), 2)
+    k = 12
+    rows = np.arange(240)[None, :, None]
+    gain = 1 + 0.1 * np.cos(2 * np.pi * (rows / 60.0 + np.arange(k)[:, None, None] / 3.0))
+    lin = (scene[None] * gain).astype(np.float32)
+    m = motion.analyze_motion(lin, 1.0, 1.5, 400, downscale_width=160)
+    assert m.static.shape == lin.shape
+    assert m.static_fraction > 0.9 and not m.high_motion and m.homs is None
+
+
+def test_motion_camera_pan_gives_homographies():
+    import cv2
+    from gridprint_engine import motion
+
+    rng = np.random.default_rng(5)
+    world = cv2.GaussianBlur(rng.uniform(0.2, 0.8, (300, 400)).astype(np.float32), (0, 0), 1.5)
+    lin = np.stack([world[20:260, 20 + 2 * i:340 + 2 * i] for i in range(10)]).astype(np.float32)
+    m = motion.analyze_motion(lin, 1.0, 1.5, 400, downscale_width=160)
+    assert m.homs is not None
+    assert abs(m.homs[0][0, 2] - m.homs[-1][0, 2]) > 10  # ~18 px pan over 9 frames

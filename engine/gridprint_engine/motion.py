@@ -83,8 +83,8 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
     cam_med = []
     for i in range(1, k):
         flow = dis.calc(gray8[i - 1], gray8[i], None)
-        H = step[i]
-        p = grid @ H.T
+        Hs = step[i]
+        p = grid @ Hs.T
         p = p[:, :2] / p[:, 2:3]
         hflow = (p - grid[:, :2]).reshape(h, w, 2)
         r = np.linalg.norm(flow - hflow, axis=2)

@@ -142,6 +142,34 @@ def _schedule(cfg: SimConfig) -> tuple[np.ndarray, np.ndarray, list[dict[str, An
     return cap_a, pts_a, events
 
 
+def grid_signal(cfg: SimConfig) -> GridSignal:
+    """Grid frequency covering the clip, insert sources and the reference margin (deterministic per seed)."""
+    span0 = int(np.floor(cfg.start_utc)) - cfg.ref_margin_s
+    span_n = int(cfg.duration_s) + 2 * cfg.ref_margin_s + 4
+    if cfg.enf_csv:
+        knots = load_track_csv(Path(cfg.enf_csv), span0, span_n)
+    else:
+        knots = ou_track(span_n, cfg.nominal_hz, np.random.default_rng(cfg.seed + 1000))
+    return GridSignal(span0, knots)
+
+
+def write_reference(cfg: SimConfig, out_dir: Path, name: str, grid: GridSignal | None = None) -> str:
+    """Write this clip's reference log to its own GridLog root (one per clip, so clips in one folder never
+    share or mix reference data). Returns the root relative to out_dir."""
+    from gridprint_engine.adapters import LocalGridLog
+
+    grid = grid or grid_signal(cfg)
+    rel = f"gridlog/{name}"
+    root = Path(out_dir) / rel
+    if root.exists():
+        import shutil
+
+        shutil.rmtree(root)
+    ref_t, ref_f = grid.reference_log()
+    LocalGridLog(root).write(cfg.zone, ref_t, ref_f, source="simulator", node=f"sim-{cfg.seed}")
+    return rel
+
+
 def simulate(cfg: SimConfig, out_dir: Path, name: str) -> dict[str, Any]:
     """Render one clip. Writes <name>.mp4, <name>.truth.json, optional <name>.sidecar.json and the
     reference log under out_dir/gridlog. Returns the ground-truth dict."""
@@ -150,14 +178,7 @@ def simulate(cfg: SimConfig, out_dir: Path, name: str) -> dict[str, Any]:
     rng = np.random.default_rng(cfg.seed)
     cap_t, pts, events = _schedule(cfg)
 
-    # ---- grid signal covering the clip, insert sources and the reference margin
-    span0 = int(np.floor(cfg.start_utc)) - cfg.ref_margin_s
-    span_n = int(cfg.duration_s) + 2 * cfg.ref_margin_s + 4
-    if cfg.enf_csv:
-        knots = load_track_csv(Path(cfg.enf_csv), span0, span_n)
-    else:
-        knots = ou_track(span_n, cfg.nominal_hz, np.random.default_rng(cfg.seed + 1000))
-    grid = GridSignal(span0, knots)
+    grid = grid_signal(cfg)
 
     # ---- scene in sensor coordinates
     hs, ws = (cfg.height, cfg.width) if cfg.sensor_axis == "rows" else (cfg.width, cfg.height)
@@ -243,16 +264,7 @@ def simulate(cfg: SimConfig, out_dir: Path, name: str) -> dict[str, Any]:
         tmp.replace(path)
 
     sha = hashlib.sha256(path.read_bytes()).hexdigest()
-    # reference log for the whole simulated span
-    ref_t, ref_f = grid.reference_log()
-    from gridprint_engine.adapters import LocalGridLog
-
-    gl_root = out_dir / "gridlog"
-    marker = gl_root / cfg.zone / f".written_{cfg.seed}_{int(cfg.start_utc)}"
-    if not marker.exists():
-        LocalGridLog(gl_root).write(cfg.zone, ref_t, ref_f, source="simulator", node=f"sim-{cfg.seed}")
-        marker.parent.mkdir(parents=True, exist_ok=True)
-        marker.write_text("1")
+    gl_rel = write_reference(cfg, out_dir, name, grid)
     clip_sec = np.arange(int(cfg.duration_s), dtype=np.int64)
     truth: dict[str, Any] = {
         "label": "SYNTHETIC",
@@ -270,7 +282,7 @@ def simulate(cfg: SimConfig, out_dir: Path, name: str) -> dict[str, Any]:
         "edits": events,
         "dropped": [list(d) for d in cfg.drop_frames],
         "enf_clip_hz": grid.freq(cfg.start_utc + clip_sec + 0.5).tolist(),
-        "gridlog_root": "gridlog",
+        "gridlog_root": gl_rel,
         "expected_class": _expected_class(cfg, events),
     }
     if cfg.sidecar:
