@@ -3,8 +3,8 @@ from __future__ import annotations
 import zipfile
 
 import numpy as np
-from gridprint_engine.adapters import LocalGridLog
 
+from gridprint_engine.adapters import LocalGridLog
 from node.ingest import import_neso as neso
 
 T = 1789948800  # 2026-09-21T00:00:00Z

@@ -10,8 +10,8 @@ import time
 from typing import Any
 
 import numpy as np
-from gridprint_engine.adapters import GridLogAdapter
 
+from gridprint_engine.adapters import GridLogAdapter
 from node.ingest.handler import DynamoWriter, day_key
 
 DAY_S = 86400

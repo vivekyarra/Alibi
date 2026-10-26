@@ -30,6 +30,7 @@ from datetime import UTC, datetime  # noqa: E402
 from typing import Any  # noqa: E402
 
 import numpy as np  # noqa: E402
+
 from gridprint_engine.adapters import GridLogAdapter, LocalGridLog  # noqa: E402
 
 SOURCE = "neso"
