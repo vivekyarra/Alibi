@@ -1,0 +1,57 @@
+# COOL benchmark configurations (SPEC Part 12). Equal vCPU and memory across A, B, C.
+#
+# Instance specs checked 2026-10-26 in the AWS docs page
+# https://docs.aws.amazon.com/ec2/latest/instancetypes/co.html ("Performance specifications" table):
+#   c7i.2xlarge : 8 vCPU, 16.00 GiB, Intel Xeon Sapphire Rapids, 4 cores x 2 threads per core
+#   c8g.2xlarge : 8 vCPU, 16.00 GiB, AWS Graviton4 Processor,     8 cores x 1 thread per core
+# Note: equal vCPU is not equal physical cores (A has 4 cores with SMT, B and C have 8 cores).
+# The report must state this.
+#
+# Prices are never written here. bench/prices.py fetches them (V12) into results/bench/<date>/prices.json.
+# Configuration C also pays the COOL Marketplace software fee per instance-hour; record it from the
+# Marketplace subscription page with date and URL (see bench/README.md). Never guess it.
+
+region: us-east-1
+runs_per_config: 5              # SPEC Part 12 step 4: at least 5 repeated runs
+inputs_file: bench/inputs.txt   # SPEC Part 12 step 1: pinned inputs with file hashes
+
+configs:
+  A:
+    description: x86 baseline, stock OpenCV 5 (amd64 image)
+    instance_type: c7i.2xlarge
+    vcpu: 8
+    memory_gib: 16
+    arch: amd64
+    ami: Amazon Linux 2023 x86_64 (latest public AMI from SSM /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64)
+    image_platform: linux/amd64
+    image_dockerfile: infra/docker/engine.Dockerfile
+    opencv: stock opencv-python-headless wheel pinned in uv.lock
+    cool: false
+  B:
+    description: Graviton4, stock OpenCV 5 (arm64 image)
+    instance_type: c8g.2xlarge
+    vcpu: 8
+    memory_gib: 16
+    arch: arm64
+    ami: Amazon Linux 2023 arm64 (latest public AMI from SSM /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64)
+    image_platform: linux/arm64
+    image_dockerfile: infra/docker/engine.Dockerfile
+    opencv: stock opencv-python-headless wheel pinned in uv.lock
+    cool: false
+  C:
+    description: Graviton4 with COOL (Cloud Optimized OpenCV for AWS Graviton4, Marketplace AMI)
+    instance_type: c8g.2xlarge
+    vcpu: 8
+    memory_gib: 16
+    arch: arm64
+    ami: COOL Graviton4 Marketplace AMI (Ubuntu 24.04), listing https://aws.amazon.com/marketplace/pp/prodview-fdvbfiewzuehs
+    image_platform: linux/arm64
+    image_dockerfile: infra/docker/engine.Dockerfile
+    # Same arm64 image as B; the host COOL install is mounted read-only and put first on PYTHONPATH.
+    # The exact site-packages path is NOT verified yet (bench/run_remote.md step C3 checks it).
+    host_mounts: [/opt/cool, /opt/ffmpeg]
+    env:
+      PYTHONPATH: /opt/cool/python_3.11/site-packages:/app:/app/engine
+      LD_LIBRARY_PATH: /opt/cool/cpp_sdk/lib
+    opencv: COOL build from the AMI
+    cool: true
