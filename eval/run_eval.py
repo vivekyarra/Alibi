@@ -59,12 +59,11 @@ def run_clip(item: dict[str, Any], data_dir: str, out_dir: str, planner_kind: st
     if threads:
         cv2.setNumThreads(threads)  # avoid oversubscription when several clips run in parallel
     sys.path[:0] = [str(REPO), str(REPO / "engine")]
-    from gridprint_engine.adapters import LocalGridLog, LocalJobStore
-    from gridprint_engine.config import settings
-
     from agent.fallback_planner import FallbackPlanner
     from agent.orchestrator import run_in_process
     from eval.replay import raw_from_job
+    from gridprint_engine.adapters import LocalGridLog, LocalJobStore
+    from gridprint_engine.config import settings
     from mcp_server.tools import EngineTools
 
     cfg = settings().default

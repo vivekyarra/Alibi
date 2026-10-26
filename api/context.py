@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from gridprint_engine.adapters import (
     GridLogAdapter,
     JobStoreAdapter,
@@ -42,9 +43,8 @@ class Context:
         store_root = base / "store"
         grid_root = Path(os.environ.get("GRIDPRINT_GRIDLOG", REPO / "data" / "gridlog"))
         if mode == "aws":  # pragma: no cover - needs AWS
-            from node.ingest.aws_gridlog import DynamoGridLog
-
             from api.aws_adapters import DynamoJobStore, S3Storage
+            from node.ingest.aws_gridlog import DynamoGridLog
 
             storage: StorageAdapter = S3Storage(os.environ["RESULTS_BUCKET"], os.environ["UPLOADS_BUCKET"],
                                                 cfg["aws"]["region"], cfg["limits"]["presign_expiry_s"])

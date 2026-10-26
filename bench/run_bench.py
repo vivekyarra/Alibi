@@ -56,6 +56,7 @@ def _peak_rss_mb() -> float | None:
 def run_config(name: str, runs: int, inputs_file: Path, out: Path) -> dict[str, Any]:
     sys.path[:0] = [str(REPO), str(REPO / "engine")]
     import cv2
+
     from gridprint_engine.adapters import LocalGridLog
     from gridprint_engine.pipeline import run_default
 
