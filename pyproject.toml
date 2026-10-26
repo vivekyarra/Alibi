@@ -26,7 +26,8 @@ agent = ["mcp==1.28.1"]
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["engine/gridprint_engine/tests", "agent/tests", "tests", "eval/tests", "api/tests", "node/ingest/tests", "calibration_rig/tests", "mcp_server/tests"]
+testpaths = ["engine/gridprint_engine/tests", "agent/tests", "tests", "eval/tests", "api/tests", "node/ingest/tests", "calibration_rig/tests", "mcp_server/tests", "capture-android/tests",
+             "infra/tests", "bench/tests"]
 pythonpath = [".", "engine"]
 
 [tool.ruff]
