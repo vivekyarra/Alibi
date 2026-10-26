@@ -34,8 +34,10 @@ def setup() -> None:
 
 def lint() -> None:
     dirs = [d for d in PY_DIRS if (ROOT / d).exists()]
-    run([PY, "-m", "ruff", "check", *dirs, "tests"])
-    run([PY, "-m", "mypy", "engine/gridprint_engine", "agent", "mcp_server", "api", "eval", "scripts"])
+    run([PY, "-m", "ruff", "check", *dirs, *(["tests"] if (ROOT / "tests").exists() else [])])
+    typed = [d for d in ["engine/gridprint_engine", "agent", "mcp_server", "api", "eval", "scripts"]
+             if (ROOT / d).exists() and any((ROOT / d).rglob("*.py"))]
+    run([PY, "-m", "mypy", *typed])
     run([PY, "scripts/claims_lint.py"])
     run([PY, "scripts/check_numbers_sourced.py"])
 

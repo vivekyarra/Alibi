@@ -27,7 +27,8 @@ Format: ID — date — decision — reason — alternatives considered.
 - `gap_factor = 1.5` is fixed by SPEC 8.2.5.
 - `timestamp_jitter_p95_limit_ms = 4.0`: larger than one 120 Hz half period would be needed to alias; 4 ms keeps phase error under 2.5 rad at 100 Hz before the jitter model is applied, and flags files where the jitter dominates.
 - `axis_ambiguity_margin = 1.2`: SNR ratio between the two image axes; under 20 % difference the choice is not reliable.
-- `analysis_max_width = 640`: frames are reduced only along the column axis (sensor rows are preserved), which reduces cost without changing row timing.
+- Analysis grid `analysis_max_height = 240`, `analysis_max_width = 320`: frames are block-averaged to at most this size. A block of `b` sensor rows is assigned the mean sensor row index of the block, so timing is kept. The averaging window of `b` rows spans `b × T_ro/(N−1)`; for 1080 rows, b = 5 and T_ro = 30 ms this is 0.14 ms, attenuating a 100 Hz flicker by sinc(π·100·0.00014) > 0.999. Only valid pixels enter a block mean.
+- DFT cross-check virtual grid rate `8 × f0` (800 Hz at 100 Hz): rows are averaged into virtual time bins; bins without rows (idle gaps) are zero with a mask.
 - Motion: `residual_limit_px = 1.0`, `high_motion_px = 1.5`, strict mode `0.5`.
 - Patches grid 8×8, `min_static_fraction = 0.8`, `min_mean_linear = 0.01`, `max_saturation_fraction = 0.05`.
 - Row signal: `window_frames = 15`, `min_pixels_per_row = 4`, `detrend_order = 2`.
@@ -62,3 +63,24 @@ Format: ID — date — decision — reason — alternatives considered.
 ## D-014 — 2026-10-26 — Change-point detection in S11
 - Decision: robust z-score of first differences of the phase residual at each frame boundary (median/MAD scale). Significance = |z|. Simplest detector that localizes a single phase jump at the frame boundary where it occurs.
 - Alternatives: PELT / binary segmentation (more parameters, same result for step changes).
+
+## D-015 — 2026-10-26 — Flicker-compensated temporal mean in S7/S8
+- Problem found on synthetic data: when the W-frame window does not cancel the flicker (dropped frames, gaps, or a frame rate whose alias does not divide W), the temporal mean L̄ keeps part of the flicker. That residual is itself a sinusoid across rows and biases the per-frame phase (0.41 rad at a 5-frame gap in the first test).
+- Decision: after the first fit, model the flicker gain per row, compute its W-frame mean with the same window, and correct the row signal: m' = (1 + m)·ḡ_W − 1. Two passes, then the final `cv2.solve` fit. This is part of S7–S8; the method (phase of the row flicker) is unchanged.
+- Alternatives: longer windows (bias stays at gaps); temporal median (does not remove a periodic term).
+
+## D-016 — 2026-10-26 — Readout direction from physical plausibility
+- Per-frame fits cannot tell the readout direction. The wrong direction gives a track offset from f0 by the flicker alias rate (|2f0 − fps·round(2f0/fps)| at the frame level, 10 Hz for 100 Hz at 30 fps). Orientation candidates are ranked first by plausibility (|mean flicker − f0| ≤ 2 Hz, i.e. grid deviation ≤ 1 Hz) and then by band SNR.
+
+## D-017 — 2026-10-26 — Calibration LED frequency 200 Hz
+- The Capture exposure is 1 ms (D-012). A 1000 Hz LED completes one cycle inside one exposure, so its bands average out. At 200 Hz the period is 5 ms, the exposure attenuation is sinc(200 × 0.001) ≈ 0.94, and a 25 ms readout shows about 5 bands per frame ("several bands", SPEC 10.5).
+- Alternatives: shorter exposure for calibration clips only (extra Capture mode, not in SPEC).
+
+## D-018 — 2026-10-26 — Motion analysis grid and static-camera rule
+- Optical flow runs on the analysis grid reduced to at most 160 px width (`engine.motion.downscale_width`), DIS preset ULTRAFAST. Motion levels are reported in analysis-grid pixels.
+- Homographies are applied only when the median per-frame camera displacement exceeds `camera_static_px = 0.05` px and the accumulated displacement exceeds 1 px. Chained per-frame homographies drift on a fixed camera; warping a fixed scene only adds interpolation error.
+
+## D-019 — 2026-10-26 — Target maximum false-CONTRADICTED rate: 1 % (written before any test data)
+- SPEC 11.4.2 requires this target before test data is examined. No test split has been run when this entry is written.
+- Value: 0.01 on authentic clips, in `config/default.yaml` → `evaluation.target_false_contradicted_rate`. The team must confirm or change it before the real-data calibration (H5); a change after the test run must be logged here with a reason.
+- Calibration also requires zero VERIFIED results with a wrong time (|error| > 2 s) on the calibration split.
