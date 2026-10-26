@@ -19,14 +19,15 @@ limits:
   results_retention_days: 30
 engine:
   version: 0.1.0
-  analysis_max_width: 640       # frames are downscaled along the non-row axis only (rows keep sensor index)
+  analysis_max_height: 240      # analysis grid; each sample keeps the mean sensor row index of its bin
+  analysis_max_width: 320
   timestamp_jitter_p95_limit_ms: 4.0
   gap_factor: 1.5
   axis_ambiguity_margin: 1.2    # SNR ratio below which axis is ambiguous
   saturation_cutoff: 0.98       # code value (0..1) at/above which a pixel is invalid
   noise_floor: 0.02             # code value (0..1) at/below which a pixel is invalid
   readout_min_s: 0.004
-  readout_search_steps: 120
+  readout_search_steps: 40
   readout_estimated_min_coherence: 0.5
   motion:
     downscale_width: 320
@@ -47,7 +48,7 @@ engine:
     window_s: 4.0
     hop_s: 1.0
     estimator_agreement_hz: 0.01
-    dft_virtual_rate_factor: 1   # virtual grid sample period = row time
+    dft_virtual_rate_factor: 8   # virtual time grid rate = 8 x f0
   match:
     min_search_window_s: 600
     sidecar_window_s: 3600
@@ -58,9 +59,14 @@ engine:
     claim_min_tolerance_s: 60
   continuity:
     smooth_window_s: 4.0
+  segmentation:
+    model_path: models/human_segmentation_pphumanseg_2023mar.onnx
+    input_size: [192, 192]
+    every_n_frames: 10
   facecheck:
     model_path: models/face_detection_yunet_2023mar.onnx
     score_threshold: 0.8
+    every_n_frames: 5
   overlay:
     alpha: 0.6
   compression:
