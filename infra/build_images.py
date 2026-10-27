@@ -196,7 +196,7 @@ def build_ec2(tag: str, account: str) -> dict[str, str]:
     for _ in range(6):
         try:
             inst = ec2.run_instances(
-                ImageId=ami["Parameter"]["Value"], InstanceType="c8g.xlarge", MinCount=1, MaxCount=1, UserData=ud,
+                ImageId=ami["Parameter"]["Value"], InstanceType="c8g.large", MinCount=1, MaxCount=1, UserData=ud,
                 IamInstanceProfile={"Name": profile}, InstanceInitiatedShutdownBehavior="terminate",
                 BlockDeviceMappings=[{"DeviceName": "/dev/xvda", "Ebs": {"VolumeSize": 40, "VolumeType": "gp3"}}],
                 MetadataOptions={"HttpTokens": "required"},
