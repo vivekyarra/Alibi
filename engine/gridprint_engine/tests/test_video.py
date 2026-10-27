@@ -13,13 +13,13 @@ from pathlib import Path
 import numpy as np
 import pytest
 import yaml
+
+from eval.simulator.render import SimConfig, simulate
 from gridprint_engine import io
 from gridprint_engine.adapters import LocalGridLog
 from gridprint_engine.config import CONFIG_DIR, load_settings
 from gridprint_engine.pipeline import Job, run_default
 from gridprint_engine.schemas import Reason, Verdict
-
-from eval.simulator.render import SimConfig, simulate
 
 SMALL = dict(width=160, height=120, ref_margin_s=300, flicker_depth=0.1, noise_sigma=0.8)
 TEST_THR = {"signal": {"snr_absent_db": 3.0, "snr_weak_db": 6.0},

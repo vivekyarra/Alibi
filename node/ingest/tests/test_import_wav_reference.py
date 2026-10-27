@@ -4,8 +4,8 @@ import wave
 from pathlib import Path
 
 import numpy as np
-from gridprint_engine.adapters import LocalGridLog
 
+from gridprint_engine.adapters import LocalGridLog
 from node.ingest import import_wav_reference as iw
 
 
