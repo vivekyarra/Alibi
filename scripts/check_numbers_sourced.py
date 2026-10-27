@@ -24,7 +24,7 @@ ALLOWED = [
     re.compile(r"\b(?:OpenCV|Python|WCAG|ES|Graviton|python|opencv)\s?\d+(?:\.\d+)*\b"),
     re.compile(r"\b(?:c8g|c7g|c7i|m7g|m7i|c8i)\.\w+\b"),
     re.compile(r"\b[MHVRDSB]\d+(?:\.\d+)*\b"),              # milestone/rule/stage ids
-    re.compile(r"\b(?:Part|Section|§)\s?\d+(?:\.\d+)*\b"),
+    re.compile(r"\b(?:Part|Section|§|SPEC)\s?\d+(?:\.\d+)*\b"),
     re.compile(r"\b\d:\d{2}(?:[–-]\d:\d{2})?\b"),             # video timecodes
     re.compile(r"`[^`]*`"),                                   # code spans
     re.compile(r"\]\([^)]*\)"),                               # link targets

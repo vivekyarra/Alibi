@@ -23,6 +23,7 @@ DEFAULT_COOL_HOST_PATHS = ("/opt/cool", "/opt/ffmpeg")
 DEFAULT_COOL_PYTHONPATH = "/opt/cool/python_3.11/site-packages"
 DEFAULT_COOL_LD_LIBRARY_PATH = "/opt/cool/cpp_sdk/lib"
 DEFAULT_NODE_ZONES = ("IN",)
+DEFAULT_RESOURCE_PREFIX = "gridprint"
 
 
 def upload_retention_days(hours: float) -> int:
@@ -48,6 +49,8 @@ class InfraConfig:
     node_zones: tuple[str, ...]
     cool_pythonpath: str
     cool_ld_library_path: str
+    resource_prefix: str = DEFAULT_RESOURCE_PREFIX
+    bedrock_role_arn: str | None = None
     cool_host_paths: tuple[str, ...] = field(default=DEFAULT_COOL_HOST_PATHS)
 
     @property
@@ -65,7 +68,8 @@ def load(config_dir: Path = CONFIG_DIR) -> InfraConfig:
     return InfraConfig(
         region=aws["region"],
         profile=aws["profile"],
-        bedrock_model_id=raw["bedrock"]["model_id"],
+        # in-account Claude model kept for the AI stack policy (planner model may live in another account, D-026)
+        bedrock_model_id=raw["bedrock"].get("in_account_model_id", raw["bedrock"]["model_id"]),
         upload_retention_hours=float(limits["upload_retention_hours"]),
         results_retention_days=int(limits["results_retention_days"]),
         presign_expiry_s=int(limits["presign_expiry_s"]),
@@ -78,6 +82,8 @@ def load(config_dir: Path = CONFIG_DIR) -> InfraConfig:
         waf_job_create_limit_5min=int(aws.get("waf_job_create_limit_5min",
                                               DEFAULT_WAF_JOB_CREATE_LIMIT_5MIN)),
         node_zones=tuple(grid.get("node_zones", DEFAULT_NODE_ZONES)),
+        resource_prefix=str(aws.get("resource_prefix", DEFAULT_RESOURCE_PREFIX)),
+        bedrock_role_arn=(raw.get("bedrock") or {}).get("role_arn"),
         cool_pythonpath=str(aws.get("cool_pythonpath", DEFAULT_COOL_PYTHONPATH)),
         cool_ld_library_path=str(aws.get("cool_ld_library_path", DEFAULT_COOL_LD_LIBRARY_PATH)),
     )
@@ -92,3 +98,15 @@ def foundation_model_id(model_or_profile_id: str) -> str:
     if rest and head in {"global", "us", "eu", "apac", "jp", "au", "ca", "us-gov"}:
         return rest
     return model_or_profile_id
+
+
+# Prefix for every physical resource name (stacks, tables, IoT names, dashboard, KMS alias); `aws.resource_prefix`.
+PREFIX = load().resource_prefix
+
+
+def prebuilt_image(key: str) -> str | None:
+    """ECR image URI built by infra/build_images.py (no local Docker needed), or None to build locally."""
+    import json
+
+    f = REPO / "infra" / "image_uris.json"
+    return json.loads(f.read_text()).get(key) if f.exists() else None

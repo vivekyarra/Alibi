@@ -148,7 +148,7 @@ def test_policy_blocks_final_report_for_contradicted_and_analysis_after_verdict(
     a, note = policies.enforce(Action("render_report", {"final": True}, "x"), st)
     assert a.tool == "render_report" and a.args["final"] is False and note
     a, _ = policies.enforce(Action("extract_flicker", {}, "x"), st)
-    assert a.tool is None
+    assert a.tool == "render_report" and a.args["final"] is False  # no analysis after the verdict
 
 
 def test_policy_strips_threshold_arguments():
@@ -198,3 +198,68 @@ def test_bedrock_planner_is_policed():
 def test_tool_config_lists_all_tools():
     names = {t["toolSpec"]["name"] for t in tool_config()["tools"]}
     assert policies.ALL_TOOLS <= names
+
+
+class FailingProbeTools(ScriptedTools):
+    """probe_video fails once, then succeeds."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.probe_failed = False
+
+    async def call(self, tool: str, args: dict[str, Any]) -> dict[str, Any]:
+        if tool == "probe_video" and not self.probe_failed:
+            self.calls.append((tool, args))
+            self.probe_failed = True
+            raise RuntimeError("Unable to allocate memory")
+        return await super().call(tool, args)
+
+
+def test_llm_guard_replaces_repeated_failures_and_out_of_order_calls():
+    # an LLM that ignores errors: always asks for motion analysis
+    client = FakeBedrock([{"tool": "analyze_motion", "input": {"strictness": "normal"}}])
+    t = FailingProbeTools()
+    trace, _ = run(t, BedrockPlanner(client, "test-model"))
+    names = tools_called(t)
+    assert names[0] == "probe_video" and names[1] == "compute_verdict"  # guard: unreadable input ends the job
+    assert any("guard:" in s.decision_reason for s in trace.steps)
+    assert names.count("analyze_motion") <= 2  # the repeated call is not retried endlessly
+    assert names[-1] == "render_report"  # the job always ends with a report
+
+
+def test_llm_guard_blocks_premature_overrides_and_identical_repeats():
+    script = [{"tool": "probe_video"}, {"tool": "estimate_readout", "input": {"method": "auto"}},
+              {"tool": "analyze_motion", "input": {"strictness": "normal"}},
+              {"tool": "propose_patches", "input": {"strategy": "top"}},
+              {"tool": "extract_flicker", "input": {"nominal_hz": 60}},
+              {"tool": "propose_patches", "input": {"strategy": "top"}}]
+    client = FakeBedrock(script)
+    t = ScriptedTools()
+    trace, _ = run(t, BedrockPlanner(client, "test-model"))
+    ex = [a for n, a in t.calls if n == "extract_flicker"]
+    assert ex and "nominal_hz" not in ex[0]  # the first extraction used the zone default
+    assert sum(1 for n, a in t.calls if n == "propose_patches" and a.get("strategy") == "top") <= 1
+    assert any("frequency or axis override" in s.decision_reason for s in trace.steps)
+    assert t.calls[-1][0] == "render_report"
+
+
+def test_policy_after_verdict_finishes_with_report():
+    st = PolicyState(max_iterations=6, max_tool_calls=30, verdict_done=True, verdict="INCONCLUSIVE")
+    a, note = policies.enforce(Action("compute_verdict", {}, "again"), st)
+    assert a.tool == "render_report" and a.args["final"] is True and note
+    st2 = PolicyState(max_iterations=6, max_tool_calls=30, verdict_done=True, verdict="CONTRADICTED")
+    a, _ = policies.enforce(Action("match_reference", {}, "late"), st2)
+    assert a.tool == "request_human_review"
+
+
+def test_policy_drops_invalid_argument_values():
+    st = PolicyState(max_iterations=6, max_tool_calls=30)
+    a, note = policies.enforce(Action("match_reference", {"track_id": "t1", "zone": "global"}, "x"), st)
+    assert a.args == {"track_id": "t1"} and note
+    a, _ = policies.enforce(Action("extract_flicker", {"nominal_hz": 55, "axis": "diagonal"}, "x"), st)
+    assert a.args == {}
+    a, _ = policies.enforce(Action("match_reference", {"zone": "SIM50"}, "x"), st)
+    assert a.args == {"zone": "SIM50"}
+    st.verdict_done, st.verdict = True, "INCONCLUSIVE"
+    a, _ = policies.enforce(Action("render", {}, "x"), st)
+    assert a.tool == "render_report"

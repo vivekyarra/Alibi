@@ -32,6 +32,13 @@ class EngineTools:
     @classmethod
     def from_env(cls) -> EngineTools:
         work = Path(os.environ.get("GRIDPRINT_WORKDIR", REPO / "work"))
+        if os.environ.get("GRIDPRINT_MODE") == "aws":  # same adapters as the API and worker (SPEC 5)
+            from api.aws_adapters import DynamoJobStore
+            from node.ingest.aws_gridlog import DynamoGridLog
+
+            region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
+            return cls(work, DynamoGridLog(table_name=os.environ["GRIDLOG_TABLE"], region=region),
+                       DynamoJobStore(region))
         grid = Path(os.environ.get("GRIDPRINT_GRIDLOG", REPO / "data" / "gridlog"))
         store = Path(os.environ.get("GRIDPRINT_STORE", REPO / "work" / "store"))
         return cls(work, LocalGridLog(grid), LocalJobStore(store))

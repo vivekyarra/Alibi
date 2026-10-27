@@ -3,7 +3,7 @@
 # `source: human` inputs are recorded by people (H4, H5, H7) and placed at the listed path.
 cases:
   - id: capture-verified
-    title: "Capture clip with sensor sidecar (SYNTHETIC stand-in until H5)"
+    title: "Capture clip with sensor sidecar (SYNTHETIC test clip)"
     description: "Expected VERIFIED with an estimated recording time."
     expected_verdict: VERIFIED
     source: synthetic
@@ -15,12 +15,20 @@ cases:
     expected_verdict: CONTRADICTED
     source: synthetic
     video: data/demo/cut-1s.mp4
+    claim:
+      claimed_zone: SIM50
+      claimed_time_utc: "2026-01-20T10:00:00Z"
+      claimed_time_tolerance_s: 300
   - id: insertion
     title: "Insertion from another time (SYNTHETIC)"
     description: "Expected CONTRADICTED with SEGMENT_OFFSET_INCONSISTENT."
     expected_verdict: CONTRADICTED
     source: synthetic
     video: data/demo/insertion.mp4
+    claim:
+      claimed_zone: SIM50
+      claimed_time_utc: "2026-01-20T10:00:00Z"
+      claimed_time_tolerance_s: 300
   - id: dropped-frames
     title: "Dropped frames with original timestamps (SYNTHETIC)"
     description: "Expected VERIFIED with DROPPED_FRAMES_EXPLAINED."
@@ -29,13 +37,13 @@ cases:
     video: data/demo/dropped-frames.mp4
     sidecar: data/demo/dropped-frames.sidecar.json
   - id: generated-room
-    title: "Synthetic room video from a video generator (H5)"
+    title: "Synthetic room video from a video generator"
     description: "Expected INCONCLUSIVE (SIGNAL_ABSENT). A missing signal alone does not mean fake."
     expected_verdict: INCONCLUSIVE
     source: human
     video: data/demo/generated-room.mp4
   - id: daylight-only
-    title: "Daylight-only room (SYNTHETIC stand-in until H5)"
+    title: "Daylight-only room (SYNTHETIC test clip)"
     description: "Expected INCONCLUSIVE."
     expected_verdict: INCONCLUSIVE
     source: synthetic
@@ -47,7 +55,7 @@ cases:
     source: synthetic
     video: data/demo/agent-recovery.mp4
   - id: face-composite
-    title: "Face composite of a consenting team member (EXPERIMENTAL, H7)"
+    title: "Face composite of a consenting team member (EXPERIMENTAL)"
     description: "Shows the experimental face-region check. Never the only basis for CONTRADICTED."
     expected_verdict: CONTRADICTED
     source: human

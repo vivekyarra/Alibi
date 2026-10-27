@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 import json
 import shutil
+import time
+import uuid
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from pathlib import Path
@@ -140,12 +142,23 @@ class LocalJobStore(JobStoreAdapter):
     def put(self, table: str, key: str, item: dict[str, Any]) -> None:
         p = self._p(table, key)
         p.parent.mkdir(parents=True, exist_ok=True)
-        tmp = p.with_suffix(".tmp")
+        tmp = p.with_suffix(f".{uuid.uuid4().hex[:8]}.tmp")
         tmp.write_text(json.dumps(item, default=str, indent=1))
+        for attempt in range(50):  # Windows refuses replace while a reader holds the file open
+            try:
+                tmp.replace(p)
+                return
+            except PermissionError:
+                time.sleep(0.02 * (attempt + 1))
         tmp.replace(p)
 
     def get(self, table: str, key: str) -> dict[str, Any] | None:
         p = self._p(table, key)
+        for attempt in range(50):
+            try:
+                return json.loads(p.read_text()) if p.exists() else None
+            except (PermissionError, json.JSONDecodeError):
+                time.sleep(0.02 * (attempt + 1))
         return json.loads(p.read_text()) if p.exists() else None
 
     def scan(self, table: str) -> list[dict[str, Any]]:

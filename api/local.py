@@ -10,7 +10,6 @@ import secrets
 from pathlib import Path
 
 import uvicorn
-from fastapi.staticfiles import StaticFiles
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -24,10 +23,7 @@ def main() -> None:
         os.environ["GRIDPRINT_REVIEWER_TOKEN"] = tok_file.read_text().strip()
     from api.app import create_app
 
-    app = create_app()
-    dist = REPO / "web" / "dist"
-    if dist.exists():
-        app.mount("/", StaticFiles(directory=dist, html=True), name="web")
+    app = create_app()  # also serves web/dist when it has been built
     print(f"GRIDPRINT local: http://127.0.0.1:8000  (reviewer token in {tok_file})")
     uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("PORT", "8000")))
 

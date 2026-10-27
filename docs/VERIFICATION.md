@@ -25,14 +25,17 @@ Each entry: source URL or command, result, date, decision. Status is one of `VER
 - Facts from these sources: distributed as an AWS Marketplace AMI (Ubuntu 24.04 LTS, precompiled OpenCV based on OpenCV 5, Arm KleidiCV optimizations), separate listings for Graviton3 and Graviton4.
 - NOT yet verified (direct page fetch failed: network/Cloudflare): exact version string, instance-type list, license/EULA text, accelerated function list, runtime proof method.
 - Runtime proof plan (implemented in `bench/cool_evidence.py`): `cv2.getBuildInformation()` text, `cv2.__file__` and loaded shared-library paths from `/proc/self/maps`, and a `perf record` capture of the hot stages, all saved under `results/bench/<date>/evidence/`.
+- Additional facts (infra agent, Marketplace listing fetched 2026-10-26): Graviton4 listing says Ubuntu 24.04 LTS, "Built on OpenCV 5.0", Arm KleidiCV, compatible families c8g/m8g/r8g, Python venvs under `/opt/cool/venvs/` (3.10, 3.11, 3.12), C++ SDK under `/opt/cool/cpp_sdk/lib`, hourly software fee, 7-day trial. A separate COOL Docker listing exists (not opened). A Graviton5 listing targets c9g/m9g with OpenCV 5.1.0 (not used).
+- Still unverified: whether COOL libraries load inside the Debian-based `python:3.11-slim` container (`bench/run_remote.md` step C3 tests this and gives a native fallback).
 - Needs H1 (Marketplace subscription). Until then the COOL award is not claimed.
 
 ## V6 — Claude with tool use on Amazon Bedrock — BLOCKED-HUMAN (partial)
 - Sources: AWS ML blog "Access Anthropic Claude models in India on Amazon Bedrock with global cross-Region inference" (`https://aws.amazon.com/blogs/machine-learning/access-anthropic-claude-models-in-india-on-amazon-bedrock-with-global-cross-region-inference`) names the global inference profile ID `global.anthropic.claude-sonnet-4-6`. Anthropic docs `https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock` state newer models need an inference profile ID and that tool use is supported through the Converse/Messages APIs.
-- Not verified: availability for the account in `us-east-1` (no `gridprint` AWS profile exists on this machine: `aws configure list-profiles` has no `gridprint`).
+- 2026-10-26, profile `gridprint` (account 643700104680, us-east-1): `aws bedrock list-inference-profiles` lists Claude profiles (e.g. `us.anthropic.claude-sonnet-5`, `us.anthropic.claude-haiku-4-5-20251001-v1:0`), but `converse` returns `ValidationException: Operation not allowed` (us-east-1, us-west-2) and `AccessDeniedException: Your account is currently being verified` (eu-central-1); `get-foundation-model-availability` reports `authorizationStatus: NOT_AUTHORIZED`. The second account (profile `vivek`) returns `INVALID_PAYMENT_INSTRUMENT`.
+- Status: FALLBACK applied for now (deterministic planner, documented in D-021). Re-check after AWS completes the account verification and model access is granted (H1).
 - Decision: `config/default.yaml` holds `bedrock.model_id: global.anthropic.claude-sonnet-4-6`, `bedrock.enabled: false`. The deterministic fallback planner runs until H1 completes and `scripts/verify_aws.py` confirms the model with `bedrock:ListInferenceProfiles` and a one-call Converse test.
 
-## V7 — Android Camera2 capabilities on test devices — BLOCKED-HUMAN
+## V7 — Android Camera2 capabilities on test devices — BLOCKED-HUMAN (method ready)
 - Keys exist in the Android API reference (`CaptureRequest.CONTROL_AE_MODE`, `CONTROL_AE_ANTIBANDING_MODE_OFF`, `SENSOR_EXPOSURE_TIME`, `CaptureResult.SENSOR_ROLLING_SHUTTER_SKEW`, `SENSOR_TIMESTAMP`, `CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE`). Per-device support must be checked on hardware. The Capture app writes a capability report on first run (H4). Fallback: calibration-rig readout (Part 10.5).
 
 ## V8 — Public grid-frequency data — VERIFIED (partial)
@@ -52,8 +55,8 @@ Each entry: source URL or command, result, date, decision. Status is one of `VER
 ## V11 — GPS PPS with ESP32 and MQTT/TLS to IoT Core — BLOCKED-HUMAN
 - Needs hardware (H2). Firmware uses ESP-IDF GPIO interrupt + `esp_timer_get_time()` for PPS and zero-cross capture, and `esp-mqtt` with TLS client certificates. Validation: `node/selftest.md` checklist + `node/ingest/data_quality.py`.
 
-## V12 — On-demand prices — BLOCKED-HUMAN
-- Needs AWS account (H1). `bench/prices.py` reads prices through the AWS Price List API (`pricing:GetProducts`, endpoint region `us-east-1`) and stores the raw response with date in `results/bench/<date>/prices.json`. No price is written by hand.
+## V12 — On-demand prices — OPEN
+- The AWS account exists (H1). Prices are fetched by `bench/prices.py` when the benchmark runs. `bench/prices.py` reads prices through the AWS Price List API (`pricing:GetProducts`, endpoint region `us-east-1`) and stores the raw response with date in `results/bench/<date>/prices.json`. No price is written by hand.
 
 ## Extra — CI action versions — VERIFIED (2026-10-26)
 - Command: `curl https://api.github.com/repos/<repo>/releases/latest` → `actions/checkout v7.0.1`, `astral-sh/setup-uv v10.3.2`, `actions/setup-node v7.1.0`, `aquasecurity/trivy-action v0.36.0`. Pinned in `.github/workflows/ci.yml`.

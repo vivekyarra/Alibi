@@ -34,7 +34,8 @@ def test_simulated_publisher_end_to_end(tmp_path):
     rows = data_quality.read_local_rows(tmp_path, "SIM50", T, T + 599)
     assert {r["source"] for r in rows} == {"sim"}
     rep = data_quality.analyze(rows, T, T + 599, 50.0)
-    assert rep["coverage_pct"] == 100.0 and rep["gps_lock_pct"] == 100.0 and rep["gaps"] == []
+    # simulated rows are labelled "sim", so they never count as GPS-locked
+    assert rep["coverage_pct"] == 100.0 and rep["gps_lock_pct"] == 0.0 and rep["gaps"] == []
 
 
 def test_invalid_messages_are_not_written(tmp_path):

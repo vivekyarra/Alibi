@@ -3,11 +3,18 @@
 aws:
   profile: gridprint
   region: us-east-1            # DECISIONS D-005
+  resource_prefix: orchard     # neutral name for all AWS resources in the deployment account (D-021)
+  worker_instance_type: c8g.xlarge   # 4 vCPU Graviton4; fits the account on-demand vCPU quota (D-024)
+  worker_max_instances: 1
 bedrock:
-  enabled: false               # turned on after V6 is verified with the gridprint profile (H1)
-  # Inference-profile ID as listed by AWS (see docs/VERIFICATION.md V6). Re-check with
-  # `aws bedrock list-inference-profiles --profile gridprint` before enabling.
-  model_id: global.anthropic.claude-sonnet-4-6
+  enabled: true
+  # Amazon Nova Lite through a role in the model account (D-026). Anthropic models on Bedrock need a
+  # Marketplace payment method that neither account has yet; Nova is billed directly by AWS.
+  model_id: us.amazon.nova-lite-v1:0
+  in_account_model_id: global.anthropic.claude-sonnet-4-6   # AI stack policy; usable once Claude access is granted
+  region: us-east-1
+  role_arn: arn:aws:iam::768669378827:role/orchard-planner
+  external_id: orchard-planner
   max_tokens: 1024
 limits:
   max_file_bytes: 524288000    # 500 MiB
@@ -59,7 +66,8 @@ engine:
     segment_offset_tolerance_s: 3
     claim_min_tolerance_s: 60
   continuity:
-    smooth_window_s: 4.0
+    jump_window_s: 1.0           # frames on each side of a boundary for the two line fits (D-023)
+    min_frame_snr: 1.0            # linear; frames below 0 dB fit SNR are left out of the phase series (D-022)
   segmentation:
     model_path: models/human_segmentation_pphumanseg_2023mar.onnx
     input_size: [192, 192]
@@ -75,7 +83,7 @@ engine:
 agent:
   max_iterations: 6
   max_tool_calls: 30
-  planner: fallback             # fallback | bedrock
+  planner: bedrock              # bedrock | fallback; fallback also covers any Bedrock error per step
 evaluation:
   target_false_contradicted_rate: 0.01   # DECISIONS D-019 (written before any test data was examined)
 grid:

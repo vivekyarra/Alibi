@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aws_cdk import Duration, IgnoreMode, Stack
+from aws_cdk import CfnOutput, Duration, IgnoreMode, Stack
+from aws_cdk import aws_apigatewayv2 as apigw
+from aws_cdk import aws_apigatewayv2_integrations as apigw_int
 from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_ecr_assets as ecr_assets
 from aws_cdk import aws_ecs as ecs
@@ -18,8 +20,8 @@ from aws_cdk import aws_logs as logs
 from constructs import Construct
 
 from .auth import AuthStack
-from .compute import API_CONTEXT, METRIC_NAMESPACE, ComputeStack
-from .config import REPO, InfraConfig
+from .compute import API_CONTEXT, METRIC_NAMESPACE, ComputeStack, container_image
+from .config import REPO, InfraConfig, prebuilt_image
 from .data import DataStack
 from .runtime_env import API_COMMAND, service_env
 from .storage import StorageStack
@@ -31,7 +33,8 @@ class ApiStack(Stack):
     def __init__(self, scope: Construct, cid: str, *, cfg: InfraConfig, vpc: ec2.IVpc, storage: StorageStack,
                  data: DataStack, compute: ComputeStack, auth: AuthStack, **kwargs) -> None:
         super().__init__(scope, cid, **kwargs)
-        image = ecr_assets.DockerImageAsset(
+        prebuilt = prebuilt_image("api_arm64")
+        image = None if prebuilt else ecr_assets.DockerImageAsset(
             self, "ApiImageArm64",
             directory=str(REPO),
             file=str(Path("infra") / "docker" / "api.Dockerfile"),
@@ -53,7 +56,7 @@ class ApiStack(Stack):
                                                  operating_system_family=ecs.OperatingSystemFamily.LINUX),
             circuit_breaker=ecs.DeploymentCircuitBreaker(rollback=True),
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
-                image=ecs.ContainerImage.from_docker_image_asset(image),
+                image=container_image(self, "ApiRepo", prebuilt, image),
                 container_port=API_PORT,
                 log_driver=ecs.LogDrivers.aws_logs(stream_prefix="api", log_group=self.log_group,
                                                    mode=ecs.AwsLogDriverMode.NON_BLOCKING),
@@ -69,6 +72,26 @@ class ApiStack(Stack):
         # Only clients inside the VPC (CloudFront VPC origin ENIs) can reach the internal ALB.
         self.service.load_balancer.connections.allow_from(ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.tcp(80),
                                                           "CloudFront VPC origin inside the VPC")
+
+        # Public HTTPS entry point without CloudFront (D-025): API Gateway HTTP API → VPC link → internal ALB.
+        # The VPC link ENIs sit inside the VPC, so the CIDR rule above admits them. Stage throttling limits
+        # abuse of anonymous upload creation (WAF cannot attach to HTTP APIs).
+        # The VPC's default security group has no rules (CDK hardening), so the VPC link gets its own group with
+        # egress to the ALB only.
+        link_sg = ec2.SecurityGroup(self, "VpcLinkSg", vpc=vpc, allow_all_outbound=False,
+                                    description="API Gateway VPC link to the internal API load balancer")
+        link_sg.add_egress_rule(ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.tcp(80), "to the internal ALB")
+        vpc_link = apigw.VpcLink(self, "PublicApiLink", vpc=vpc, security_groups=[link_sg],
+                                 subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS))
+        self.http_api = apigw.HttpApi(
+            self, "PublicApi",
+            default_integration=apigw_int.HttpAlbIntegration("AlbIntegration", self.service.listener,
+                                                             vpc_link=vpc_link),
+        )
+        stage = self.http_api.default_stage.node.default_child  # type: ignore[union-attr]
+        stage.default_route_settings = apigw.CfnStage.RouteSettingsProperty(  # type: ignore[union-attr]
+            throttling_burst_limit=cfg.waf_job_create_limit_5min * 2, throttling_rate_limit=10)
+        CfnOutput(self, "PublicEndpoint", value=self.http_api.api_endpoint)
 
         role = self.service.task_definition.task_role
         storage.uploads.grant_put(role)

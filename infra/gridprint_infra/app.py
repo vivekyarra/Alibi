@@ -25,7 +25,7 @@ def build_app(account: str | None = None, config_dir: Path | None = None,
     cfg = config_mod.load(config_dir or config_mod.CONFIG_DIR)
     app = cdk.App(outdir=outdir, context=context) if outdir or context else cdk.App()
     env = cdk.Environment(account=account, region=cfg.region)
-    p = "Gridprint"
+    p = cfg.resource_prefix.capitalize()
 
     network = NetworkStack(app, f"{p}Network", env=env)
     storage = StorageStack(app, f"{p}Storage", cfg=cfg, env=env)
@@ -43,6 +43,6 @@ def build_app(account: str | None = None, config_dir: Path | None = None,
     if str(app.node.try_get_context("bench")).lower() == "true":
         BenchImagesStack(app, f"{p}BenchImages", env=env)
 
-    for key, value in {"project": "gridprint", "managed-by": "cdk"}.items():
+    for key, value in {"project": cfg.resource_prefix, "managed-by": "cdk"}.items():
         cdk.Tags.of(app).add(key, value)
     return app

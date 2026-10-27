@@ -79,7 +79,18 @@ class BedrockPlanner:
         return Action(None, {}, reason or "no tool chosen")
 
 
-def make_client(profile: str | None, region: str) -> Any:
+def make_client(profile: str | None, region: str, role_arn: str | None = None,
+                external_id: str | None = None) -> Any:
+    """bedrock-runtime client. With `role_arn`, the model is called through a role in the model account
+    (cross-account, D-026); the role allows only InvokeModel on the pinned model."""
     import boto3
 
-    return boto3.Session(profile_name=profile, region_name=region).client("bedrock-runtime")
+    session = boto3.Session(profile_name=profile, region_name=region)
+    if role_arn:
+        kw = {"RoleArn": role_arn, "RoleSessionName": "planner"}
+        if external_id:
+            kw["ExternalId"] = external_id
+        c = session.client("sts").assume_role(**kw)["Credentials"]
+        session = boto3.Session(aws_access_key_id=c["AccessKeyId"], aws_secret_access_key=c["SecretAccessKey"],
+                                aws_session_token=c["SessionToken"], region_name=region)
+    return session.client("bedrock-runtime")

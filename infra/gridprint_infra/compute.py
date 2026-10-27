@@ -18,6 +18,7 @@ from aws_cdk import aws_applicationautoscaling as appscaling
 from aws_cdk import aws_autoscaling as autoscaling
 from aws_cdk import aws_cloudwatch as cw
 from aws_cdk import aws_ec2 as ec2
+from aws_cdk import aws_ecr as ecr
 from aws_cdk import aws_ecr_assets as ecr_assets
 from aws_cdk import aws_ecs as ecs
 from aws_cdk import aws_iam as iam
@@ -27,7 +28,7 @@ from constructs import Construct
 
 from .ai import AiStack
 from .auth import AuthStack
-from .config import REPO, InfraConfig
+from .config import PREFIX, REPO, InfraConfig, prebuilt_image
 from .data import DataStack
 from .runtime_env import WORKER_COMMAND, service_env
 from .storage import StorageStack
@@ -44,16 +45,17 @@ def docker_context(dockerfile: str, paths: list[str]) -> list[str]:
 
 
 ENGINE_CONTEXT = docker_context("engine.Dockerfile",
-                                ["config", "engine", "agent", "mcp_server", "api", "models"])
-API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "api"])
+                                ["config", "engine", "agent", "mcp_server", "api", "node", "scripts"])
+API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "agent", "mcp_server", "node", "api", "web"])
 
 # Engineering constants for the worker task on c8g.2xlarge (8 vCPU, 16 GiB). Headroom is left for the
 # ECS agent and the OS. Documented in docs/agent_notes/infra.md.
-WORKER_CPU_UNITS = 7168
-WORKER_MEMORY_MIB = 13312
+# Worker task size per instance type: whole instance minus headroom for the ECS agent and OS.
+WORKER_SIZES = {"c8g.xlarge": (3584, 6656), "c8g.2xlarge": (7168, 13312), "c8g.4xlarge": (15360, 28672)}
+WORKER_CPU_UNITS, WORKER_MEMORY_MIB = WORKER_SIZES["c8g.2xlarge"]
 JOB_VISIBILITY_TIMEOUT_S = 1800   # > limits.decode_timeout_s plus analysis time
 DLQ_MAX_RECEIVES = 3
-METRIC_NAMESPACE = "GRIDPRINT"
+METRIC_NAMESPACE = PREFIX.capitalize()
 ARM64_CONSTRAINT = "attribute:ecs.cpu-architecture == arm64"
 
 
@@ -66,6 +68,17 @@ def engine_image(scope: Construct, cid: str, platform: ecr_assets.Platform) -> e
         exclude=ENGINE_CONTEXT,
         ignore_mode=IgnoreMode.DOCKER,
     )
+
+
+def container_image(scope: Construct, cid: str, uri: str | None,
+                    asset: ecr_assets.DockerImageAsset | None) -> ecs.ContainerImage:
+    """Pre-built ECR image (infra/build_images.py) when available, else the local Docker build asset."""
+    if uri:
+        repo_name, tag = uri.split("/", 1)[1].split(":", 1)
+        repo = ecr.Repository.from_repository_name(scope, cid, repo_name)
+        return ecs.ContainerImage.from_ecr_repository(repo, tag)
+    assert asset is not None
+    return ecs.ContainerImage.from_docker_image_asset(asset)
 
 
 def ubuntu_ecs_agent_user_data(region: str) -> list[str]:
@@ -113,7 +126,7 @@ class ComputeStack(Stack):
             user_data = ec2.UserData.for_linux()
 
         self.host_sg = ec2.SecurityGroup(self, "WorkerHostSg", vpc=vpc, allow_all_outbound=True,
-                                         description="GRIDPRINT worker hosts: no inbound")
+                                         description=f"{PREFIX} worker hosts: no inbound")
         launch_template = ec2.LaunchTemplate(
             self, "WorkerLaunchTemplate",
             instance_type=ec2.InstanceType(cfg.worker_instance_type),
@@ -172,13 +185,15 @@ class ComputeStack(Stack):
         if self.uses_cool_ami:
             env["PYTHONPATH"] = f"{cfg.cool_pythonpath}:/app:/app/engine"
             env["LD_LIBRARY_PATH"] = cfg.cool_ld_library_path
-        self.worker_image = engine_image(self, "EngineImageArm64", ecr_assets.Platform.LINUX_ARM64)
+        prebuilt = prebuilt_image("engine_arm64")
+        self.worker_image = None if prebuilt else engine_image(self, "EngineImageArm64",
+                                                               ecr_assets.Platform.LINUX_ARM64)
         container = self.task_def.add_container(
             "engine",
-            image=ecs.ContainerImage.from_docker_image_asset(self.worker_image),
+            image=container_image(self, "EngineRepo", prebuilt, self.worker_image),
             command=WORKER_COMMAND,
-            cpu=WORKER_CPU_UNITS,
-            memory_limit_mib=WORKER_MEMORY_MIB,
+            cpu=WORKER_SIZES.get(cfg.worker_instance_type, WORKER_SIZES["c8g.2xlarge"])[0],
+            memory_limit_mib=WORKER_SIZES.get(cfg.worker_instance_type, WORKER_SIZES["c8g.2xlarge"])[1],
             environment=env,
             readonly_root_filesystem=False,
             logging=ecs.LogDrivers.aws_logs(stream_prefix="worker", log_group=self.log_group,
@@ -192,6 +207,9 @@ class ComputeStack(Stack):
                                                           read_only=True))
 
         # Least privilege for the worker.
+        if cfg.bedrock_role_arn:  # planner model hosted in another account: assume only that role (D-026)
+            self.task_role.add_to_policy(iam.PolicyStatement(actions=["sts:AssumeRole"],
+                                                             resources=[cfg.bedrock_role_arn]))
         storage.uploads.grant_read_write(self.task_role)
         storage.results.grant_read_write(self.task_role)
         for table in data.tables:

@@ -18,6 +18,10 @@ menu "GRIDPRINT Node"
         string "Grid zone id (config/zones.yaml)"
         default "IN"
 
+    config GRIDPRINT_TOPIC_PREFIX
+        string "MQTT topic prefix (aws.resource_prefix in config/default.yaml)"
+        default "orchard"
+
     config GRIDPRINT_NODE_ID
         string "Node id (IoT thing name and MQTT client id)"
         default "node-01"

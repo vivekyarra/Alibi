@@ -19,6 +19,40 @@ ALLOWED_ARGS = {
 }
 
 
+def _zones() -> set[str]:
+    try:
+        from pathlib import Path
+
+        import yaml
+
+        p = Path(__file__).resolve().parents[1] / "config" / "zones.yaml"
+        return {z["id"] for z in yaml.safe_load(p.read_text())["zones"]}
+    except Exception:  # config missing: accept no zone argument
+        return set()
+
+
+# allowed values per argument; a value outside the set is dropped (the engine default applies)
+ALLOWED_VALUES: dict[str, Any] = {
+    "method": {"auto", "sidecar", "profile", "blind"}, "strictness": {"normal", "strict"},
+    "strategy": {"all", "top", "coherent", "bright"}, "axis": {"rows+", "rows-", "cols+", "cols-"},
+    "nominal_hz": {50, 60}, "kind": {"original_file", "camera_model", "claimed_time", "longer_clip"},
+    "final": {True, False}, "zone": _zones(),
+}
+
+
+def _valid(k: str, v: Any) -> bool:
+    if k in ALLOWED_VALUES:
+        try:
+            return v in ALLOWED_VALUES[k]
+        except TypeError:
+            return False
+    if k == "patch_ids":
+        return isinstance(v, list) and all(isinstance(i, int) for i in v)
+    if k == "frame_subset":
+        return v == "low_motion" or (isinstance(v, list) and all(isinstance(i, int) for i in v))
+    return isinstance(v, str | int | float) or v is None
+
+
 @dataclass
 class Action:
     tool: str | None  # None = planner wants to stop
@@ -53,10 +87,13 @@ def enforce(a: Action, st: PolicyState) -> tuple[Action, str | None]:
                           "policy: report must be rendered"), "report required"
         return a, None
     if a.tool not in ALL_TOOLS:
-        return Action("compute_verdict" if not st.verdict_done else None, {},
-                      "policy: unknown tool rejected"), f"unknown tool {a.tool}"
+        if st.verdict_done:
+            nxt, _ = enforce(Action(None, {}, ""), st)
+            nxt.reason = f"policy: unknown tool {a.tool} rejected; " + (nxt.reason or "job complete")
+            return nxt, f"unknown tool {a.tool}"
+        return Action("compute_verdict", {}, "policy: unknown tool rejected"), f"unknown tool {a.tool}"
     note = None
-    args = {k: v for k, v in a.args.items() if k in ALLOWED_ARGS[a.tool]}
+    args = {k: v for k, v in a.args.items() if k in ALLOWED_ARGS[a.tool] and _valid(k, v)}
     if args != {k: v for k, v in a.args.items() if k != "job_id"}:
         note = "policy: disallowed arguments removed"
     a = Action(a.tool, args, a.reason)
@@ -66,11 +103,10 @@ def enforce(a: Action, st: PolicyState) -> tuple[Action, str | None]:
     if a.tool == "extract_flicker" and st.iterations >= st.max_iterations:
         st.budget_exhausted = True
         return Action("compute_verdict", {}, "policy: iteration budget exhausted (B5)"), "iteration budget"
-    if st.verdict_done and a.tool in ANALYSIS_TOOLS:
-        return Action(None, {}, "policy: compute_verdict must be the last analysis call"), \
-            f"{a.tool} after verdict blocked"
-    if st.verdict_done and a.tool == "compute_verdict":
-        return Action(None, {}, "policy: verdict already computed"), "repeat verdict blocked"
+    if st.verdict_done and a.tool in ANALYSIS_TOOLS | {"compute_verdict"}:
+        nxt, _ = enforce(Action(None, {}, ""), st)  # finish the job: review if needed, then the report
+        nxt.reason = f"policy: {a.tool} after the verdict is not allowed; " + (nxt.reason or "job complete")
+        return nxt, f"{a.tool} after verdict blocked"
     if a.tool == "render_report":
         if not st.verdict_done:
             return Action("compute_verdict", {}, "policy: verdict before report"), "report before verdict"

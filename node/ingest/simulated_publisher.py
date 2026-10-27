@@ -52,7 +52,7 @@ def ou_track(n: int, f0: float, seed: int, theta: float = THETA, sigma: float = 
 
 
 def messages(zone: str, nodes: list[str], t0: int, seconds: int, seed: int = 0,
-             quality: str = "gps", drop_fraction: float = 0.0) -> Iterator[dict[str, Any]]:
+             quality: str = "sim", drop_fraction: float = 0.0) -> Iterator[dict[str, Any]]:
     """Yield node messages in time order. `drop_fraction` removes random seconds (to test gap reports)."""
     f0 = nominal_hz(zone)
     track = ou_track(seconds, f0, seed)
@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seconds", type=int, default=3600)
     ap.add_argument("--start", type=int, default=None, help="first UTC epoch second (default: now - seconds)")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--quality", choices=["gps", "ntp"], default="gps")
+    ap.add_argument("--quality", choices=["sim", "gps", "ntp"], default="sim")
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--local", type=Path, help="LocalGridLog root, for example work/gridlog")
     g.add_argument("--iot", action="store_true", help="publish to AWS IoT Core")

@@ -6,7 +6,7 @@
 // 2. For each UTC second the crossings between two PPS edges are filtered (glitch, band and median
 //    filters in freq_calc.c) and converted to a frequency.
 // 3. Each second a JSON message {zone, node_id, t_utc_s, freq_hz, quality, gps_lock} is published with
-//    QoS 1 over MQTT/TLS (esp-mqtt) to AWS IoT Core topic gridprint/<zone>/<node_id>.
+//    QoS 1 over MQTT/TLS (esp-mqtt) to AWS IoT Core topic <prefix>/<zone>/<node_id> (prefix = aws.resource_prefix).
 // 4. Messages go through a RAM FIFO. When offline they stay in the FIFO; after reconnect the FIFO is
 //    drained oldest first (back-fill), at most CONFIG_GRIDPRINT_BACKFILL_RATE messages per second.
 // Fallback (SPEC V11): without GPS lock, and if enabled, seconds are framed by SNTP time and sent with
@@ -336,7 +336,8 @@ static void uplink_task(void *arg)
 {
     char topic[96];
     char payload[200];
-    snprintf(topic, sizeof(topic), "gridprint/%s/%s", CONFIG_GRIDPRINT_ZONE, CONFIG_GRIDPRINT_NODE_ID);
+    snprintf(topic, sizeof(topic), "%s/%s/%s", CONFIG_GRIDPRINT_TOPIC_PREFIX, CONFIG_GRIDPRINT_ZONE,
+             CONFIG_GRIDPRINT_NODE_ID);
     const int gap_ms = 1000 / CONFIG_GRIDPRINT_BACKFILL_RATE;
     for (;;) {
         sample_t s;

@@ -41,3 +41,4 @@ class AiStack(Stack):
                 resources=bedrock_resource_arns(self, cfg.bedrock_model_id),
             )],
         )
+

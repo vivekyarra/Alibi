@@ -16,7 +16,7 @@ class FakeIot:
         self.stack_deployed = stack_deployed
 
     def get_policy(self, policyName):
-        if self.stack_deployed and policyName == "gridprint-node":
+        if self.stack_deployed and policyName == f"{prov.PREFIX}-node":
             return {}
         raise ClientError({"Error": {"Code": "ResourceNotFoundException", "Message": ""}}, "GetPolicy")
 
@@ -47,7 +47,7 @@ def test_policy_is_scoped_to_node_topic():
     doc = prov.policy_document("us-east-1", "123456789012", "IN", "node-01")
     res = [s["Resource"] for s in doc["Statement"]]
     assert res == ["arn:aws:iot:us-east-1:123456789012:client/node-01",
-                   "arn:aws:iot:us-east-1:123456789012:topic/gridprint/IN/node-01"]
+                   f"arn:aws:iot:us-east-1:123456789012:topic/{prov.PREFIX}/IN/node-01"]
 
 
 def test_provision_writes_certs(tmp_path):
@@ -56,9 +56,9 @@ def test_provision_writes_certs(tmp_path):
     names = [c[0] for c in iot.calls]
     assert names == ["create_policy", "create_thing", "create_keys_and_certificate", "attach_policy",
                      "attach_thing_principal", "describe_endpoint"]
-    assert iot.calls[3][1]["policyName"] == "gridprint-node-node-01"
+    assert iot.calls[3][1]["policyName"] == f"{prov.PREFIX}-node-node-01"
     assert (tmp_path / "private.pem.key").read_text() == "KEY"
-    assert r["topic"] == "gridprint/IN/node-01"
+    assert r["topic"] == f"{prov.PREFIX}/IN/node-01"
 
 
 def test_provision_uses_stack_policy_and_thing_type(tmp_path):
@@ -66,6 +66,6 @@ def test_provision_uses_stack_policy_and_thing_type(tmp_path):
     r = prov.provision(iot, FakeSts(), "us-east-1", "IN", "node-01", tmp_path)
     calls = dict(iot.calls)
     assert "create_policy" not in calls
-    assert calls["create_thing"]["thingTypeName"] == "gridprint-node"
+    assert calls["create_thing"]["thingTypeName"] == f"{prov.PREFIX}-node"
     assert calls["create_thing"]["attributePayload"]["attributes"]["zone"] == "IN"
-    assert calls["attach_policy"]["policyName"] == "gridprint-node" and r["policy"] == "gridprint-node"
+    assert calls["attach_policy"]["policyName"] == f"{prov.PREFIX}-node" and r["policy"] == f"{prov.PREFIX}-node"

@@ -2,7 +2,7 @@
 
 GRIDPRINT checks if a video is real from the flicker of the lights in the room. It reads the power-grid frequency from rolling-shutter flicker bands with OpenCV 5 and compares it with a reference log of the real grid.
 
-Status: this report is a working draft. Sections 7–10 receive their tables from `eval/make_report.py` after milestones M9 and M10. This report contains no measured number without a source tag (SPEC Part 14.3).
+Status (2026-10-27): sections 1–6 and 11–14 describe the built system. Sections 7–10 receive their tables from `eval/make_report.py` and the benchmark run. This report contains no measured number without a source tag (SPEC Part 14.3).
 
 ## Contents
 
@@ -61,7 +61,8 @@ See `docs/ARCHITECTURE.md` and the diagrams `docs/diagrams/architecture.mmd` and
 Summary:
 - **Clients:** GRIDPRINT Capture (Android) and GRIDPRINT Verify (web).
 - **API:** FastAPI on ECS Fargate `linux/arm64`. Presigned S3 uploads. Jobs go to an SQS queue.
-- **Engine workers:** ECS on Graviton `c8g`, `linux/arm64`, OpenCV 5 with COOL. Each worker task holds the agent orchestrator, the MCP client, and the MCP server `gridprint-engine` (stdio).
+- **Engine workers:** ECS on Graviton4 `c8g`, `linux/arm64`, OpenCV 5 (stock wheel). The stack also supports a COOL AMI when `aws.cool_ami_id` is set; COOL is not active yet (§6). Each worker task holds the agent orchestrator, the MCP client, and the MCP server `gridprint-engine` (stdio).
+- **Planner:** an LLM on Amazon Bedrock through the Converse API with tool use (`agent/planner_bedrock.py`; Amazon Nova Lite through a cross-account role, D-026; the model ID is configuration, so a Claude model works unchanged), with the deterministic fallback planner taking over for any step where the model call fails; the fallback planner can also run alone (`agent/fallback_planner.py`). The Bedrock planner is implemented and tested against a recorded-shape client. Bedrock access on the account waits for AWS account verification, so all runs so far use the fallback planner (D-021).
 - **Engine:** Python package `engine/gridprint_engine`, stages S1–S15. No AWS imports. Storage, grid log, and job store are reached through adapter interfaces.
 - **Reference:** GRIDPRINT Node (ESP32, GPS PPS, certified plug-in AC-to-AC adapter) → AWS IoT Core → Lambda → DynamoDB `GridLog`.
 - **Human control:** Cognito reviewer login; reviewer decisions stored in DynamoDB `Reviews`.
@@ -85,7 +86,7 @@ Pinned build: `opencv-python-headless==5.0.0.93` (OpenCV 5.0.0, main modules). A
 | S8 phase and frequency | Per-frame least-squares fit of a cosine and sine at the nominal flicker frequency; phase unwrapping over frames; frequency from weighted sliding phase slopes. Cross-check: DFT on a uniform virtual time grid with idle gaps zero-filled under a known mask (never interpolated). |
 | S9 clock bias | Demean the video track and the reference segment. Match variations only. |
 | S10 matching | Normalized cross-correlation at one-second steps, sub-second refinement, segment matching. |
-| S11 continuity | Phase residual change points at frame boundaries; gaps that explain the residual give `DROPPED_FRAMES_EXPLAINED`, others give `EDIT_CANDIDATE`. |
+| S11 continuity | Phase jump at each frame boundary from two-sided line fits (D-023); gaps that explain the jump give `DROPPED_FRAMES_EXPLAINED`, others give `EDIT_CANDIDATE`. |
 | S12 face region | EXPERIMENTAL. Band amplitude in face pixels vs background pixels of the same rows. Never the only basis for `CONTRADICTED`. |
 | S13 verdict | Deterministic rules (SPEC Part 8.14). |
 | S14 overlay | Visualization only, labeled "Visualization of measured flicker. Not itself evidence." |
@@ -101,21 +102,22 @@ Each row lists the calls found in the engine source (`grep -o "cv2\.[A-Za-z_.]*"
 |---|---|---|---|
 | S1 | `io.py` | `cv2.VideoCapture` (`CAP_PROP_FRAME_COUNT`, `CAP_PROP_FRAME_WIDTH`, `CAP_PROP_FRAME_HEIGHT`) | Cross-check of frame count and size. Decoding and PTS use PyAV. |
 | S2 | `color.py` | `cv2.LUT` | Inverse transfer lookup table to float32 linear luminance. |
-| S4 | `motion.py` | `cv2.goodFeaturesToTrack`, `cv2.calcOpticalFlowPyrLK`, `cv2.findHomography` with `cv2.USAC_MAGSAC`, `cv2.DISOpticalFlow_create` (`DISOPTICAL_FLOW_PRESET_FAST`), `cv2.dilate` | Homographies map each frame to the middle frame. |
+| S4 | `motion.py` | `cv2.goodFeaturesToTrack`, `cv2.calcOpticalFlowPyrLK`, `cv2.findHomography` with `cv2.USAC_MAGSAC`, `cv2.DISOpticalFlow_create` (`DISOPTICAL_FLOW_PRESET_FAST`), `cv2.dilate` | Each frame is registered directly to the middle (reference) frame (D-022). |
 | S5 | `segment.py` | `cv2.dnn.readNet`, `cv2.dnn.blobFromImage`, `cv2.resize`, `cv2.cvtColor`, `cv2.dilate` | PP-HumanSeg ONNX model from opencv_zoo. |
 | S6 | `patches.py` | `cv2.warpPerspective` (`WARP_INVERSE_MAP`, `INTER_NEAREST`) | Patch masks mapped into each frame. Per-patch row sums use NumPy `np.add.reduceat` (not `cv2.reduce`). |
 | S7 | `rowsignal.py` | `cv2.warpPerspective` (`INTER_LINEAR`, `INTER_NEAREST`, `WARP_INVERSE_MAP`) | Temporal mean in scene coordinates. Masked moving average and division are NumPy (`np.divide` with `where`), float32. |
 | S8 | `phase.py`, `pipeline.py` | `cv2.solve` (`DECOMP_SVD`, float64), `cv2.dft` (`DFT_COMPLEX_OUTPUT`), `cv2.getOptimalDFTSize` | Least-squares phase fit; DFT cross-check. Detrending in S7 uses `np.linalg.lstsq`. |
 | S12 | `facecheck.py` | `cv2.FaceDetectorYN.create`, `cv2.cvtColor` | YuNet ONNX model from opencv_zoo. |
 | S14 | `overlay.py` | `cv2.applyColorMap` (`COLORMAP_TWILIGHT_SHIFTED`), `cv2.VideoWriter`, `cv2.VideoWriter_fourcc`, `cv2.resize`, `cv2.cvtColor`, `cv2.putText`, `cv2.polylines`, `cv2.line`, `cv2.rectangle` | Temporal band-pass at the flicker alias rate is a NumPy complex demodulation, not an OpenCV filter. |
-| Calibration | `calibration_rig/fit_readout.py` (milestone M5) | Planned: band-period measurement with `cv2.dft` / `cv2.reduce` | Not yet implemented; update this row when M5 is accepted. |
+| Calibration | `calibration_rig/fit_readout.py` (milestone M5) | `cv2.reduce` (`REDUCE_AVG`), `cv2.dft` (`DFT_COMPLEX_OUTPUT`), `cv2.getOptimalDFTSize`, `cv2.magnitude` | Band-period measurement on rig clips; readout time from the fitted band period. |
 
 ### Design choices recorded in `docs/DECISIONS.md`
 
 - Analysis grid: frames are block-averaged to a small grid; each block keeps the mean sensor row index of its rows, so timing is kept (D-006).
 - Flicker-compensated temporal mean (D-015).
 - Readout direction chosen by physical plausibility of the measured flicker frequency, then band SNR (D-016).
-- Change-point detection: robust z-score of phase-residual differences (D-014).
+- Motion: each frame is registered directly to the reference frame; chaining is only a fallback (D-022).
+- Continuity: two-sided line fits of the phase at each frame boundary give the jump and its standard error (D-023, replaces D-014).
 
 ## 6. AWS deployment
 
@@ -126,8 +128,8 @@ The infrastructure is AWS CDK v2 (Python) in `infra/` (SPEC Part 10.6).
 | Network | VPC, private subnets, endpoints for S3 and DynamoDB |
 | Storage | S3 buckets with SSE-KMS and lifecycle deletion |
 | Data | DynamoDB `Jobs`, `Reviews`, `GridLog`, `TraceIndex` |
-| Compute | ECS cluster on Graviton `c8g` with COOL; SQS queue; autoscaling on queue depth |
-| API | Fargate `linux/arm64` service behind a load balancer or HTTP API |
+| Compute | ECS cluster on Graviton4 `c8g`, stock OpenCV 5 (COOL AMI used when `aws.cool_ami_id` is set); SQS queue with DLQ; autoscaling on queue depth |
+| API | Fargate `linux/arm64` service behind an internal Application Load Balancer |
 | IoT | Thing type, certificates, policy, topic rule |
 | Auth | Cognito user pool with `reviewer` group |
 | Web | S3 + CloudFront; WAF rate limits |
@@ -135,6 +137,29 @@ The infrastructure is AWS CDK v2 (Python) in `infra/` (SPEC Part 10.6).
 | AI | IAM permission for the pinned Bedrock model only |
 
 Region: `us-east-1` (DECISIONS D-005). `make deploy` creates all stacks; `make destroy` removes them.
+
+### Deployment status (2026-10-27)
+
+Account 643700104680, region `us-east-1`, resource prefix `orchard` (D-021).
+
+| Stack | Status | Note |
+|---|---|---|
+| Network | Deployed | |
+| Storage | Deployed | S3 buckets with SSE-KMS |
+| Data | Deployed | DynamoDB `Jobs`, `Reviews`, `GridLog`, `TraceIndex` |
+| AI | Deployed | IAM permission for the pinned Bedrock model. Bedrock model access waits for AWS account verification (H1); runs use the fallback planner. |
+| Auth | Deployed | Cognito user pool with `reviewer` group |
+| Compute | Deployed | ECS cluster; Graviton4 `c8g.xlarge` worker Auto Scaling group, at most one instance within the account vCPU quota (D-024); SQS queue and DLQ |
+| API | Deployed | Fargate `linux/arm64` behind an internal ALB. A public HTTPS endpoint through Amazon API Gateway is in progress. |
+| IoT | Deployed | IoT topic rule and ingest Lambda |
+| Observability | Deployed | CloudWatch dashboard and alarms |
+| Web | Not deployed | CloudFront requires AWS account verification (H1). |
+
+Images: `linux/arm64`, built on a Graviton EC2 build instance by `infra/build_images.py` and pushed to Amazon ECR. They run on Graviton.
+
+COOL: not active. The Marketplace subscription is pending (H1). The engine runs stock OpenCV 5.0.0 on Graviton. The COOL award is not claimed unless the benchmark in §7 runs.
+
+End-to-end runs on AWS are in progress.
 
 x86 and Arm: production containers are `linux/arm64`. The `linux/amd64` image exists only for the x86 baseline in the COOL benchmark.
 

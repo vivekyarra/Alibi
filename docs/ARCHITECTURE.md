@@ -8,7 +8,7 @@ Diagrams:
 
 ## 1. Build status
 
-The components below are the target design. Their build state is tracked in `docs/PROGRESS.md`. Do not read this document as a statement that a component is deployed. At the time of writing, the engine package (`engine/gridprint_engine/`) and the simulator (`eval/simulator/`) contain code. The API, agent, MCP server, web app, infrastructure, Node, and Capture app are later milestones (M4–M8, M11).
+The components below are the system design. All components have code in the repository. Build and acceptance state is tracked in `docs/PROGRESS.md`; the AWS deployment status is in `docs/TECHNICAL_REPORT.md` §6. On 2026-10-27 all stacks except Web (CloudFront, waiting for AWS account verification) are deployed in `us-east-1`. The engine runs stock OpenCV 5 on Graviton; COOL is supported by the stack but not active yet.
 
 ## 2. Components
 
@@ -18,7 +18,7 @@ The components below are the target design. Their build state is tracked in `doc
 | GRIDPRINT Verify | `web/` | Amazon S3 + Amazon CloudFront, behind AWS WAF | Upload, demo cases, live grid tile, job page with live agent trace, verdict card, overlay player, reviewer screen. |
 | API | `api/` | FastAPI on Amazon ECS Fargate, `linux/arm64` | Jobs, presigned uploads, user input, reviewer queue and decisions, demo cases, live grid samples, health. |
 | Jobs queue | CDK in `infra/` | Amazon SQS | Decouples the API from the engine workers. Worker autoscaling uses queue depth. |
-| Engine worker | `engine/`, `agent/`, `mcp_server/` | Amazon ECS on Graviton `c8g`, `linux/arm64`, OpenCV 5 + COOL | One task holds the agent orchestrator, the MCP client, and the MCP server `gridprint-engine` (stdio transport). |
+| Engine worker | `engine/`, `agent/`, `mcp_server/` | Amazon ECS on Graviton4 `c8g`, `linux/arm64`, OpenCV 5 (stock wheel); COOL AMI supported by the stack when `aws.cool_ami_id` is set | One task holds the agent orchestrator, the MCP client, and the MCP server `gridprint-engine` (stdio transport). |
 | GRIDPRINT Engine | `engine/gridprint_engine/` | inside the worker | OpenCV 5 analysis stages S1–S15 (SPEC Part 8). Python package with no AWS imports. |
 | GRIDPRINT Agent | `agent/` | inside the worker | Plans and adapts the analysis with engine tools. Planner: Claude on Amazon Bedrock, or the deterministic fallback planner. Never writes a verdict. |
 | Reference Store | DynamoDB `GridLog` | Amazon DynamoDB | Grid frequency per zone and UTC second. Key `zone#YYYYMMDD` + epoch second. |
@@ -59,11 +59,11 @@ Reference data flow: Node → MQTT/TLS → AWS IoT Core → topic rule → Lambd
 | S8 phase and frequency | `phase.py` | Per-frame least squares with `cv2.solve` (`DECOMP_SVD`, float64); DFT cross-check with `cv2.getOptimalDFTSize` and `cv2.dft` on a zero-filled, masked virtual time grid. |
 | S9 clock bias | `enf.py` | Demean both tracks. |
 | S10 matching | `match.py` | Normalized cross-correlation at 1 s steps, parabolic refinement, segment matching. |
-| S11 continuity | `continuity.py` | Phase residuals, robust change points, gap explanation. |
+| S11 continuity | `continuity.py` | Phase jump at each frame boundary from two-sided line fits (D-023), gap explanation. |
 | S12 face region (EXPERIMENTAL) | `facecheck.py` | `cv2.FaceDetectorYN`. No recognition, no embeddings, no stored crops. |
 | S13 verdict | `verdict.py` | Deterministic rules (SPEC 8.14). |
 | S14 overlay | `overlay.py` | Temporal band-pass, `cv2.applyColorMap`, `cv2.VideoWriter`. Labeled as not itself evidence. |
-| S15 report | `report.py` (planned) | JSON, HTML, PDF. |
+| S15 report | `report.py` | JSON, HTML, PDF. |
 
 The signal path uses float32 or float64 only (R6). Linear light comes before normalization (R7). Idle gaps between frames are zero-filled with a mask in the DFT cross-check, never interpolated.
 
@@ -73,16 +73,16 @@ The engine has no AWS imports. All access to storage and data goes through three
 
 | Interface | Methods | Local implementation | AWS implementation |
 |---|---|---|---|
-| `StorageAdapter` | `put_file`, `get_file`, `url` | `LocalStorage` (filesystem) | S3 (planned `adapters/aws.py`) |
-| `GridLogAdapter` | `read(zone, t0, t1)`, `write(...)` | `LocalGridLog` (CSV per zone and UTC day; median over nodes) | DynamoDB `GridLog` (planned) |
-| `JobStoreAdapter` | `put`, `get`, `scan` | local JSON files (DECISIONS D-013) | DynamoDB `Jobs`, `Reviews`, `TraceIndex` (planned) |
+| `StorageAdapter` | `put_file`, `get_file`, `url` | `LocalStorage` (filesystem) | `S3Storage` in `api/aws_adapters.py` |
+| `GridLogAdapter` | `read(zone, t0, t1)`, `write(...)` | `LocalGridLog` (CSV per zone and UTC day; median over nodes) | `DynamoGridLog` in `node/ingest/aws_gridlog.py` |
+| `JobStoreAdapter` | `put`, `get`, `scan` | local JSON files (DECISIONS D-013) | `DynamoJobStore` in `api/aws_adapters.py` |
 
 `make local` uses the local implementations. All unit and integration tests run offline with them.
 
 ## 6. Agent and MCP
 
 - The orchestrator (`agent/orchestrator.py`) runs the planner loop. The planner is `planner_bedrock.py` (Claude on Amazon Bedrock, model ID pinned in `config/default.yaml`) or `fallback_planner.py` (rules for B1–B6).
-- `config/default.yaml` sets `agent.planner: fallback` and `bedrock.enabled: false` until V6 is verified (see `docs/VERIFICATION.md`).
+- `config/default.yaml` sets `agent.planner: bedrock` with `bedrock.model_id: us.amazon.nova-lite-v1:0`, called through a cross-account role (D-026). The fallback planner runs any step where the model call fails, and the trace records which planner made each decision.
 - `policies.py` enforces budgets and order rules in code, not only in the prompt.
 - The MCP server `gridprint-engine` runs in the same worker task as the orchestrator. Transport: stdio.
 - Tools: see SPEC 9.2. The agent loop is in `diagrams/agent_workflow.mmd`.
@@ -91,7 +91,7 @@ The engine has no AWS imports. All access to storage and data goes through three
 
 - Production engine containers are `linux/arm64` and run on Graviton `c8g` instances. The API runs on Fargate `linux/arm64`.
 - The `linux/amd64` engine image exists only for the x86 baseline of the COOL benchmark (SPEC Part 12, configuration A). It is not deployed in the production stack.
-- Both images are built from the same Dockerfile with Docker buildx. They use the same engine code, the same pinned Python dependencies (`uv.lock`), and the same OpenCV 5 release (`opencv-python-headless==5.0.0.93`, DECISIONS D-003). Configuration C replaces stock OpenCV 5 with the COOL build on Graviton.
+- Images are built by `infra/build_images.py`: the `linux/arm64` images on a Graviton EC2 build instance, from the committed tree, and pushed to Amazon ECR. The `linux/amd64` engine image (benchmark only) is built with `--amd64`. All engine images use `infra/docker/engine.Dockerfile`, the same engine code, the same pinned Python dependencies (`uv.lock`), and the same OpenCV 5 release (`opencv-python-headless==5.0.0.93`, DECISIONS D-003). Configuration C replaces stock OpenCV 5 with the COOL build on Graviton.
 - The benchmark parity check compares ENF tracks and verdicts from A, B, and C.
 - If COOL cannot be obtained (V5), production runs stock OpenCV 5 on Graviton, the reason is documented, and the COOL award is not claimed.
 

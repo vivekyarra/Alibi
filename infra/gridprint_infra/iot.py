@@ -16,11 +16,11 @@ from aws_cdk import aws_logs as logs
 from constructs import Construct
 
 from .compute import METRIC_NAMESPACE
-from .config import REPO
+from .config import PREFIX, REPO
 from .data import DataStack
 
-TOPIC_PREFIX = "gridprint"
-THING_TYPE = "gridprint-node"
+TOPIC_PREFIX = PREFIX
+THING_TYPE = f"{PREFIX}-node"
 INGEST_DIR = REPO / "node" / "ingest"
 
 
@@ -53,13 +53,13 @@ class IotStack(Stack):
             self, "NodeThingType",
             thing_type_name=THING_TYPE,
             thing_type_properties=iot.CfnThingType.ThingTypePropertiesProperty(
-                thing_type_description="GRIDPRINT grid-frequency Node (ESP32 + GPS PPS)",
+                thing_type_description=f"{PREFIX} sensor node",
                 searchable_attributes=["zone"],
             ),
         )
         self.node_policy = iot.CfnPolicy(
             self, "NodePolicy",
-            policy_name="gridprint-node",
+            policy_name=f"{PREFIX}-node",
             policy_document=node_policy_document(self.partition, self.region, self.account),
         )
 

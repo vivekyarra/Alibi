@@ -18,9 +18,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 CERT_DIR = Path(__file__).resolve().parent / "firmware" / "certs"
-STACK_POLICY = "gridprint-node"  # created by infra/gridprint_infra/iot.py
-THING_TYPE = "gridprint-node"
+PREFIX = str((yaml.safe_load((Path(__file__).resolve().parents[1] / "config" / "default.yaml").read_text())
+              .get("aws") or {}).get("resource_prefix", "gridprint"))  # aws.resource_prefix
+STACK_POLICY = f"{PREFIX}-node"  # created by infra/gridprint_infra/iot.py
+THING_TYPE = f"{PREFIX}-node"
 
 
 def policy_document(region: str, account: str, zone: str, node_id: str) -> dict[str, Any]:
@@ -30,7 +34,7 @@ def policy_document(region: str, account: str, zone: str, node_id: str) -> dict[
         "Statement": [
             {"Effect": "Allow", "Action": "iot:Connect", "Resource": f"{base}:client/{node_id}"},
             {"Effect": "Allow", "Action": "iot:Publish",
-             "Resource": f"{base}:topic/gridprint/{zone}/{node_id}"},
+             "Resource": f"{base}:topic/{PREFIX}/{zone}/{node_id}"},
         ],
     }
 
@@ -53,7 +57,7 @@ def provision(iot: Any, sts: Any, region: str, zone: str, node_id: str,
     if _exists(lambda: iot.get_policy(policyName=STACK_POLICY)):
         policy_name = STACK_POLICY
     else:
-        policy_name = f"gridprint-node-{node_id}"
+        policy_name = f"{PREFIX}-node-{node_id}"
         if not _exists(lambda: iot.get_policy(policyName=policy_name)):
             iot.create_policy(policyName=policy_name,
                               policyDocument=json.dumps(policy_document(region, account, zone, node_id)))
@@ -73,7 +77,7 @@ def provision(iot: Any, sts: Any, region: str, zone: str, node_id: str,
     (out_dir / "endpoint.txt").write_text(endpoint + "\n")
     (out_dir / "certificate_arn.txt").write_text(cert["certificateArn"] + "\n")
     return {"thing": node_id, "policy": policy_name, "certificate_arn": cert["certificateArn"],
-            "endpoint": endpoint, "topic": f"gridprint/{zone}/{node_id}", "cert_dir": str(out_dir)}
+            "endpoint": endpoint, "topic": f"{PREFIX}/{zone}/{node_id}", "cert_dir": str(out_dir)}
 
 
 def main(argv: list[str] | None = None) -> int:

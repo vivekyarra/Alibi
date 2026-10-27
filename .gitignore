@@ -19,4 +19,7 @@ capture-android/build/
 capture-android/app/build/
 capture-android/local.properties
 infra/cdk.context.json
+infra/image_uris.json
 .worktrees/
+work_deploy*.log
+work_cdk_outputs.json

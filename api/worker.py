@@ -28,7 +28,9 @@ def make_planner(ctx: Context) -> Any:
     if cfg["agent"]["planner"] == "bedrock" and cfg["bedrock"]["enabled"]:
         from agent.planner_bedrock import BedrockPlanner, make_client
 
-        client = make_client(cfg["aws"]["profile"] if ctx.mode == "local" else None, cfg["aws"]["region"])
+        b = cfg["bedrock"]
+        profile = cfg["aws"]["profile"] if ctx.mode == "local" else None
+        client = make_client(profile, b.get("region", cfg["aws"]["region"]), b.get("role_arn"), b.get("external_id"))
         return BedrockPlanner(client, cfg["bedrock"]["model_id"], cfg["bedrock"]["max_tokens"])
     return FallbackPlanner()
 
@@ -68,13 +70,21 @@ def process_job(ctx: Context, job_id: str) -> None:
             publish_artifacts(ctx, job_id, jobdir)
         else:
             job.update({"status": "failed", "error": "no result produced; see trace"})
+            publish_artifacts(ctx, job_id, jobdir)  # the trace explains the failure
         job["user_requests"] = [r for r in ctx.store.scan("UserRequests") if r.get("job_id") == job_id]
         ctx.store.put("Jobs", job_id, job)
     except Exception as e:
         job["status"] = "failed"
         job["error"] = f"{type(e).__name__}: {e}"
         (jobdir / "error.txt").write_text(traceback.format_exc())
+        print(traceback.format_exc(), flush=True)  # also to CloudWatch
         ctx.store.put("Jobs", job_id, job)
+        try:
+            ctx.storage.put_file(f"jobs/{job_id}/error.txt", jobdir / "error.txt")
+            if (jobdir / "trace.json").exists():
+                ctx.storage.put_file(f"jobs/{job_id}/trace.json", jobdir / "trace.json")
+        except Exception:
+            pass
 
 
 def publish_artifacts(ctx: Context, job_id: str, jobdir: Path) -> None:

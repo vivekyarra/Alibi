@@ -109,12 +109,14 @@ def _plots(job: Job, outdir: Path) -> list[dict[str, str]]:
             if e.kind == "EDIT_CANDIDATE":
                 ax.axvline(e.t_s, color="#b00000", lw=1.5)
         ax.set_xlabel("time in video (s)")
-        ax.set_ylabel("phase residual (rad)")
+        ax.set_ylabel("phase jump at boundary (rad)")
         fig.tight_layout()
         _save(fig, outdir, "phase_residual")
-        plots.append({"file": "phase_residual.png", "alt": "Flicker phase residual over time. Solid vertical "
-                      "lines mark edit candidates; dotted lines mark frame-timestamp gaps.",
-                      "caption": "Phase residual. Solid line: edit candidate. Dotted line: timestamp gap."})
+        plots.append({"file": "phase_residual.png",
+                      "alt": "Estimated flicker phase jump at each frame boundary. Solid vertical lines mark edit "
+                             "candidates; dotted lines mark frame-timestamp gaps.",
+                      "caption": "Phase jump at frame boundaries. Solid line: edit candidate. "
+                                 "Dotted line: timestamp gap."})
     # 4. per-frame band amplitude
     fig, ax = plt.subplots(figsize=(8, 2.4))
     ax.plot(job.timing.t_s, np.where(tr.fits.ok, tr.fits.amp, np.nan), lw=0.8)

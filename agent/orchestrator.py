@@ -44,6 +44,36 @@ class McpCaller:
         return json.loads(text) if text else {}
 
 
+_PREREQ_FREE = {"probe_video", "compute_verdict", "request_user_input", "request_human_review", "render_report"}
+
+
+def _probe_ok(history: list[Step]) -> bool:
+    return any(h.tool == "probe_video" and h.error is None for h in history)
+
+
+def _needs_rule(a: Action, history: list[Step]) -> bool:
+    if a.tool not in {"render_report", "compute_verdict"} and any(h.tool == a.tool and h.args == a.args
+                                                                     for h in history):
+        return True  # identical call already made (failed or not): no new information
+    if a.tool == "extract_flicker" and (a.args.get("nominal_hz") or a.args.get("axis")) and not any(
+            h.tool == "extract_flicker" and h.result for h in history):
+        return True  # B1 allows switching frequency or axis only after a weak first extraction
+    asked = {h.args.get("kind") for h in history if h.tool == "request_user_input"}
+    if a.tool == "request_user_input" and a.args.get("kind") in asked:
+        return True
+    return a.tool not in _PREREQ_FREE and not _probe_ok(history)
+
+
+def _why(a: Action, history: list[Step]) -> str:
+    if any(h.tool == a.tool and h.args == a.args for h in history):
+        return "identical call already made"
+    if a.tool == "extract_flicker" and not any(h.tool == "extract_flicker" and h.result for h in history):
+        return "frequency or axis override before the first extraction"
+    if a.tool == "request_user_input":
+        return "same request already made"
+    return "video not probed yet"
+
+
 async def run_job(job_id: str, planner: Planner, caller: ToolCaller, max_iterations: int,
                   max_tool_calls: int, trace_path: Path | None = None) -> tuple[Trace, list[Step]]:
     trace = Trace(job_id)
@@ -56,6 +86,13 @@ async def run_job(job_id: str, planner: Planner, caller: ToolCaller, max_iterati
         except Exception as e:  # planner failure (e.g. Bedrock unavailable): fall back for this step
             proposed = FallbackPlanner().next_action(history)
             proposed.reason = f"planner error ({type(e).__name__}); fallback rule: {proposed.reason}"
+        # Guard the LLM planner: a call that repeats a failed call, or an analysis call before the video was
+        # probed successfully, is replaced by the deterministic rule for this step (recorded in the trace).
+        if planner.kind != "fallback" and proposed.tool is not None and _needs_rule(proposed, history):
+            rule = FallbackPlanner().next_action(history)
+            rule.reason = (f"guard: planner proposed {proposed.tool} {proposed.args} ({_why(proposed, history)}); "
+                           f"fallback rule: {rule.reason}")
+            proposed = rule
         action, note = policies.enforce(proposed, st)
         if action.tool is None:
             if proposed.tool is not None or note:

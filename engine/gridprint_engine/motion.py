@@ -66,13 +66,31 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
     step = [np.eye(3)]
     for i in range(1, k):
         step.append(_pair_homography(gray8[i - 1], gray8[i], max_features))  # (i-1) → i
-    # accumulate frame → frame-0, then re-reference to the middle frame
-    to0 = [np.eye(3)]
-    for i in range(1, k):
-        to0.append(to0[-1] @ np.linalg.inv(step[i]))
+    # Register every frame directly to the reference (middle) frame: features found once in the reference and
+    # tracked with pyramidal LK. Chaining per-frame homographies accumulates error into fake drift over
+    # hundreds of frames, so chaining is used only for a frame whose direct registration fails.
     ref = k // 2
-    inv_ref = np.linalg.inv(to0[ref])
-    homs = np.stack([inv_ref @ H for H in to0]).astype(np.float64)
+    homs_l: list[np.ndarray | None] = [None] * k
+    ref_pts = cv2.goodFeaturesToTrack(gray8[ref], maxCorners=max_features, qualityLevel=0.01, minDistance=5)
+    for i in range(k):
+        if i == ref:
+            homs_l[i] = np.eye(3)
+            continue
+        if ref_pts is None or len(ref_pts) < 8:
+            break
+        nxt, st, _ = cv2.calcOpticalFlowPyrLK(gray8[ref], gray8[i], ref_pts, None, winSize=(21, 21), maxLevel=3)
+        good = st.ravel() == 1
+        if good.sum() >= 8:
+            Hm, inl = cv2.findHomography(nxt[good], ref_pts[good], cv2.USAC_MAGSAC, 1.0)  # frame i → reference
+            if Hm is not None and inl is not None and inl.sum() >= 8:
+                homs_l[i] = Hm
+    for i in list(range(ref + 1, k)) + list(range(ref - 1, -1, -1)):  # fallback: chain from a neighbour
+        if homs_l[i] is None:
+            if i > ref:
+                homs_l[i] = homs_l[i - 1] @ np.linalg.inv(step[i])  # type: ignore[operator]
+            else:
+                homs_l[i] = homs_l[i + 1] @ step[i + 1]  # type: ignore[operator]
+    homs = np.stack(homs_l).astype(np.float64)  # type: ignore[arg-type]
     homs /= homs[:, 2:3, 2:3]
 
     dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_ULTRAFAST)  # type: ignore[attr-defined]
@@ -101,19 +119,18 @@ def analyze_motion(lin: np.ndarray, residual_limit_px: float, high_motion_px: fl
                            for s_ in static])
         homs = np.stack([scale @ Hm @ np.linalg.inv(scale) for Hm in homs])
         h, w = H, W
-    max_disp = 0.0
     corners = np.array([[0, 0, 1], [w - 1, 0, 1], [0, h - 1, 1], [w - 1, h - 1, 1]], np.float64)
-    for H in homs:
-        q = corners @ H.T
+    disp = []
+    for Hm in homs:
+        q = corners @ Hm.T
         q = q[:, :2] / q[:, 2:3]
-        max_disp = max(max_disp, float(np.abs(q - corners[:, :2]).max()))
+        disp.append(float(np.abs(q - corners[:, :2]).max()))
+    max_disp = float(np.percentile(disp, 90)) if disp else 0.0
+    moving = max_disp > max(1.0, 20 * camera_static_px)  # 90th-percentile corner displacement (analysis px)
     subset = None
     if strictness == "strict" and resid_med:
         rm = np.array([resid_med[0]] + resid_med)
         subset = np.flatnonzero(rm <= np.percentile(rm, 50))
-    # Chained per-frame homographies drift slowly even for a fixed camera. Warping is used only when the
-    # camera visibly moves (median per-frame displacement) and the accumulated displacement is real.
-    moving = cam > camera_static_px and max_disp > 1.0
     return MotionResult(
         homs=homs if moving else None,
         static=static,

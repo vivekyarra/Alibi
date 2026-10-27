@@ -1,5 +1,12 @@
 # GRIDPRINT API image (FastAPI on arm64 Fargate, SPEC 10.1). Build context: repository root.
 #   docker buildx build --platform linux/arm64 -f infra/docker/api.Dockerfile -t gridprint-api .
+FROM node:24-slim AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY web/ ./
+RUN npm run build
+
 FROM ghcr.io/astral-sh/uv:0.11.8 AS uv
 
 FROM python:3.11-slim
@@ -19,11 +26,15 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
 
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev --group agent --no-install-project
 
 COPY config ./config
 COPY engine ./engine
+COPY agent ./agent
+COPY mcp_server ./mcp_server
+COPY node/ingest ./node/ingest
 COPY api ./api
+COPY --from=web /web/dist ./web/dist
 
 ENV PATH=/opt/venv/bin:$PATH \
     PYTHONPATH=/app:/app/engine

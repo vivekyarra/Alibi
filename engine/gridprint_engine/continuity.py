@@ -1,9 +1,11 @@
 """Stage S11 — continuity (SPEC 8.12). Works with or without reference data.
 
-The flicker phase φ_k is measured against absolute frame time, so across a true time interval Δt it
-advances by 2π·δf·Δt. Residual r_k = wrap(Δφ_k − 2π·δf_local·Δt_k). A cut that was re-timed to
-look continuous leaves a residual of 2π·f·(removed time) mod 2π; dropped frames with true
-timestamps leave none. Change points: robust z-score of r_k (DECISIONS D-014).
+The flicker phase φ_k is measured against absolute frame time, so it follows a smooth curve (slope 2π·δf).
+A cut that was re-timed to look continuous shifts the phase after the cut by 2π·f·(removed time) mod 2π;
+dropped frames with true timestamps do not. At every frame boundary the phase is fitted with a straight line
+on each side (frames within `jump_window_s`), both lines are evaluated at the boundary, and the difference is
+the phase jump. Its standard error comes from the two fits. Change points are local maxima of |jump|/σ
+(DECISIONS D-014, D-023).
 """
 
 from __future__ import annotations
@@ -25,53 +27,80 @@ class ContinuityResult:
     residual_t: np.ndarray
     residual_rad: np.ndarray
     reasons: list[Reason]
-    boundaries: list[dict[str, float]] = field(default_factory=list)  # raw candidates (z > 3) for calibration
+    boundaries: list[dict[str, float]] = field(default_factory=list)  # raw candidates for calibration
+
+
+def _side_fits(t: np.ndarray, y: np.ndarray, lo: np.ndarray, hi: np.ndarray, tb: np.ndarray
+               ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Least-squares line through samples [lo, hi) of (t, y) evaluated at tb: (value, variance, n). float64."""
+    c = lambda a: np.concatenate([[0.0], np.cumsum(a)])  # noqa: E731
+    St, Sy, Stt, Sty, Syy = c(t), c(y), c(t * t), c(t * y), c(y * y)
+    n = (hi - lo).astype(np.float64)
+    st, sy = St[hi] - St[lo], Sy[hi] - Sy[lo]
+    stt, sty, syy = Stt[hi] - Stt[lo], Sty[hi] - Sty[lo], Syy[hi] - Syy[lo]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        tm, ym = st / n, sy / n
+        sxx = stt - n * tm * tm
+        sxy = sty - n * tm * ym
+        b = sxy / sxx
+        a = ym - b * tm
+        rss = np.maximum(syy - n * ym * ym - b * sxy, 0.0)
+        s2 = rss / np.maximum(n - 2, 1)
+        val = a + b * tb
+        var = s2 * (1.0 / n + (tb - tm) ** 2 / sxx)
+    return val, var, n
 
 
 def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[GapEvent],
-                     smooth_window_s: float, thr: dict[str, float]) -> ContinuityResult:
+                     jump_window_s: float, thr: dict[str, float], min_side_frames: int = 8) -> ContinuityResult:
     ok = ~np.isnan(phi_unwrapped)
     idx = np.flatnonzero(ok)
-    if len(idx) < 10:
+    if len(idx) < 2 * min_side_frames:
         return ContinuityResult([], np.zeros(0), np.zeros(0), [])
-    t = t_frame[idx]
-    phi = phi_unwrapped[idx]
-    dphi = _wrap(np.diff(phi))
-    dt = np.diff(t)
-    rate = dphi / np.maximum(dt, 1e-9)  # rad/s per interval
-    # smooth frequency model: running median of the phase rate over the smoothing window
-    mid = 0.5 * (t[1:] + t[:-1])
-    loc = np.empty_like(rate)
-    for i in range(len(rate)):
-        sel = np.abs(mid - mid[i]) <= smooth_window_s / 2
-        sel[i] = False
-        loc[i] = np.median(rate[sel]) if sel.any() else rate[i]
-    res = _wrap(dphi - loc * dt)
-    mad = float(np.median(np.abs(res - np.median(res)))) * 1.4826 + 1e-9
-    z = np.abs(res - np.median(res)) / mad
+    t = t_frame[idx].astype(np.float64)
+    phi = phi_unwrapped[idx].astype(np.float64)
+    # boundary j lies between samples j and j+1
+    tb = 0.5 * (t[1:] + t[:-1])
+    j = np.arange(len(t) - 1)
+    left_lo = np.searchsorted(t, tb - jump_window_s, "left")
+    left_hi = j + 1
+    right_lo = j + 1
+    right_hi = np.searchsorted(t, tb + jump_window_s, "right")
+    vl, varl, nl = _side_fits(t, phi, left_lo, left_hi, tb)
+    vr, varr, nr = _side_fits(t, phi, right_lo, right_hi, tb)
+    jump = _wrap(vr - vl)
+    sigma = np.sqrt(np.maximum(varl + varr, 1e-12))
+    z = np.where((nl >= min_side_frames) & (nr >= min_side_frames), np.abs(jump) / sigma, 0.0)
+    # local maxima of z within ±jump_window_s (a single jump raises z at its neighbours too)
+    peak = np.zeros(len(z), bool)
+    for cand in np.flatnonzero(z > 3.0):
+        near = np.abs(tb - tb[cand]) <= jump_window_s
+        peak[cand] = z[cand] >= z[near].max()
     sig_thr = float(thr["edit_significance_sigma"])
     min_rad = float(thr["edit_min_rad"])
     gap_at = {g.frame_index: g for g in gaps}
     events: list[ContinuityEvent] = []
-    reasons: list[Reason] = []
-    for j in range(len(res)):
-        k = int(idx[j + 1])  # boundary between idx[j] and idx[j+1]
-        gap = gap_at.get(k)  # S1 timestamp gap at this boundary
-        significant = bool(z[j] > sig_thr and abs(res[j]) >= min_rad)
+    raw: list[dict[str, float]] = []
+    for i in range(len(z)):
+        k = int(idx[i + 1])
+        gap = gap_at.get(k)
+        if not peak[i] and gap is None:
+            continue
+        significant = bool(peak[i] and z[i] > sig_thr and abs(jump[i]) >= min_rad)
+        raw.append({"t_s": float(t[i + 1]), "z": float(z[i]), "rad": float(abs(jump[i])), "gap": gap is not None})
         if gap is not None and not significant:
-            events.append(ContinuityEvent(kind="DROPPED_FRAMES_EXPLAINED", frame_index=k, t_s=float(t[j + 1]),
-                                          magnitude_rad=float(res[j]), significance=float(z[j]),
-                                          significant=False, gap_s=gap.size_s))
+            events.append(ContinuityEvent(kind="DROPPED_FRAMES_EXPLAINED", frame_index=k, t_s=float(t[i + 1]),
+                                          magnitude_rad=float(jump[i]), significance=float(z[i]), significant=False,
+                                          gap_s=gap.size_s))
         elif significant:
-            events.append(ContinuityEvent(kind="EDIT_CANDIDATE", frame_index=k, t_s=float(t[j + 1]),
-                                          magnitude_rad=float(res[j]), significance=float(z[j]),
-                                          significant=True, gap_s=gap.size_s if gap else None))
+            events.append(ContinuityEvent(kind="EDIT_CANDIDATE", frame_index=k, t_s=float(t[i + 1]),
+                                          magnitude_rad=float(jump[i]), significance=float(z[i]), significant=True,
+                                          gap_s=gap.size_s if gap else None))
+    reasons: list[Reason] = []
     if any(e.kind == "EDIT_CANDIDATE" for e in events):
         reasons.append(Reason.EDIT_CANDIDATE)
     if any(e.kind == "DROPPED_FRAMES_EXPLAINED" for e in events):
         reasons.append(Reason.DROPPED_FRAMES_EXPLAINED)
-    raw = [{"t_s": float(t[j + 1]), "z": float(z[j]), "rad": float(abs(res[j])),
-            "gap": bool(int(idx[j + 1]) in gap_at)} for j in np.flatnonzero(z > 3.0)]
-    raw += [{"t_s": float(t[j + 1]), "z": float(z[j]), "rad": float(abs(res[j])), "gap": True}
-            for j in range(len(res)) if int(idx[j + 1]) in gap_at and z[j] <= 3.0]
-    return ContinuityResult(events, mid, res, reasons, raw)
+    # series for plots: the estimated phase jump at every boundary with enough frames on both sides
+    valid = (nl >= min_side_frames) & (nr >= min_side_frames)
+    return ContinuityResult(events, tb[valid], jump[valid], reasons, raw)

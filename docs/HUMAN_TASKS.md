@@ -4,24 +4,23 @@ Status values: `BLOCKED-HUMAN` (waiting for a person), `DONE` (validated by scri
 
 ---
 
-## H1 — AWS account, credentials, region, budget alarm, Bedrock access, COOL subscription — BLOCKED-HUMAN
+## H1 — AWS account, account verification, quotas, Bedrock access, COOL subscription — BLOCKED-HUMAN
 
+Done (2026-10-27): steps 1–3 (account 643700104680, deployer access, CLI profile `gridprint` in `us-east-1`) and the CDK bootstrap. Nine stacks are deployed (`docs/TECHNICAL_REPORT.md` §6).
+
+Done steps, for reference:
 1. Sign in to the AWS account you will use for the competition.
 2. Create an IAM user or IAM Identity Center permission set for deployment. Attach the policy in `infra/iam/deployer-policy.json`.
-3. On this machine, create the CLI profile named `gridprint` in region `us-east-1`:
-   ```bash
-   aws configure --profile gridprint
-   ```
-   (or `aws configure sso --profile gridprint`). Do not put keys in the repository.
-4. Create a monthly budget with an email alarm at 80 % of your limit: AWS Console → Billing → Budgets → Create budget → Cost budget.
-5. Bedrock model access: Bedrock console (us-east-1) → Model access → enable Anthropic Claude Sonnet 4.6. Accept the Anthropic use-case form if asked.
-6. COOL: open the AWS Marketplace listing "Cloud Optimized OpenCV For AWS Graviton4" (`https://aws.amazon.com/marketplace/pp/prodview-fdvbfiewzuehs`) and subscribe. Note the AMI ID for us-east-1.
-7. Put the AMI ID in `config/default.yaml` under `aws.cool_ami_id` (create the key).
-8. Bootstrap CDK once:
-   ```bash
-   npx aws-cdk@2 bootstrap --profile gridprint
-   ```
-9. Validate:
+3. On this machine, create the CLI profile named `gridprint` in region `us-east-1`: `aws configure --profile gridprint` (or `aws configure sso --profile gridprint`). Do not put keys in the repository.
+4. Bootstrap CDK once: `npx aws-cdk@2 bootstrap --profile gridprint`.
+
+Open items (each needs the account owner):
+1. **AWS account verification.** AWS Console → Support Center → open the case or notice about account verification and complete it. This unblocks CloudFront (the Web stack) and Amazon Bedrock.
+2. **EC2 vCPU quota increase.** AWS Console → Service Quotas → Amazon EC2 → "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances" (`L-1216C47A`) → Request increase. Ask for at least 32 vCPUs. This restores the default worker size and allows the benchmark instances (D-024).
+3. **Bedrock model access.** After verification: Bedrock console (`us-east-1`) → Model access → enable Anthropic Claude Sonnet 4.6. Accept the Anthropic use-case form if asked. Then set `bedrock.enabled: true` and `agent.planner: bedrock` in `config/default.yaml`.
+4. **COOL subscription.** Open the AWS Marketplace listing "Cloud Optimized OpenCV For AWS Graviton4" (`https://aws.amazon.com/marketplace/pp/prodview-fdvbfiewzuehs`) and subscribe. Note the AMI ID for `us-east-1` and put it in `config/default.yaml` under `aws.cool_ami_id`.
+5. **Budget alarm.** If it does not exist yet: AWS Console → Billing → Budgets → Create budget → Cost budget, with an email alarm at 80 % of your limit.
+6. Validate:
    ```bash
    make verify-aws
    ```
@@ -64,6 +63,16 @@ Status values: `BLOCKED-HUMAN` (waiting for a person), `DONE` (validated by scri
 5. Validate: `python capture-android/validate_capability.py data/devices/*.json`.
 
 ## H5 — Record the real dataset — BLOCKED-HUMAN
+
+### H5-a — Download the public ENF video datasets (needs your login; the agent cannot create accounts)
+Both sets have real rolling-shutter videos plus a recorded mains reference.
+1. EV-ENFD (Xu et al., CVPR 2023, code MIT): open the TeraBox link in https://github.com/xlx-creater/E-ENF (README, "Data").
+   Download the video sequences and the `ENF_Reference` folder (each `.wav` is one hour of grid voltage).
+2. Choi, Wong, Su, Wu rolling-shutter set: log in at https://ieee-dataport.org/documents/rolling-shutter-videos-enf-extraction
+   and download `vids.zip` (and `mats.zip` if offered).
+3. Upload the downloaded archives unchanged to your Google Drive folder `GRIDPRINT-data/` and tell the agent.
+   The agent copies them to `data/public/` (git-ignored), converts the mains `.wav` references to 1 s GridLog
+   entries, and runs the evaluation on them.
 
 Follow `eval/DATASET.md` (shot list, manifest template, consent form template). Validate with:
 ```bash

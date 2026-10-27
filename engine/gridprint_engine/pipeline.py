@@ -456,9 +456,17 @@ class Job:
         tr = self.tracks.get(track_id) if track_id else self.primary_track()
         if tr is None or self.timing is None:
             raise JobError("no flicker track")
+        if Reason.SIGNAL_ABSENT in tr.reasons:
+            # without a signal the phase is noise; reporting phase breaks would be meaningless (and R2)
+            res = s11.ContinuityResult([], np.zeros(0), np.zeros(0), [])
+            self.continuity[tr.id] = res
+            return {"track_id": tr.id, "events": [], "edit_candidates": 0, "dropped_explained": 0, "reasons": [],
+                    "skipped": "no signal"}
+        # only frames whose own flicker fit is usable enter the phase series
+        phi = np.where(tr.fits.snr >= self.E["continuity"]["min_frame_snr"], tr.track.phase_unwrapped, np.nan)
         with self._timed("S11_continuity"):
-            res = s11.check_continuity(self.timing.t_s, tr.track.phase_unwrapped, self.timing.gaps,
-                                       self.E["continuity"]["smooth_window_s"], self.cfg.thresholds["continuity"])
+            res = s11.check_continuity(self.timing.t_s, phi, self.timing.gaps,
+                                       self.E["continuity"]["jump_window_s"], self.cfg.thresholds["continuity"])
         self.continuity[tr.id] = res
         return {"track_id": tr.id, "events": [e.model_dump() for e in res.events][:50],
                 "edit_candidates": sum(e.kind == "EDIT_CANDIDATE" for e in res.events),
@@ -524,6 +532,9 @@ class Job:
             stage_timings_s={k: round(v, 4) for k, v in self.timings.items()}, artifacts=dict(self.artifacts),
             notes=list(self.notes))
         self.result.quality["verdict_rule"] = out.rule
+        from gridprint_engine import report as s15
+
+        s15.write_json(self, self.workdir)  # the verdict is stored even if no report is rendered
         return {"verdict": out.verdict.value, "lifecycle_state": out.state.value,
                 "reasons": [r.value for r in out.reasons], "rule": out.rule}
 

@@ -7,7 +7,7 @@ from aws_cdk import aws_kms as kms
 from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
-from .config import InfraConfig
+from .config import PREFIX, InfraConfig
 
 
 class StorageStack(Stack):
@@ -15,7 +15,7 @@ class StorageStack(Stack):
         super().__init__(scope, cid, **kwargs)
         self.key = kms.Key(
             self, "DataKey",
-            alias="alias/gridprint-data",
+            alias=f"alias/{PREFIX}-data",
             enable_key_rotation=True,
             removal_policy=RemovalPolicy.DESTROY,   # `make destroy` removes everything (SPEC 10.6)
             pending_window=Duration.days(7),
@@ -37,6 +37,8 @@ class StorageStack(Stack):
         # S3 lifecycle expiration counts whole days. limits.upload_retention_hours is rounded up.
         self.uploads = s3.Bucket(
             self, "Uploads",
+            cors=[s3.CorsRule(allowed_methods=[s3.HttpMethods.PUT], allowed_origins=["*"], allowed_headers=["*"],
+                              max_age=3000)],  # presigned PUT from the browser (D-025)
             lifecycle_rules=[s3.LifecycleRule(
                 id="expire-uploads",
                 expiration=Duration.days(cfg.upload_retention_days),

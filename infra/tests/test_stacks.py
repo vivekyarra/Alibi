@@ -21,6 +21,9 @@ sys.path.insert(0, str(INFRA))
 
 from gridprint_infra import config as cfgmod  # noqa: E402
 from gridprint_infra.app import build_app  # noqa: E402
+from gridprint_infra.config import PREFIX  # noqa: E402
+
+P = PREFIX.capitalize()
 
 ACCOUNT = "123456789012"
 
@@ -58,22 +61,22 @@ def test_docker_context_is_allow_list(tmp_path_factory: pytest.TempPathFactory,
     assert ENGINE_CONTEXT[0] == "*" and API_CONTEXT[0] == "*"
     assert "!infra/docker/engine.Dockerfile" in ENGINE_CONTEXT
     assert "!api" in ENGINE_CONTEXT and "!agent" in ENGINE_CONTEXT
-    assert "!agent" not in API_CONTEXT
+    assert "!agent" in API_CONTEXT and "!node" in API_CONTEXT  # the API imports the worker (agent) and node adapters
 
 
 def test_all_stacks_present(stacks: dict[str, Template]) -> None:
     for name in ["Network", "Storage", "Data", "Compute", "Api", "Iot", "Auth", "Web", "Observability", "Ai"]:
-        assert f"Gridprint{name}" in stacks
+        assert f"{P}{name}" in stacks
 
 
 def test_vpc_gateway_endpoints(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintNetwork"]
+    t = stacks[f"{P}Network"]
     t.resource_count_is("AWS::EC2::VPCEndpoint", 2)
     t.has_resource_properties("AWS::EC2::VPCEndpoint", {"VpcEndpointType": "Gateway"})
 
 
 def test_buckets_kms_tls_public_block_and_lifecycle(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintStorage"]
+    t = stacks[f"{P}Storage"]
     buckets = t.find_resources("AWS::S3::Bucket")
     assert len(buckets) == 2
     cfg = cfgmod.load()
@@ -95,25 +98,25 @@ def test_buckets_kms_tls_public_block_and_lifecycle(stacks: dict[str, Template])
 
 
 def test_four_tables_with_pitr_and_gridlog_keys(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintData"]
+    t = stacks[f"{P}Data"]
     t.resource_count_is("AWS::DynamoDB::Table", 4)
     for name in ["Jobs", "Reviews", "GridLog", "TraceIndex"]:
         t.has_resource_properties("AWS::DynamoDB::Table", {
-            "TableName": f"gridprint-{name}",
+            "TableName": f"{PREFIX}-{name}",
             "PointInTimeRecoverySpecification": {"PointInTimeRecoveryEnabled": True},
         })
     t.has_resource_properties("AWS::DynamoDB::Table", {
-        "TableName": "gridprint-GridLog",
+        "TableName": f"{PREFIX}-GridLog",
         "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "t", "KeyType": "RANGE"}],
         "AttributeDefinitions": Match.array_with([{"AttributeName": "t", "AttributeType": "N"}]),
     })
 
 
 def test_lead_key_schema_for_jobs_reviews_trace(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintData"]
+    t = stacks[f"{P}Data"]
     for name in ["Jobs", "Reviews", "TraceIndex"]:
         t.has_resource_properties("AWS::DynamoDB::Table", {
-            "TableName": f"gridprint-{name}",
+            "TableName": f"{PREFIX}-{name}",
             "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}],
             "AttributeDefinitions": [{"AttributeName": "pk", "AttributeType": "S"}],
             "BillingMode": "PAY_PER_REQUEST",
@@ -130,8 +133,8 @@ def _container(t: Template) -> dict:
 
 
 @pytest.mark.parametrize("stack,command", [
-    ("GridprintApi", ["uvicorn", "api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]),
-    ("GridprintCompute", ["python", "-m", "api.worker", "--sqs"]),
+    (f"{P}Api", ["uvicorn", "api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]),
+    (f"{P}Compute", ["python", "-m", "api.worker", "--sqs"]),
 ])
 def test_container_command_and_env(stacks: dict[str, Template], stack: str, command: list[str]) -> None:
     c = _container(stacks[stack])
@@ -143,32 +146,32 @@ def test_container_command_and_env(stacks: dict[str, Template], stack: str, comm
 
 
 def test_uploads_cors_put_from_cloudfront(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintWeb"]
+    t = stacks[f"{P}Web"]
     cr = json.dumps(t.find_resources("Custom::AWS"))
     assert "putBucketCors" in cr
     assert "PUT" in cr
     assert "DomainName" in cr   # origin is built from the distribution domain
-    storage_buckets = stacks["GridprintStorage"].find_resources("AWS::S3::Bucket")
+    storage_buckets = stacks[f"{P}Storage"].find_resources("AWS::S3::Bucket")
     assert all("CorsConfiguration" not in b["Properties"] for b in storage_buckets.values())
 
 
 def test_worker_can_put_uploads_and_write_all_tables(stacks: dict[str, Template]) -> None:
-    pols = json.dumps(stacks["GridprintCompute"].find_resources("AWS::IAM::Policy"))
+    pols = json.dumps(stacks[f"{P}Compute"].find_resources("AWS::IAM::Policy"))
     for action in ["s3:PutObject", "s3:GetObject*", "dynamodb:PutItem", "sqs:ReceiveMessage",
                    "sqs:DeleteMessage"]:
         assert action in pols
     for table in ["Jobs", "Reviews", "GridLog", "TraceIndex"]:
-        assert f"GridprintData:ExportsOutputFnGetAtt{table}" in pols
+        assert f"{P}Data:ExportsOutputFnGetAtt{table}" in pols
 
 
 def test_cognito_reviewer_group(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintAuth"]
+    t = stacks[f"{P}Auth"]
     t.has_resource_properties("AWS::Cognito::UserPoolGroup", {"GroupName": "reviewer"})
     t.has_resource_properties("AWS::Cognito::UserPool", {"MfaConfiguration": "ON"})
 
 
 def test_waf_rate_rules_on_cloudfront(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintWeb"]
+    t = stacks[f"{P}Web"]
     t.has_resource_properties("AWS::WAFv2::WebACL", {
         "Scope": "CLOUDFRONT",
         "Rules": Match.array_with([Match.object_like({
@@ -179,14 +182,14 @@ def test_waf_rate_rules_on_cloudfront(stacks: dict[str, Template]) -> None:
 
 
 def test_arm64_task_definitions(stacks: dict[str, Template]) -> None:
-    worker = stacks["GridprintCompute"]
+    worker = stacks[f"{P}Compute"]
     worker.has_resource_properties("AWS::ECS::TaskDefinition", {
         "RequiresCompatibilities": ["EC2"],
         "PlacementConstraints": [{"Type": "memberOf",
                                   "Expression": "attribute:ecs.cpu-architecture == arm64"}],
     })
     worker.has_resource_properties("AWS::ECS::Service", {"CapacityProviderStrategy": Match.any_value()})
-    api = stacks["GridprintApi"]
+    api = stacks[f"{P}Api"]
     api.has_resource_properties("AWS::ECS::TaskDefinition", {
         "RequiresCompatibilities": ["FARGATE"],
         "RuntimePlatform": {"CpuArchitecture": "ARM64", "OperatingSystemFamily": "LINUX"},
@@ -195,7 +198,7 @@ def test_arm64_task_definitions(stacks: dict[str, Template]) -> None:
 
 
 def test_graviton_capacity_and_queue(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintCompute"]
+    t = stacks[f"{P}Compute"]
     t.has_resource_properties("AWS::EC2::LaunchTemplate", {
         "LaunchTemplateData": Match.object_like({"InstanceType": "c8g.2xlarge"})})
     t.resource_count_is("AWS::ECS::CapacityProvider", 1)
@@ -208,7 +211,7 @@ def test_graviton_capacity_and_queue(stacks: dict[str, Template]) -> None:
 
 
 def test_bedrock_policy_is_pinned(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintAi"]
+    t = stacks[f"{P}Ai"]
     pol = next(iter(t.find_resources("AWS::IAM::ManagedPolicy").values()))
     stmts = pol["Properties"]["PolicyDocument"]["Statement"]
     assert len(stmts) == 1
@@ -221,9 +224,9 @@ def test_bedrock_policy_is_pinned(stacks: dict[str, Template]) -> None:
 
 
 def test_iot_policy_topic_and_arm64_lambda(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintIot"]
+    t = stacks[f"{P}Iot"]
     doc = json.dumps(t.find_resources("AWS::IoT::Policy"))
-    assert "topic/gridprint/${iot:Connection.Thing.Attributes[zone]}/${iot:Connection.Thing.ThingName}" in doc
+    assert f"topic/{PREFIX}/${{iot:Connection.Thing.Attributes[zone]}}/${{iot:Connection.Thing.ThingName}}" in doc
     t.has_resource_properties("AWS::Lambda::Function",
                               {"Architectures": ["arm64"], "Handler": "handler.handler"})
     t.resource_count_is("AWS::IoT::TopicRule", 1)
@@ -231,7 +234,7 @@ def test_iot_policy_topic_and_arm64_lambda(stacks: dict[str, Template]) -> None:
 
 
 def test_observability_alarms(stacks: dict[str, Template]) -> None:
-    t = stacks["GridprintObservability"]
+    t = stacks[f"{P}Observability"]
     t.resource_count_is("AWS::CloudWatch::Dashboard", 1)
     limit = cfgmod.load().freshness_limit_s
     t.has_resource_properties("AWS::CloudWatch::Alarm", {
@@ -239,7 +242,7 @@ def test_observability_alarms(stacks: dict[str, Template]) -> None:
 
 
 def test_cool_ami_variant(cool_stacks: dict[str, Template]) -> None:
-    t = cool_stacks["GridprintCompute"]
+    t = cool_stacks[f"{P}Compute"]
     lt = json.dumps(t.find_resources("AWS::EC2::LaunchTemplate"))
     assert "amazon-ecs-init-latest.arm64.deb" in lt
     t.has_resource_properties("AWS::ECS::TaskDefinition", {
@@ -248,4 +251,4 @@ def test_cool_ami_variant(cool_stacks: dict[str, Template]) -> None:
                 [Match.object_like({"ContainerPath": "/opt/cool", "ReadOnly": True})]),
         })],
     })
-    assert "GridprintBenchImages" in cool_stacks
+    assert f"{P}BenchImages" in cool_stacks

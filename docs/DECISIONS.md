@@ -87,3 +87,29 @@ Format: ID — date — decision — reason — alternatives considered.
 
 ## D-020 — 2026-10-26 — Scope of the placeholder-marker scan in the final check
 - `scripts/final_check.py` item 5 searches the repository for the placeholder marker of R8. Two files must contain the marker word to do their job: `eval/calibrate_thresholds.py` (writes it when calibration used SYNTHETIC data only) and `scripts/final_check.py` (searches for it). Both are excluded from the scan; everything else, including `config/` and `docs/`, is scanned. `data/`, `work/`, `results/`, `.venv/` and `node_modules/` are not repository content and are skipped.
+## D-021 — 2026-10-26 — Deployment account and neutral resource names
+- The owner chose the AWS account behind the local `kittu` CLI credentials for the deployment; the CLI profile `gridprint` (the only profile the code uses) now holds those credentials. Account 643700104680, region `us-east-1`.
+- At the owner's request every physical AWS resource name in that account uses a neutral prefix, `aws.resource_prefix: orchard` (stacks `Orchard*`, tables `orchard-*`, IoT topic `orchard/<zone>/<node>`, dashboard, KMS alias). Code and documents keep the product name.
+- Bedrock in that account returns "account is currently being verified" and the Claude models are not yet authorized (`get-foundation-model-availability`: `authorizationStatus NOT_AUTHORIZED`). Per V6, the deterministic fallback planner runs (`bedrock.enabled: false`) until access is granted; `scripts/verify_aws.py` re-checks it.
+
+## D-022 — 2026-10-26 — Direct registration to the reference frame; continuity only on usable frames
+- Found by `engine/gridprint_engine/tests/test_video.py`: on a fixed 160×120 clip the chained per-frame homographies accumulated several pixels of false drift over 1,200 frames, the warp smeared the scene, and band SNR fell from 11.5 dB to −2.6 dB (all three clips SIGNAL_ABSENT).
+- Each frame is now registered directly to the middle frame (features from the reference, pyramidal LK, `findHomography` with USAC_MAGSAC); chaining is a fallback for frames whose direct registration fails. Warping is used only when the 90th-percentile corner displacement exceeds 1 px.
+- Continuity (S11) skips tracks marked SIGNAL_ABSENT and uses only frames whose own fit SNR is at least 1 (0 dB) (`engine.continuity.min_frame_snr`). Without this, noise-level phases produced edit candidates on clips with no signal.
+
+## D-023 — 2026-10-26 — Continuity: two-sided line fits replace single frame differences
+- Found by the video integration test: a re-timed 1 s cut gave a true phase jump of 0.44 rad at the cut, but the single-difference detector (D-014) reached only z = 3.8 because per-frame phase noise was about 0.1 rad.
+- New detector: at each frame boundary, fit a line to the phase on each side (frames within `engine.continuity.jump_window_s` = 1 s, at least 8 frames per side), evaluate both at the boundary, and take the wrapped difference as the jump. Its standard error comes from the two fits; z = |jump|/σ. Local maxima within ±1 s are the change points. Thresholds `edit_significance_sigma` and `edit_min_rad` stay in `thresholds.yaml`.
+- Gap rule unchanged: a boundary with an S1 gap whose jump is not significant is DROPPED_FRAMES_EXPLAINED.
+
+## D-024 — 2026-10-27 — Worker instance size within the account vCPU quota
+- The deployment account has an on-demand standard vCPU quota of 8 (`service-quotas get-service-quota L-1216C47A`). The ASG could not launch `c8g.2xlarge` (8 vCPU) because another 2-vCPU instance already runs in the account ("You have requested more vCPU capacity than your current vCPU limit of 8").
+- Workers now use `c8g.xlarge` (4 vCPU, Graviton4) with at most one instance (`aws.worker_instance_type`, `aws.worker_max_instances`). A quota increase request (H1) restores the default sizes. The benchmark protocol (Part 12) still specifies equal-vCPU pairs and runs separately.
+
+## D-025 — 2026-10-27 — Public HTTPS endpoint through API Gateway while CloudFront is blocked
+- CloudFront in the deployment account needs AWS account verification (H1). The API stack adds an API Gateway HTTP API with a VPC link to the internal ALB; it gives a public HTTPS URL with no CloudFront. Stage throttling limits request rates (WAF cannot attach to HTTP APIs). The uploads bucket allows browser PUTs with presigned URLs from any origin; the signature limits what can be uploaded.
+
+## D-026 — 2026-10-27 — Planner model: Amazon Nova Lite through a cross-account role
+- Anthropic models on Bedrock are sold through AWS Marketplace; both accounts refuse them (no valid payment instrument on one, account verification pending on the other). SPEC Part 7 names an Anthropic model; V6's fallback order is another region, then the deterministic planner. Amazon Nova Lite (first-party, tool use through Converse) works in the second account today, and in a test it chose the B1 action (re-rank patches after SIGNAL_WEAK).
+- Decision: the LLM planner uses `us.amazon.nova-lite-v1:0` through role `orchard-planner` in account 768669378827. The role allows only `bedrock:InvokeModel` on that model and can be assumed only from the deployment account with the external ID. The worker's policy allows `sts:AssumeRole` on that one role. The deterministic fallback planner stays in place and takes over for any step where the model call fails; the trace marks every step's planner.
+- Switch back to Claude by changing `bedrock.model_id` once Marketplace access works; no code change.
