@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import boto3
+from botocore.config import Config
 
 from gridprint_engine.adapters import JobStoreAdapter, StorageAdapter
 
@@ -16,7 +17,8 @@ TABLES = {"Jobs": "JOBS_TABLE", "Reviews": "REVIEWS_TABLE", "TraceIndex": "TRACE
 
 class S3Storage(StorageAdapter):
     def __init__(self, results_bucket: str, uploads_bucket: str, region: str, expiry_s: int):
-        self.s3 = boto3.client("s3", region_name=region)
+        # SigV4 is required for presigned PUTs to a bucket with SSE-KMS default encryption
+        self.s3 = boto3.client("s3", region_name=region, config=Config(signature_version="s3v4"))
         self.results, self.uploads, self.expiry = results_bucket, uploads_bucket, expiry_s
 
     def _bucket(self, key: str) -> str:
