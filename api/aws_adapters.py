@@ -36,9 +36,16 @@ class S3Storage(StorageAdapter):
                                                   ExpiresIn=self.expiry))
 
     def presign_put(self, key: str) -> str:
-        return str(self.s3.generate_presigned_url("put_object", Params={"Bucket": self.uploads, "Key": key,
-                                                                        "ContentType": "video/mp4"},
+        # no ContentType in the signature: browsers send the file's own type (video/mp4, video/quicktime, ...)
+        return str(self.s3.generate_presigned_url("put_object", Params={"Bucket": self.uploads, "Key": key},
                                                   ExpiresIn=self.expiry))
+
+    def uploaded_size(self, key: str) -> int | None:
+        """Size of an object uploaded directly to S3 through a presigned URL, or None if it is not there."""
+        try:
+            return int(self.s3.head_object(Bucket=self._bucket(key), Key=key)["ContentLength"])
+        except self.s3.exceptions.ClientError:
+            return None
 
 
 class DynamoJobStore(JobStoreAdapter):
