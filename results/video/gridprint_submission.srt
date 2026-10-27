@@ -1,0 +1,196 @@
+1
+00:00:00,400 --> 00:00:03,882
+Today, anyone can generate a realistic video in minutes.
+
+2
+00:00:04,302 --> 00:00:06,509
+It costs almost nothing, and it looks real.
+
+3
+00:00:07,509 --> 00:00:08,789
+This creates a second problem.
+
+4
+00:00:09,209 --> 00:00:12,708
+When a video is real, people now say: it is just AI.
+
+5
+00:00:13,128 --> 00:00:14,865
+True evidence loses its value.
+
+6
+00:00:15,865 --> 00:00:19,185
+We need a fact from the physical world that a generator does not know.
+
+7
+00:00:19,605 --> 00:00:21,802
+There is one, and it hangs above your head.
+
+8
+00:00:22,222 --> 00:00:23,913
+Mains lights flicker with the power grid.
+
+9
+00:00:24,333 --> 00:00:28,769
+The grid frequency drifts a little, all the time, and that drift marks the time.
+
+10
+00:00:29,769 --> 00:00:31,169
+This problem hurts real people.
+
+11
+00:00:31,589 --> 00:00:34,144
+Newsrooms must check footage before they publish it.
+
+12
+00:00:34,564 --> 00:00:36,642
+Courts must decide which video to trust.
+
+13
+00:00:37,062 --> 00:00:39,238
+Insurers must check claims that use video.
+
+14
+00:00:39,658 --> 00:00:43,233
+Human-rights groups must defend footage that powerful people call AI.
+
+15
+00:00:44,233 --> 00:00:47,431
+Meet GRIDPRINT. It checks a video against the power grid.
+
+16
+00:00:47,851 --> 00:00:50,554
+A mains light flickers at two times the grid frequency.
+
+17
+00:00:50,974 --> 00:00:54,541
+On a fifty hertz grid, that is one hundred pulses each second.
+
+18
+00:00:55,541 --> 00:00:58,213
+A phone camera reads its sensor one row at a time.
+
+19
+00:00:58,633 --> 00:00:59,901
+This is called a rolling shutter.
+
+20
+00:01:00,321 --> 00:01:03,689
+So the fast flicker becomes faint horizontal bands in the image.
+
+21
+00:01:04,689 --> 00:01:07,301
+This is a public clip of a real fluorescent light.
+
+22
+00:01:07,721 --> 00:01:13,796
+OpenCV 5 linearises the light, removes camera motion, and measures the bands in each frame.
+
+23
+00:01:14,796 --> 00:01:18,542
+From the band phase, the engine rebuilds the grid frequency track.
+
+24
+00:01:18,962 --> 00:01:21,443
+Then it slides that track along the grid reference log.
+
+25
+00:01:21,863 --> 00:01:26,494
+One clear match gives a recording time. A cut or an insertion breaks the match.
+
+26
+00:01:27,494 --> 00:01:31,284
+GRIDPRINT runs live on AWS today. This is the web app.
+
+27
+00:01:31,704 --> 00:01:35,764
+You upload a video. You can add a claimed grid zone and a claimed recording time.
+
+28
+00:01:36,764 --> 00:01:39,953
+Ready-made example cases run through the same live pipeline.
+
+29
+00:01:40,373 --> 00:01:42,321
+One click starts a full analysis job.
+
+30
+00:01:43,321 --> 00:01:47,573
+Here is a finished job. The verdict is VERIFIED, and the report is final.
+
+31
+00:01:47,993 --> 00:01:51,500
+The page shows the estimated recording time and its uncertainty.
+
+32
+00:01:51,920 --> 00:01:54,722
+Each verdict comes with reason codes in plain words.
+
+33
+00:01:55,722 --> 00:01:57,659
+An agent plans each analysis.
+
+34
+00:01:58,079 --> 00:02:02,353
+It calls engine tools through an MCP server, and it logs every step.
+
+35
+00:02:03,353 --> 00:02:06,252
+A CONTRADICTED result is never final on its own.
+
+36
+00:02:06,672 --> 00:02:08,781
+A human reviewer must approve it first.
+
+37
+00:02:09,781 --> 00:02:13,295
+The limitations page tells users what GRIDPRINT cannot do.
+
+38
+00:02:13,715 --> 00:02:15,254
+Clear limits are part of the product.
+
+39
+00:02:16,254 --> 00:02:19,867
+A video arrives through API Gateway and a load balancer.
+
+40
+00:02:20,287 --> 00:02:27,030
+An API service on Fargate stores it in S3 with KMS keys, and puts a job on an SQS queue.
+
+41
+00:02:27,450 --> 00:02:32,542
+Workers on Graviton4 run the OpenCV 5 engine in fifteen stages.
+
+42
+00:02:32,962 --> 00:02:40,429
+An agent with twelve MCP tools uses Amazon Nova Lite on Bedrock to plan each run, inside strict policies.
+
+43
+00:02:40,849 --> 00:02:47,867
+DynamoDB keeps jobs and the grid log. IoT Core brings in grid data. Cognito signs in reviewers.
+
+44
+00:02:48,867 --> 00:02:52,443
+We measured the same engine on Graviton and on x86.
+
+45
+00:02:52,863 --> 00:02:57,478
+Graviton processed more video per second, at a lower cost per video hour.
+
+46
+00:02:58,478 --> 00:03:04,149
+GRIDPRINT gives exactly three verdicts: VERIFIED, CONTRADICTED, or INCONCLUSIVE.
+
+47
+00:03:04,569 --> 00:03:06,830
+A missing signal never counts against a video.
+
+48
+00:03:07,250 --> 00:03:10,866
+It needs mains lighting, and many phone videos will be INCONCLUSIVE.
+
+49
+00:03:11,286 --> 00:03:13,837
+GRIDPRINT. Evidence from the light in the room.
+
