@@ -250,3 +250,16 @@ def test_policy_after_verdict_finishes_with_report():
     st2 = PolicyState(max_iterations=6, max_tool_calls=30, verdict_done=True, verdict="CONTRADICTED")
     a, _ = policies.enforce(Action("match_reference", {}, "late"), st2)
     assert a.tool == "request_human_review"
+
+
+def test_policy_drops_invalid_argument_values():
+    st = PolicyState(max_iterations=6, max_tool_calls=30)
+    a, note = policies.enforce(Action("match_reference", {"track_id": "t1", "zone": "global"}, "x"), st)
+    assert a.args == {"track_id": "t1"} and note
+    a, _ = policies.enforce(Action("extract_flicker", {"nominal_hz": 55, "axis": "diagonal"}, "x"), st)
+    assert a.args == {}
+    a, _ = policies.enforce(Action("match_reference", {"zone": "SIM50"}, "x"), st)
+    assert a.args == {"zone": "SIM50"}
+    st.verdict_done, st.verdict = True, "INCONCLUSIVE"
+    a, _ = policies.enforce(Action("render", {}, "x"), st)
+    assert a.tool == "render_report"
