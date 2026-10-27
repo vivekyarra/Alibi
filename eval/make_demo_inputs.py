@@ -17,7 +17,7 @@ BASE = SimConfig(seed=7001, duration_s=70.0, width=320, height=240, flicker_dept
                  start_utc=1768903200.0)  # 2026-01-20T10:00:00Z
 CASES = {
     "capture-verified": replace(BASE, sidecar=True),
-    "cut-1s": replace(BASE, edits=[{"type": "cut", "at_s": 31.2, "dur_s": 1.0}]),
+    "cut-1s": replace(BASE, edits=[{"type": "cut", "at_s": 31.2, "dur_s": 1.25}]),
     "insertion": replace(BASE, edits=[{"type": "insert", "at_s": 30.0, "dur_s": 32.0, "from_offset_s": -1500.0}]),
     "dropped-frames": replace(BASE, sidecar=True, drop_frames=[(600, 6), (1300, 9)]),
     # other seeds use other days, so their reference spans (±1 h) never overlap in zone SIM50

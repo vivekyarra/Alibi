@@ -7,6 +7,7 @@ import asyncio
 import json
 import os
 import sys
+from contextlib import AsyncExitStack
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -32,16 +33,65 @@ class ToolCaller(Protocol):
     async def call(self, tool: str, args: dict[str, Any]) -> dict[str, Any]: ...
 
 
+class ConnectionLost(Exception):
+    """The MCP server process stopped answering (e.g. it was killed); the call can be retried on a new server."""
+
+
 class McpCaller:
     def __init__(self, session: ClientSession):
         self.session = session
 
     async def call(self, tool: str, args: dict[str, Any]) -> dict[str, Any]:
-        res = await self.session.call_tool(tool, args)
+        try:
+            res = await self.session.call_tool(tool, args)
+        except Exception as e:
+            raise ConnectionLost(f"{type(e).__name__}: {e}") from e
         text = "".join(getattr(c, "text", "") for c in res.content)
         if res.isError:
             raise RuntimeError(text or f"{tool} failed")
-        return json.loads(text) if text else {}
+        if not text:  # every engine tool returns a JSON object; an empty reply means the server is gone
+            raise ConnectionLost(f"{tool}: empty reply from MCP server")
+        return dict(json.loads(text))
+
+
+class RestartingMcpCaller:
+    """McpCaller that starts the MCP server on demand and, if the server process is lost, starts a new one and
+    retries the call once. Job state lives in the job store, so a new server continues the same job."""
+
+    def __init__(self, params: StdioServerParameters):
+        self.params = params
+        self.stack: AsyncExitStack | None = None
+        self.caller: McpCaller | None = None
+        self.restarts = 0
+
+    async def _start(self) -> McpCaller:
+        await self.aclose()
+        self.stack = AsyncExitStack()
+        read, write = await self.stack.enter_async_context(stdio_client(self.params))
+        session = await self.stack.enter_async_context(ClientSession(read, write))
+        await session.initialize()
+        self.caller = McpCaller(session)
+        return self.caller
+
+    async def call(self, tool: str, args: dict[str, Any]) -> dict[str, Any]:
+        for attempt in range(2):
+            caller = self.caller or await self._start()
+            try:
+                return await caller.call(tool, args)
+            except ConnectionLost:
+                self.caller = None
+                self.restarts += 1
+                if attempt:
+                    raise
+        raise AssertionError("unreachable")
+
+    async def aclose(self) -> None:
+        stack, self.stack, self.caller = self.stack, None, None
+        if stack is not None:
+            try:
+                await stack.aclose()
+            except Exception:  # noqa: BLE001 - the old server is already gone; nothing to clean up
+                pass
 
 
 _PREREQ_FREE = {"probe_video", "compute_verdict", "request_user_input", "request_human_review", "render_report"}
@@ -126,9 +176,11 @@ async def run_with_mcp(job_id: str, planner: Planner, max_iterations: int, max_t
     params = StdioServerParameters(command=sys.executable, args=["-m", "mcp_server.server"],
                                    env={**os.environ, **env, "PYTHONPATH": f"{REPO}{os.pathsep}{REPO / 'engine'}"},
                                    cwd=str(REPO))
-    async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
-        await session.initialize()
-        return await run_job(job_id, planner, McpCaller(session), max_iterations, max_tool_calls, trace_path)
+    caller = RestartingMcpCaller(params)
+    try:
+        return await run_job(job_id, planner, caller, max_iterations, max_tool_calls, trace_path)
+    finally:
+        await caller.aclose()
 
 
 def run_sync(job_id: str, planner: Planner, max_iterations: int, max_tool_calls: int, env: dict[str, str],
