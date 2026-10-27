@@ -101,3 +101,7 @@ Format: ID — date — decision — reason — alternatives considered.
 - Found by the video integration test: a re-timed 1 s cut gave a true phase jump of 0.44 rad at the cut, but the single-difference detector (D-014) reached only z = 3.8 because per-frame phase noise was about 0.1 rad.
 - New detector: at each frame boundary, fit a line to the phase on each side (frames within `engine.continuity.jump_window_s` = 1 s, at least 8 frames per side), evaluate both at the boundary, and take the wrapped difference as the jump. Its standard error comes from the two fits; z = |jump|/σ. Local maxima within ±1 s are the change points. Thresholds `edit_significance_sigma` and `edit_min_rad` stay in `thresholds.yaml`.
 - Gap rule unchanged: a boundary with an S1 gap whose jump is not significant is DROPPED_FRAMES_EXPLAINED.
+
+## D-024 — 2026-10-27 — Worker instance size within the account vCPU quota
+- The deployment account has an on-demand standard vCPU quota of 8 (`service-quotas get-service-quota L-1216C47A`). The ASG could not launch `c8g.2xlarge` (8 vCPU) because another 2-vCPU instance already runs in the account ("You have requested more vCPU capacity than your current vCPU limit of 8").
+- Workers now use `c8g.xlarge` (4 vCPU, Graviton4) with at most one instance (`aws.worker_instance_type`, `aws.worker_max_instances`). A quota increase request (H1) restores the default sizes. The benchmark protocol (Part 12) still specifies equal-vCPU pairs and runs separately.

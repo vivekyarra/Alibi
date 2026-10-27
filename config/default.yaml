@@ -4,6 +4,8 @@ aws:
   profile: gridprint
   region: us-east-1            # DECISIONS D-005
   resource_prefix: orchard     # neutral name for all AWS resources in the deployment account (D-021)
+  worker_instance_type: c8g.xlarge   # 4 vCPU Graviton4; fits the account on-demand vCPU quota (D-024)
+  worker_max_instances: 1
 bedrock:
   enabled: false               # turned on after V6 is verified with the gridprint profile (H1)
   # Inference-profile ID as listed by AWS (see docs/VERIFICATION.md V6). Re-check with
