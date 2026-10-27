@@ -63,6 +63,26 @@ def test_calibration_respects_target_and_picks_coverage():
     assert thr["continuity"]["edit_significance_sigma"] >= 8.0 or thr["continuity"]["edit_min_rad"] > 0.2
 
 
+def test_edit_detection_counts_contradicted_edits_without_truth_time():
+    base = {"class": "edited", "condition": "x", "expected_verdict": "CONTRADICTED"}
+    recs = [
+        # insert: truth time present, localized
+        {**base, "name": "a", "verdict": "CONTRADICTED", "reasons": ["EDIT_CANDIDATE"], "edits_true_t_s": [30.0],
+         "edit_localization_error_s": [0.5]},
+        # reorder: no truth time, still a correct detection; no localization entry
+        {**base, "name": "b", "verdict": "CONTRADICTED", "reasons": ["SEGMENT_OFFSET_INCONSISTENT"],
+         "edits_true_t_s": []},
+        # CONTRADICTED only by a claimed-time mismatch is not an edit detection
+        {**base, "name": "c", "verdict": "CONTRADICTED", "reasons": ["CLAIM_TIME_MISMATCH"], "edits_true_t_s": [5.0],
+         "edit_localization_error_s": []},
+        {**base, "name": "d", "verdict": "VERIFIED", "reasons": ["MATCH_OK"], "edits_true_t_s": [5.0],
+         "edit_localization_error_s": []},
+    ]
+    s = metrics.summarize(recs)
+    assert (s["edit_detection"]["k"], s["edit_detection"]["n"]) == (2, 4)
+    assert s["edit_localization_error_s"] == {"n": 1, "mean": 0.5, "median": 0.5, "p95": 0.5, "max": 0.5}
+
+
 def test_dataset_validator_reports_problems(tmp_path: Path):
     m = {"dataset_version": "t", "clips": [{"clip_id": "a", "file": "a.mp4", "app": "nope", "people_present": True,
                                              "consent_ids": [], "gt_start_utc": "x"}]}

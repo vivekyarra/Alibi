@@ -1,0 +1,79 @@
+{
+ "name": "clock_ppm__s1110",
+ "condition": "clock_ppm",
+ "split": "calibration",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 568.4642808999633,
+ "truth_start_utc": 1768650397.0,
+ "video_s": 35.967745666666666,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_ESTIMATED",
+  "NO_UNIQUE_MATCH"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 2.5501,
+  "S2_linear": 23.722,
+  "S7_rowsignal": 29.1137,
+  "S3_readout": 69.9591,
+  "S4_motion": 163.7502,
+  "S5_segment": 0.0338,
+  "S6_patches": 48.1405,
+  "S8_phase": 40.77,
+  "S10_match": 2.968,
+  "S11_continuity": 0.0236,
+  "S12_face": 0.0268,
+  "S14_overlay": 176.107,
+  "S15_report": 18.406
+ },
+ "band_snr_db": 10.488611152351217,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_ESTIMATED"
+  ],
+  "band_snr_db": 10.488611152351217,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.9914257694446509,
+   "rho2": 0.9060376445519499,
+   "margin": 0.08538812489270098,
+   "length_s": 35.0,
+   "best_offset_utc": 1768650396.9725108,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": []
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\clock_ppm__s1110\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "enf_rmse_mhz": 1.9906497228040385,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

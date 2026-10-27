@@ -1,0 +1,16 @@
+{
+ "name": "real-phone1",
+ "video": "data/real/phone1.mov",
+ "sidecar": null,
+ "gridlog_root": "data/gridlog_empty",
+ "started": "2026-10-27T05:25:40.359796+00:00",
+ "ok": true,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "SIGNAL_ABSENT",
+  "READOUT_ESTIMATED"
+ ],
+ "wall_s": 825.39,
+ "finished": "2026-10-27T05:39:25.756023+00:00"
+}

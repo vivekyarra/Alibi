@@ -119,7 +119,7 @@ def _plots(job: Job, outdir: Path) -> list[dict[str, str]]:
                                  "Dotted line: timestamp gap."})
     # 4. per-frame band amplitude
     fig, ax = plt.subplots(figsize=(8, 2.4))
-    ax.plot(job.timing.t_s, np.where(tr.fits.ok, tr.fits.amp, np.nan), lw=0.8)
+    ax.plot(job.timing.clip_times(), np.where(tr.fits.ok, tr.fits.amp, np.nan), lw=0.8)
     ax.set_xlabel("time in video (s)")
     ax.set_ylabel("band amplitude")
     fig.tight_layout()

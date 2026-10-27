@@ -46,7 +46,7 @@ def bandpass_frame(m: np.ndarray, i: int, center_hz: float, fps: float, taps: in
 def _strip(job: Job, width: int, t_now: float) -> np.ndarray:
     assert job.timing is not None
     strip = np.full((STRIP_H, width, 3), 32, np.uint8)
-    dur = max(float(job.timing.t_s[-1]), 1e-6)
+    dur = max(float(job.timing.clip_times()[-1]), 1e-6)
 
     def x(t: float) -> int:
         return int(np.clip(t / dur * (width - 1), 0, width - 1))
@@ -98,7 +98,7 @@ def render_overlay(job: Job, out_path: Path, scale: int = 2) -> Path | None:
         fr = cv2.resize(fr, (W, H), interpolation=cv2.INTER_NEAREST)
         cv2.rectangle(fr, (0, 0), (W, 16), (0, 0, 0), -1)
         cv2.putText(fr, LABEL, (4, 12), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1, cv2.LINE_AA)
-        vw.write(np.vstack([fr, _strip(job, W, float(tm.t_s[i]))]))
+        vw.write(np.vstack([fr, _strip(job, W, float(tm.clip_times()[i]))]))
     vw.release()
     # re-encode to H.264 for browser playback (ffmpeg CLI; per-frame conversion in Python is slow)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp), "-c:v", "libx264", "-preset", "veryfast",

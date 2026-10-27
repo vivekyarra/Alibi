@@ -1,0 +1,135 @@
+{
+ "job_id": "aws4-dropped-frames-041757",
+ "file_sha256": "97bd81ea29c2a33b16465d912f7ac4e526a0425b1cc54b33e27aeb10b46074b9",
+ "engine_version": "0.1.0",
+ "config_hash": "8f439372b865ee8e",
+ "thresholds_hash": "0161b96f77d3e925",
+ "verdict": "VERIFIED",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_ESTIMATED",
+  "MATCH_OK"
+ ],
+ "time_estimate_utc": 1768903200.109978,
+ "time_estimate_iso": "2026-01-20T10:00:00.109978+00:00",
+ "time_uncertainty_s": 1.612423172503822,
+ "zone": "SIM50",
+ "match": {
+  "zone": "SIM50",
+  "window_start_utc": 1768899600.0,
+  "window_end_utc": 1768906800.0,
+  "best_offset_utc": 1768903200.109978,
+  "rho1": 0.95681091496428,
+  "rho2": 0.7706804381511355,
+  "margin": 0.18613047681314443,
+  "psr": 2.942828361245858,
+  "track_length_s": 69.0,
+  "time_uncertainty_s": 1.612423172503822,
+  "passes": true,
+  "segments": [
+   {
+    "start_s": 2.0,
+    "end_s": 32.0,
+    "offset_s": 1768903199.6371696,
+    "rho1": 0.9627293848844974,
+    "margin": 0.04941018234792338,
+    "passes": true
+   },
+   {
+    "start_s": 32.0,
+    "end_s": 62.0,
+    "offset_s": 1768903200.546203,
+    "rho1": 0.9598167015723367,
+    "margin": 0.0023399308189189227,
+    "passes": false
+   }
+  ],
+  "segments_consistent": null
+ },
+ "continuity_events": [],
+ "face_region": null,
+ "quality": {
+  "codec": "h264",
+  "width": 320,
+  "height": 240,
+  "frames": 2085,
+  "bitrate": 490747,
+  "bits_per_pixel": 0.21453018834932053,
+  "transfer": "bt709",
+  "rotation_metadata_deg": 0,
+  "timestamp_source": "sensor",
+  "jitter_p50_ms": 3.3305269653283176e-07,
+  "jitter_p95_ms": 3.338056941970535e-07,
+  "timing_assumption": "sensor_timestamp_is_first_row_exposure_start",
+  "opencv_frame_count": 2085,
+  "gaps": [
+   {
+    "frame_index": 600,
+    "t_s": 20.19999999999999,
+    "size_s": 0.20000000100000648
+   },
+   {
+    "frame_index": 1294,
+    "t_s": 43.633333332999996,
+    "size_s": 0.30000000000001137
+   }
+  ],
+  "readout_s": 0.025285469843590924,
+  "readout_source": "READOUT_ESTIMATED",
+  "motion_level_px": 0.10989784047152439,
+  "camera_motion_px": 0.032422965009069944,
+  "static_fraction": 1.0,
+  "segmentation": "ok",
+  "foreground_fraction": 0.052121927458033575,
+  "track_id": "t1",
+  "axis": "rows+",
+  "nominal_flicker_hz": 100.0,
+  "band_snr_db": 8.066753447894417,
+  "estimators_agree": true,
+  "dft_peak_hz": 100.02934823200873,
+  "phase_mean_flicker_hz": 100.02626642175629,
+  "patch_ids": [
+   53,
+   35,
+   37,
+   36,
+   23,
+   31,
+   29,
+   25,
+   30,
+   15,
+   28,
+   39,
+   34,
+   27
+  ],
+  "track_samples": 66,
+  "verdict_rule": "S13.4",
+  "pdf_engine": "weasyprint"
+ },
+ "stage_timings_s": {
+  "S1_ingest": 0.3257,
+  "S2_linear": 2.1445,
+  "S3_readout": 2.0851,
+  "S7_rowsignal": 2.6154,
+  "S4_motion": 6.4908,
+  "S5_segment": 1.006,
+  "S6_patches": 1.5211,
+  "S8_phase": 0.7494,
+  "S10_match": 0.7262,
+  "S14_overlay": 24.0282,
+  "S15_report": 1.1517
+ },
+ "artifacts": {
+  "overlay_mp4": "/app/work/jobs/aws4-dropped-frames-041757/overlay.mp4",
+  "report_html": "/app/work/jobs/aws4-dropped-frames-041757/report.html",
+  "report_pdf": "/app/work/jobs/aws4-dropped-frames-041757/report.pdf",
+  "report_json": "/app/work/jobs/aws4-dropped-frames-041757/result.json",
+  "plot_enf_track": "/app/work/jobs/aws4-dropped-frames-041757/enf_track.png",
+  "plot_ncc_scan": "/app/work/jobs/aws4-dropped-frames-041757/ncc_scan.png",
+  "plot_band_amplitude": "/app/work/jobs/aws4-dropped-frames-041757/band_amplitude.png"
+ },
+ "reviewer": null,
+ "notes": []
+}

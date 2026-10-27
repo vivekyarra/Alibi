@@ -1,0 +1,113 @@
+{
+ "name": "insert_other_time__s1190",
+ "condition": "insert_other_time",
+ "split": "calibration",
+ "label": "SYNTHETIC",
+ "class": "edited",
+ "expected_verdict": "CONTRADICTED",
+ "planner": "fallback",
+ "wall_s": 1134.3162747999886,
+ "truth_start_utc": 1768737804.0,
+ "video_s": 101.96666666666667,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_FROM_SIDECAR",
+  "NO_UNIQUE_MATCH",
+  "DROPPED_FRAMES_EXPLAINED"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 7.9868,
+  "S2_linear": 128.7785,
+  "S3_readout": 0.0032,
+  "S4_motion": 303.8599,
+  "S5_segment": 0.0214,
+  "S7_rowsignal": 56.8206,
+  "S6_patches": 71.4072,
+  "S8_phase": 48.8569,
+  "S10_match": 1.4011,
+  "S11_continuity": 0.0562,
+  "S12_face": 0.0025,
+  "S14_overlay": 497.0648,
+  "S15_report": 16.3729
+ },
+ "band_snr_db": 11.012252967489642,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": 11.012252967489642,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.9936804938567109,
+   "rho2": 0.8960336909645847,
+   "margin": 0.09764680289212613,
+   "length_s": 69.0,
+   "best_offset_utc": 1768737803.9242845,
+   "coverage": true,
+   "segment_stats": [
+    {
+     "rho1": 0.9935035946610196,
+     "offset": 1768737803.917714,
+     "margin": 0.010263602517136983
+    },
+    {
+     "rho1": 0.9901438472882539,
+     "offset": 1768737803.8663437,
+     "margin": 0.01891666017170257
+    }
+   ]
+  },
+  "boundaries": [
+   {
+    "t_s": -1469.933333333,
+    "z": 3.10069436071448,
+    "rad": 2.9873018482494693,
+    "gap": false
+   },
+   {
+    "t_s": -1448.0666666660002,
+    "z": 10.583081981887535,
+    "rad": 0.5466187180791628,
+    "gap": false
+   },
+   {
+    "t_s": 30.0,
+    "z": 0.0,
+    "rad": NaN,
+    "gap": true
+   }
+  ]
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\insert_other_time__s1190\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "edits_true_t_s": [
+  30.0
+ ],
+ "edit_events_t_s": [],
+ "edit_localization_error_s": [],
+ "edit_detected": false,
+ "dropped_false_alarm": false
+}

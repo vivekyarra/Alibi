@@ -228,6 +228,36 @@ def test_dropped_frames_with_true_timestamps_not_flagged():
     assert Reason.DROPPED_FRAMES_EXPLAINED in res.reasons
 
 
+
+def test_edit_event_time_is_in_clip_time_not_sensor_time():
+    # spliced clip: sensor timestamps come from another recording (offset by about -1470 s); the reported event
+    # time must be the boundary's position inside the clip (eval defect B, insert_other_time__s1191)
+    t, phi = _phase_series(jump_at=400, jump=0.6)
+    res = continuity.check_continuity(t - 1470.0, phi, [], 4.0, THR["continuity"], t_clip=t)
+    ed = [e for e in res.events if e.kind == "EDIT_CANDIDATE"]
+    assert len(ed) == 1 and ed[0].frame_index == 400
+    assert ed[0].t_s == pytest.approx(t[400])
+    assert all(b["t_s"] >= 0 for b in res.boundaries)
+    assert res.residual_t.min() >= 0
+
+
+def test_timing_clip_times_follow_pts_when_sensor_timestamps_jump():
+    from gridprint_engine import io
+
+    k, dt = 120, 1 / 30
+    pts = np.arange(k) * dt
+    sensor_s = pts.copy()
+    sensor_s[60:] = pts[60:] - 1500.0  # inserted footage keeps its own (earlier) sensor timestamps
+    ns = [int(round((v + 2000.0) * 1e9)) for v in sensor_s]
+    sc = CaptureSidecar(app_version="t", device_model="t", sensor_orientation=0, frame_sensor_timestamps_ns=ns,
+                        frame_exposure_ns=[1_000_000] * k, frame_duration_ns=[33_333_333] * k,
+                        rolling_shutter_skew_ns=25_000_000, iso=100, wall_clock_start_utc="2026-01-01T00:00:00+00:00",
+                        wall_clock_source="test", zone="SIM50", video_sha256="0" * 64)
+    tm = io.compute_timing(pts, sc, 1.5)
+    assert tm.source == "sensor" and tm.t_s[60] < -1000
+    np.testing.assert_allclose(tm.clip_times(), pts)
+    assert all(0 <= g.t_s <= pts[-1] for g in tm.gaps)
+
 # ---------------------------------------------------------------- S4 motion
 def test_motion_static_scene_with_moving_bands_is_static():
     from gridprint_engine import motion

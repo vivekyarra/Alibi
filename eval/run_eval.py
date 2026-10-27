@@ -61,6 +61,7 @@ def run_clip(item: dict[str, Any], data_dir: str, out_dir: str, planner_kind: st
     sys.path[:0] = [str(REPO), str(REPO / "engine")]
     from agent.fallback_planner import FallbackPlanner
     from agent.orchestrator import run_in_process
+    from eval.metrics import edit_detected
     from eval.replay import raw_from_job
     from gridprint_engine.adapters import LocalGridLog, LocalJobStore
     from gridprint_engine.config import settings
@@ -118,10 +119,10 @@ def run_clip(item: dict[str, Any], data_dir: str, out_dir: str, planner_kind: st
     events = [e for e in (res.continuity_events or []) if e.kind == "EDIT_CANDIDATE"]
     rec["edits_true_t_s"] = edit_times
     rec["edit_events_t_s"] = [e.t_s for e in events]
-    if edit_times:
-        errs = [min(abs(t - e.t_s) for e in events) for t in edit_times] if events else []
-        rec["edit_localization_error_s"] = errs
-        rec["edit_detected"] = bool(res.verdict.value == "CONTRADICTED")
+    if item["class"] == "edited":
+        rec["edit_detected"] = edit_detected(rec)
+    if edit_times:  # localization only where the ground truth gives an edit time
+        rec["edit_localization_error_s"] = [min(abs(t - e.t_s) for e in events) for t in edit_times] if events else []
     rec["dropped_false_alarm"] = bool(truth.get("dropped") and not truth.get("edits")
                                       and any(e.kind == "EDIT_CANDIDATE" for e in res.continuity_events))
     return rec

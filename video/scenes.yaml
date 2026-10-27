@@ -1,0 +1,286 @@
+# GRIDPRINT submission video: scene list (SPEC 14.4, docs/VIDEO_SCRIPT.md).
+#
+# Fields per scene:
+#   id          unique name
+#   target_s    planned length (for the plan only)
+#   min_s       minimum visual time; scene length = max(narration + padding, min_s)
+#   narration   text spoken by Windows System.Speech and burned in as subtitles
+#   narration_by  optional: choose narration from real data. Keys:
+#                   source: "verdict:<run>"  -> the engine verdict of that run
+#                           "trace"          -> "recovery" if the agent trace re-extracted with higher band SNR,
+#                                               else "plain"; "none" when no agent trace exists
+#                   options: {<value>: text, default: text}
+#               Placeholders in narration: {planner_phrase} (from the agent trace).
+#   visual      what is on screen (type + params). All data comes from real files.
+#
+# Narration rules: plain, short, active sentences. No hype. No numbers in narration (numbers appear on screen
+# with their source file). Never "prove"/"proves" for the product; forbidden-claims list is enforced by
+# make_video.py (scripts/claims_lint.py).
+
+engine_runs:
+  capture_verified:
+    video: D:/Open-cv/data/demo/capture-verified.mp4
+    sidecar: D:/Open-cv/data/demo/capture-verified.sidecar.json
+    gridlog: D:/Open-cv/data/gridlog
+    truth: D:/Open-cv/data/demo/capture-verified.truth.json
+  cut_1s:
+    video: D:/Open-cv/data/demo/cut-1s.mp4
+    gridlog: D:/Open-cv/data/gridlog
+    truth: D:/Open-cv/data/demo/cut-1s.truth.json
+  public_fluorescent:
+    video: D:/Open-cv/data/public/fluorescent_beat_effect.mp4
+    gridlog: D:/Open-cv/data/gridlog
+
+credit_public: "Footage: Wikimedia Commons, 'Fluorescent beat effect', CC BY-SA 3.0"
+
+scenes:
+  - id: hook
+    target_s: 12
+    min_s: 10
+    narration: >-
+      AI can fake a video. Now people call real videos fake.
+      GRIDPRINT checks whether a video is real, from the light in the room.
+    visual:
+      type: title
+      title: GRIDPRINT
+      lines:
+        - "AI can fake a video."
+        - "Now people call real videos fake."
+        - "GRIDPRINT checks whether a video is real, from the light in the room."
+      footer: "OpenCV AI Competition 2026  ·  OpenCV 5 + AWS"
+
+  - id: physics
+    target_s: 24
+    min_s: 20
+    narration: >-
+      Lights on the power grid flicker at twice the grid frequency.
+      That frequency drifts a little every second, and the whole grid shares the same drift.
+      A phone camera reads its sensor one row at a time.
+      So the flicker shows up as bands that move across the picture.
+      Here you see them in a public clip.
+    visual:
+      type: public_clip
+      heading: "Rolling shutter turns light flicker into bands"
+      bullets:
+        - "Mains lights flicker at twice the grid frequency."
+        - "The grid frequency drifts; the whole grid shares the drift."
+        - "The sensor is read one row at a time (rolling shutter)."
+        - "So the flicker becomes moving bands."
+
+  - id: public_result
+    target_s: 14
+    min_s: 12
+    narration_by:
+      source: "verdict:public_fluorescent"
+      options:
+        INCONCLUSIVE: >-
+          We ran the engine on this public clip. The result is INCONCLUSIVE. The reasons are on screen.
+          A result without a match is never evidence of a fake.
+        VERIFIED: >-
+          We ran the engine on this public clip. The result is VERIFIED. The details are on screen.
+        CONTRADICTED: >-
+          We ran the engine on this public clip. The result is CONTRADICTED, which stays pending until a person
+          reviews it. The reasons are on screen.
+        default: >-
+          The engine run on this public clip is not available yet.
+    visual:
+      type: engine_run
+      run: public_fluorescent
+      heading: "Engine run on the public clip"
+
+  - id: verified
+    target_s: 26
+    min_s: 22
+    narration_by:
+      source: "verdict:capture_verified"
+      options:
+        VERIFIED: >-
+          This is a synthetic test clip from our simulator, with a capture sidecar.
+          The engine measures the bands, builds a grid frequency track, and matches it with the grid log.
+          The result is VERIFIED, with an estimated recording time and its uncertainty.
+        INCONCLUSIVE: >-
+          This is a synthetic test clip from our simulator, with a capture sidecar.
+          The engine measures the bands, builds a grid frequency track, and compares it with the grid log.
+          The result is INCONCLUSIVE. The reasons are on screen.
+        CONTRADICTED: >-
+          This is a synthetic test clip from our simulator, with a capture sidecar.
+          The engine measures the bands and compares them with the grid log.
+          The result is CONTRADICTED, pending human review. The reasons are on screen.
+        default: >-
+          The engine run on the synthetic capture clip is not available yet.
+    visual:
+      type: engine_run
+      run: capture_verified
+      heading: "Synthetic capture clip with sidecar"
+
+  - id: evidence
+    target_s: 16
+    min_s: 14
+    narration: >-
+      The report shows the evidence.
+      The top plot is the frequency track from the video, over the matched reference.
+      The lower plot shows the flicker phase jump at each frame boundary.
+    visual:
+      type: plots
+      run: capture_verified
+      files: [enf_track.png, phase_residual.png]
+      heading: "Evidence plots from the engine report"
+
+  - id: cut
+    target_s: 26
+    min_s: 22
+    narration_by:
+      source: "verdict:cut_1s"
+      options:
+        CONTRADICTED: >-
+          Now we remove one second from the same clip and join the ends.
+          The flicker phase jumps at the cut, and the engine marks it.
+          The result is CONTRADICTED. It stays pending until a person reviews the evidence and approves it.
+        INCONCLUSIVE: >-
+          Now we remove one second from the same clip and join the ends.
+          On this run the engine returns INCONCLUSIVE. The reasons are on screen.
+          A cut can also be missed. We list that in our limitations.
+        VERIFIED: >-
+          Now we remove one second from the same clip and join the ends.
+          On this run the engine returns VERIFIED. The cut was not found.
+          We list this kind of miss in our limitations.
+        default: >-
+          The engine run on the cut clip is not available yet.
+    visual:
+      type: engine_run
+      run: cut_1s
+      heading: "Same clip with one second removed"
+      seek: continuity
+      side_plot: phase_residual.png
+
+  - id: web_ui
+    target_s: 16
+    min_s: 15
+    narration: >-
+      In the web app, you upload a video and follow the job as it runs.
+      A reviewer reads the evidence before any CONTRADICTED result becomes final.
+    visual:
+      type: ui
+      shots:
+        - {file: video/assets/ui_home.png, caption: "Upload"}
+        - {file: video/assets/ui_job.png, caption: "Job page"}
+        - {file: video/assets/ui_reviewer.png, caption: "Reviewer"}
+
+  - id: agent_trace
+    target_s: 26
+    min_s: 22
+    narration_by:
+      source: trace
+      options:
+        recovery: >-
+          An agent plans each job and calls the OpenCV tools.
+          In this run, the first pass gave a weak signal.
+          The agent ranked the light patches again and extracted again, and the signal got stronger.
+          The agent never writes the verdict. Fixed rules do that.
+        plain: >-
+          An agent plans each job and calls the OpenCV tools, one step at a time.
+          Every step and its reason are logged.
+          The agent never writes the verdict. Fixed rules do that.
+        none: >-
+          An agent plans each job and calls the OpenCV tools. Its trace is logged for every job.
+          The agent never writes the verdict. Fixed rules do that.
+    visual:
+      type: trace
+      heading: "Agent trace"
+
+  - id: architecture
+    target_s: 20
+    min_s: 18
+    narration: >-
+      The engine uses OpenCV 5. On AWS, jobs run on Graviton workers.
+      The agent calls engine tools through MCP.
+      {planner_phrase}
+    visual:
+      type: image
+      svg: docs/diagrams/architecture.svg
+      override_png: video/assets/architecture.png
+      heading: "Architecture"
+      pan: vertical
+
+  - id: agent_workflow
+    target_s: 12
+    min_s: 11
+    narration: >-
+      This is the agent workflow. Each tool call and its reason go into the trace.
+    visual:
+      type: image
+      svg: docs/diagrams/agent_workflow.svg
+      override_png: video/assets/agent_workflow.png
+      heading: "Agent workflow"
+      pan: none
+
+  - id: results
+    target_s: 18
+    min_s: 16
+    narration: >-
+      Every number on this screen is read from a file in the results folder, and shows its source.
+      Results that do not exist yet say pending.
+    visual:
+      type: results
+      heading: "Measured results"
+
+  - id: limitations
+    target_s: 24
+    min_s: 20
+    narration: >-
+      GRIDPRINT has limits. Phone anti-banding hides the flicker in many ordinary videos.
+      Short clips, strong compression, HDR, daylight, and fast motion also stop the check.
+      Then the result is INCONCLUSIVE, and that is not evidence of a fake.
+    visual:
+      type: bullets
+      heading: "Limitations"
+      source: "docs/TECHNICAL_REPORT.md section 11"
+      bullets:
+        - "Phone anti-banding removes the bands in many ordinary videos."
+        - "Short clips can match many reference times: NO_UNIQUE_MATCH."
+        - "Strong recompression removes the faint bands."
+        - "HDR (HLG, PQ) is not supported."
+        - "Daylight, battery and DC lamps give little or no flicker."
+        - "Fast motion reduces the static area."
+        - "A cut of a whole number of flicker periods can be too small to detect."
+        - "Time can be found only inside the reference log."
+
+  - id: responsible_use
+    target_s: 16
+    min_s: 15
+    narration: >-
+      GRIDPRINT is not a deepfake classifier, and it is not cryptographic proof.
+      It reports only the grid zone, never a finer location.
+      A person must approve every CONTRADICTED result.
+    visual:
+      type: bullets
+      heading: "Responsible use"
+      source: "docs/RESPONSIBLE_USE.md"
+      bullets:
+        - "Not a deepfake classifier. Not face recognition. Not a location tracker."
+        - "Not cryptographic proof of authenticity."
+        - "Three verdicts only: VERIFIED, CONTRADICTED, INCONCLUSIVE."
+        - "A missing signal is never evidence that a video is fake."
+        - "Every CONTRADICTED result needs human review before it is final."
+        - "Output location is limited to the grid zone. Short retention."
+
+  - id: team
+    target_s: 20
+    min_s: 6
+    narration: >-
+      This is our team.
+    visual:
+      type: team
+      file: video/assets/team.mp4
+
+  - id: closing
+    target_s: 8
+    min_s: 7
+    narration: >-
+      GRIDPRINT. A check you can see in the light.
+    visual:
+      type: title
+      title: GRIDPRINT
+      lines:
+        - "A check you can see in the light."
+      footer: "github.com/vivekyarra/Alibi"

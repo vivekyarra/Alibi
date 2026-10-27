@@ -1,0 +1,79 @@
+{
+ "name": "noisy__s1080",
+ "condition": "noisy",
+ "split": "calibration",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 297.2581475999905,
+ "truth_start_utc": 1768898700.0,
+ "video_s": 35.96666666666667,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_FROM_SIDECAR",
+  "NO_UNIQUE_MATCH"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 3.0399,
+  "S2_linear": 11.941,
+  "S3_readout": 0.0017,
+  "S4_motion": 86.6981,
+  "S5_segment": 0.0065,
+  "S7_rowsignal": 15.7432,
+  "S6_patches": 25.8467,
+  "S8_phase": 6.9136,
+  "S10_match": 1.6242,
+  "S11_continuity": 0.0128,
+  "S12_face": 0.0017,
+  "S14_overlay": 136.5263,
+  "S15_report": 8.1627
+ },
+ "band_snr_db": 11.079885807314987,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": 11.079885807314987,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.993137984995591,
+   "rho2": 0.8713682808109243,
+   "margin": 0.1217697041846667,
+   "length_s": 35.0,
+   "best_offset_utc": 1768898699.9686723,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": []
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\noisy__s1080\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "enf_rmse_mhz": 1.1473703542737834,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

@@ -1,6 +1,6 @@
 # GRIDPRINT progress
 
-Current milestone: M2/M3 hardening (video integration tests) and M8 (AWS deployment in progress).
+Current milestone: M8 (9 of 10 stacks deployed; Web/CloudFront BLOCKED-HUMAN H1), M11 (demo cases on the deployed endpoint), M2/M3 hardening.
 
 Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BLOCKED-HUMAN (waits for a task in `docs/HUMAN_TASKS.md`).
 
@@ -50,13 +50,16 @@ Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BL
 - Done: MCP server (12 tools, stdio test), fallback planner (B1–B6), Bedrock planner, policies, trace; `agent/tests` (13 passed); adversarial-planner fuzz (200 runs) in `tests/test_stress.py`.
 - Remaining: saved traces from real runs showing B1–B6; the evaluation run commits them under `results/`. Bedrock planner: Amazon Nova Lite through a cross-account role (D-026); the fallback planner covers failed model calls.
 
-## M8 — AWS deployment — OPEN
+## M8 — AWS deployment — OPEN (Web/CloudFront: BLOCKED-HUMAN H1)
 
 - Account 643700104680, region `us-east-1`, profile `gridprint`, resource prefix `orchard` (D-021).
-- Deployed: Network, Storage (KMS), Data, Ai, Auth, Compute (Graviton4 `c8g.xlarge` workers, max 1 per D-024; SQS with DLQ), Api (Fargate `linux/arm64` behind an internal ALB), Iot, Observability.
+- Deployed (9 of 10 stacks): Network, Storage (KMS), Data, Ai, Auth, Compute (Graviton4 `c8g.xlarge` workers, max 1 per D-024; SQS with DLQ), Api (Fargate `linux/arm64` behind an internal ALB), Iot, Observability.
+- Not deployed: Web (CloudFront waits for AWS account verification, H1). Public HTTPS instead through API Gateway → VPC link → internal ALB → Fargate API, with the web app on the same origin (D-025).
+- Endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com
+- Planner: Amazon Nova Lite on Bedrock through a cross-account role (D-026), with the deterministic guard and fallback.
 - Images: `linux/arm64`, built on a Graviton EC2 build instance by `infra/build_images.py`.
-- In progress: public HTTPS endpoint through API Gateway; end-to-end run on AWS.
-- Blockers: CloudFront (Web stack) needs AWS account verification (H1); EC2 vCPU quota increase (H1).
+- Evidence: end-to-end jobs on AWS in `results/aws/<job_id>/` and `results/aws/index.json` (collected by `scripts/collect_aws_runs.py`); table in `docs/TECHNICAL_REPORT.md` §6.
+- Remaining blockers: CloudFront (H1 account verification); EC2 vCPU quota increase (H1).
 
 ## M9 — Real evaluation — BLOCKED-HUMAN (H5–H7)
 
@@ -64,8 +67,28 @@ Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BL
 
 ## M10 — COOL benchmark — OPEN / BLOCKED-HUMAN (COOL subscription)
 
+- Done: configurations A (x86 `c7i.2xlarge`) and B (Graviton4 `c8g.2xlarge`), stock OpenCV 5.0.0, five runs each, with cost, parity and per-instance evidence in `results/bench/2026-10-27/`; reported in `docs/TECHNICAL_REPORT.md` §7. COOL award not claimed.
+- Remaining: configuration C (COOL) after the Marketplace subscription (H1 item 4); ENF-track parity on a clip with a usable signal.
+
 ## M11 — Demo and UX — OPEN
 
+<!-- m11-aws:begin (from results/aws/index.json) -->
+- Demo cases (SYNTHETIC simulator clips from `eval/make_demo_inputs.py`) run end to end on the deployed system. Cases with evidence in `results/aws/`:
+  - capture-verified: `VERIFIED` (FINAL), target `VERIFIED`, job `aws3-capture-verified-040158`
+  - cut-1s: `VERIFIED` (FINAL), target `CONTRADICTED`, job `aws3-cut-1s-040211` — MISSED target
+  - dropped-frames: `VERIFIED` (FINAL), target `VERIFIED`, job `aws3-dropped-frames-040218`
+  - agent-recovery: `INCONCLUSIVE` (FINAL), target `second-pass verdict`, job `aws4-agent-recovery-041816`
+  - capture-verified: `VERIFIED` (FINAL), target `VERIFIED`, job `aws4-capture-verified-041747`
+  - cut-1s: `VERIFIED` (FINAL), target `CONTRADICTED`, job `aws4-cut-1s-041731` — MISSED target
+  - daylight-only: `INCONCLUSIVE` (DRAFT), target `INCONCLUSIVE`, job `aws4-daylight-only-041808`
+  - dropped-frames: `VERIFIED` (FINAL), target `VERIFIED`, job `aws4-dropped-frames-041757`
+  - insertion: job failed on the worker (no result produced), target `CONTRADICTED`, job `aws4-insertion-041739` — MISSED target
+- Open: AWS runs for the cases not listed above; investigate cases marked MISSED target (see `docs/TECHNICAL_REPORT.md` §6).
+<!-- m11-aws:end -->
+
 ## M12 — Docs and video — OPEN (video: H8)
+
+- Done: all Part 14 documents exist; consistency pass on 2026-10-27 (planner Amazon Nova Lite per D-026, benchmark in report §7, COOL not claimed).
+- Remaining: video recording, upload and link (H8); README fresh-clone test result under `results/fresh_clone/`.
 
 ## M13 — Final check — OPEN (`scripts/final_check.py` reports the open items)

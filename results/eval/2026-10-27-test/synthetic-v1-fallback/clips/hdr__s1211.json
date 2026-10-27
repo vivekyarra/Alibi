@@ -1,0 +1,50 @@
+{
+ "name": "hdr__s1211",
+ "condition": "hdr",
+ "split": "test",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 3.6032313999603502,
+ "truth_start_utc": 1768910751.0,
+ "video_s": 5.966666666666667,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "HDR_UNSUPPORTED"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 2.5979,
+  "S14_overlay": 0.0,
+  "S15_report": 0.8592
+ },
+ "band_snr_db": null,
+ "agent": {
+  "tool_calls": 3,
+  "extractions": 0,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "HDR_UNSUPPORTED"
+  ]
+ },
+ "artifacts": {
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\hdr__s1211\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\hdr__s1211\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\hdr__s1211\\result.json"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

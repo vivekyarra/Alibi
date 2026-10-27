@@ -1,0 +1,64 @@
+{
+ "name": "weak_flicker__s1020",
+ "condition": "weak_flicker",
+ "split": "calibration",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 337.49780539999483,
+ "truth_start_utc": 1768732688.0,
+ "video_s": 35.96666666666667,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "SIGNAL_ABSENT",
+  "READOUT_FROM_SIDECAR"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 3.0364,
+  "S2_linear": 22.3393,
+  "S3_readout": 0.0004,
+  "S4_motion": 135.3129,
+  "S5_segment": 0.3107,
+  "S7_rowsignal": 12.6292,
+  "S6_patches": 20.9266,
+  "S8_phase": 33.815,
+  "S14_overlay": 86.4099,
+  "S15_report": 10.1709
+ },
+ "band_snr_db": 2.9535960953235865,
+ "agent": {
+  "tool_calls": 11,
+  "extractions": 4,
+  "first_extraction_weak": true,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": 2.9535960953235865,
+  "axis_ambiguous": false
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\weak_flicker__s1020\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\weak_flicker__s1020\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\weak_flicker__s1020\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\weak_flicker__s1020\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\weak_flicker__s1020\\enf_track.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\weak_flicker__s1020\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "enf_rmse_mhz": 1.5088952432048295,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

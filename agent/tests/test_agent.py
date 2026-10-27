@@ -263,3 +263,36 @@ def test_policy_drops_invalid_argument_values():
     st.verdict_done, st.verdict = True, "INCONCLUSIVE"
     a, _ = policies.enforce(Action("render", {}, "x"), st)
     assert a.tool == "render_report"
+
+
+def test_restarting_caller_restarts_lost_server_and_retries_once():
+    import asyncio
+
+    from agent.orchestrator import ConnectionLost, RestartingMcpCaller
+
+    class Dead:
+        async def call(self, tool, args):
+            raise ConnectionLost("Connection closed")
+
+    class Alive:
+        async def call(self, tool, args):
+            return {"tool": tool}
+
+    servers = [Dead(), Alive()]
+    c = RestartingMcpCaller(params=None)  # type: ignore[arg-type]
+
+    async def start():
+        c.caller = servers.pop(0)
+        return c.caller
+
+    c._start = start  # type: ignore[method-assign]
+    assert asyncio.run(c.call("analyze_motion", {"job_id": "j"})) == {"tool": "analyze_motion"}
+    assert c.restarts == 1
+
+    servers[:] = [Dead(), Dead()]
+    c.caller = None
+    try:
+        asyncio.run(c.call("analyze_motion", {"job_id": "j"}))
+        raise AssertionError("expected ConnectionLost")
+    except ConnectionLost:
+        pass

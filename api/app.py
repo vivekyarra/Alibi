@@ -112,6 +112,13 @@ def create_app(ctx: Context | None = None, start_job: Any = None) -> FastAPI:
     @app.post("/v1/jobs/{job_id}/start")
     def start(job_id: str, body: StartBody) -> dict[str, Any]:
         job = get_job(job_id)
+        if job["status"] == "created" and hasattr(ctx.storage, "uploaded_size"):
+            # AWS: the browser uploaded straight to S3 with the presigned URL, so the API never saw the bytes
+            size = ctx.storage.uploaded_size(job["upload_key"])
+            if size is not None:
+                if size > limits["max_file_bytes"]:
+                    raise HTTPException(413, "file too large")
+                job.update({"status": "uploaded", "size_bytes": size})
         if job["status"] not in ("uploaded", "done", "failed"):
             raise HTTPException(409, f"job status is {job['status']}")
         if body.sidecar is not None:

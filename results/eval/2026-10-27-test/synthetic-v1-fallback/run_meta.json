@@ -1,0 +1,9 @@
+{
+ "suite": "synthetic-v1",
+ "data": "../../data/synthetic/v1",
+ "planner": "fallback",
+ "split": "test",
+ "date": "2026-10-27-test",
+ "label": "SYNTHETIC",
+ "thresholds_hash": "0161b96f77d3e925"
+}

@@ -466,7 +466,8 @@ class Job:
         phi = np.where(tr.fits.snr >= self.E["continuity"]["min_frame_snr"], tr.track.phase_unwrapped, np.nan)
         with self._timed("S11_continuity"):
             res = s11.check_continuity(self.timing.t_s, phi, self.timing.gaps,
-                                       self.E["continuity"]["jump_window_s"], self.cfg.thresholds["continuity"])
+                                       self.E["continuity"]["jump_window_s"], self.cfg.thresholds["continuity"],
+                                       t_clip=self.timing.clip_times())
         self.continuity[tr.id] = res
         return {"track_id": tr.id, "events": [e.model_dump() for e in res.events][:50],
                 "edit_candidates": sum(e.kind == "EDIT_CANDIDATE" for e in res.events),

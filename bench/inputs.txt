@@ -1,4 +1,2 @@
-# sha256 video sidecar gridlog-root   (SYNTHETIC clips from eval/simulator/suites.py)
-ab2f7e2c226048ab4b77a10156538f5f68216d69d0bc33607a2a7c24f27a8387 data/synthetic/v1/clean__s1000.mp4 data/synthetic/v1/clean__s1000.sidecar.json data/synthetic/v1/gridlog/clean__s1000
-cbaac48734a453a0f3ba58f23c7bceca5cf55a67d07892a1f877291dd068376a data/synthetic/v1/camera_motion__s1060.mp4 data/synthetic/v1/camera_motion__s1060.sidecar.json data/synthetic/v1/gridlog/camera_motion__s1060
-77b87f3d115f3f920e8b9b1aaabb9ee6bba662c5672021d36bb9eb98e9910257 data/synthetic/v1/moving_objects__s1070.mp4 data/synthetic/v1/moving_objects__s1070.sidecar.json data/synthetic/v1/gridlog/moving_objects__s1070
+# sha256 video sidecar gridlog-root   (REAL footage: public CC BY-SA 3.0 clip "Fluorescent beat effect" from Wikimedia Commons, mp4 transcode of the .ogv in docs/LICENSES.md)
+b1101d4f30371132a23ddf4da29e03dc48db9731ba04b0fffb81d3afb5474db4 data/public/fluorescent_beat_effect.mp4 - data/gridlog_empty

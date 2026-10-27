@@ -1,0 +1,90 @@
+{
+ "name": "cut_1s__s1171",
+ "condition": "cut_1s",
+ "split": "test",
+ "label": "SYNTHETIC",
+ "class": "edited",
+ "expected_verdict": "CONTRADICTED",
+ "planner": "fallback",
+ "wall_s": 244.30187999998452,
+ "truth_start_utc": 1768714751.0,
+ "video_s": 34.96666666666667,
+ "verdict": "VERIFIED",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_FROM_SIDECAR",
+  "MATCH_OK",
+  "DROPPED_FRAMES_EXPLAINED"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 4.0571,
+  "S2_linear": 10.0426,
+  "S3_readout": 0.0,
+  "S4_motion": 98.436,
+  "S5_segment": 0.018,
+  "S7_rowsignal": 6.4452,
+  "S6_patches": 8.7867,
+  "S8_phase": 3.3991,
+  "S10_match": 2.2585,
+  "S11_continuity": 0.1142,
+  "S12_face": 0.0004,
+  "S14_overlay": 104.6514,
+  "S15_report": 5.7544
+ },
+ "band_snr_db": 10.87827310325058,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 1,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": 10.87827310325058,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.9872112389658195,
+   "rho2": 0.9217672873182987,
+   "margin": 0.06544395164752081,
+   "length_s": 35.0,
+   "best_offset_utc": 1768714750.7831974,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": [
+   {
+    "t_s": 18.099999999999994,
+    "z": 1.2865421530681356,
+    "rad": 0.16628954594616285,
+    "gap": true
+   }
+  ]
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\cut_1s__s1171\\band_amplitude.png"
+ },
+ "time_error_s": -0.21680259704589844,
+ "time_uncertainty_s": 2.0243103140523635,
+ "zone": "SIM50",
+ "edits_true_t_s": [
+  17.1
+ ],
+ "edit_events_t_s": [],
+ "edit_localization_error_s": [],
+ "edit_detected": false,
+ "dropped_false_alarm": false
+}

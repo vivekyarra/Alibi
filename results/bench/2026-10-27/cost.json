@@ -1,0 +1,19 @@
+{
+ "formula": "cost_per_video_hour_usd = hourly_price_usd / throughput_video_s_per_wall_s",
+ "configs": {
+  "A": {
+   "instance_type": "c7i.2xlarge",
+   "ec2_usd_per_hour": 0.357,
+   "software_fee_usd_per_hour": null,
+   "throughput": 0.916141939312045,
+   "cost_per_video_hour_usd": 0.3896776085462048
+  },
+  "B": {
+   "instance_type": "c8g.2xlarge",
+   "ec2_usd_per_hour": 0.31904,
+   "software_fee_usd_per_hour": null,
+   "throughput": 1.201048467324347,
+   "cost_per_video_hour_usd": 0.2656345756893108
+  }
+ }
+}

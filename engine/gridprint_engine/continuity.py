@@ -52,13 +52,18 @@ def _side_fits(t: np.ndarray, y: np.ndarray, lo: np.ndarray, hi: np.ndarray, tb:
 
 
 def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[GapEvent],
-                     jump_window_s: float, thr: dict[str, float], min_side_frames: int = 8) -> ContinuityResult:
+                     jump_window_s: float, thr: dict[str, float], min_side_frames: int = 8,
+                     t_clip: np.ndarray | None = None) -> ContinuityResult:
+    """`t_frame` (sensor or pts time) drives the fits. Reported times (events, raw boundaries, residual series) are
+    in-clip times `t_clip[frame]` when given, so a splice whose sensor timestamps come from another recording is
+    still located inside the clip."""
     ok = ~np.isnan(phi_unwrapped)
     idx = np.flatnonzero(ok)
     if len(idx) < 2 * min_side_frames:
         return ContinuityResult([], np.zeros(0), np.zeros(0), [])
     t = t_frame[idx].astype(np.float64)
     phi = phi_unwrapped[idx].astype(np.float64)
+    tc = (t_frame if t_clip is None else t_clip)[idx].astype(np.float64)
     # boundary j lies between samples j and j+1
     tb = 0.5 * (t[1:] + t[:-1])
     j = np.arange(len(t) - 1)
@@ -87,13 +92,13 @@ def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[
         if not peak[i] and gap is None:
             continue
         significant = bool(peak[i] and z[i] > sig_thr and abs(jump[i]) >= min_rad)
-        raw.append({"t_s": float(t[i + 1]), "z": float(z[i]), "rad": float(abs(jump[i])), "gap": gap is not None})
+        raw.append({"t_s": float(tc[i + 1]), "z": float(z[i]), "rad": float(abs(jump[i])), "gap": gap is not None})
         if gap is not None and not significant:
-            events.append(ContinuityEvent(kind="DROPPED_FRAMES_EXPLAINED", frame_index=k, t_s=float(t[i + 1]),
+            events.append(ContinuityEvent(kind="DROPPED_FRAMES_EXPLAINED", frame_index=k, t_s=float(tc[i + 1]),
                                           magnitude_rad=float(jump[i]), significance=float(z[i]), significant=False,
                                           gap_s=gap.size_s))
         elif significant:
-            events.append(ContinuityEvent(kind="EDIT_CANDIDATE", frame_index=k, t_s=float(t[i + 1]),
+            events.append(ContinuityEvent(kind="EDIT_CANDIDATE", frame_index=k, t_s=float(tc[i + 1]),
                                           magnitude_rad=float(jump[i]), significance=float(z[i]), significant=True,
                                           gap_s=gap.size_s if gap else None))
     reasons: list[Reason] = []
@@ -103,4 +108,5 @@ def check_continuity(t_frame: np.ndarray, phi_unwrapped: np.ndarray, gaps: list[
         reasons.append(Reason.DROPPED_FRAMES_EXPLAINED)
     # series for plots: the estimated phase jump at every boundary with enough frames on both sides
     valid = (nl >= min_side_frames) & (nr >= min_side_frames)
-    return ContinuityResult(events, tb[valid], jump[valid], reasons, raw)
+    tbc = 0.5 * (tc[1:] + tc[:-1])
+    return ContinuityResult(events, tbc[valid], jump[valid], reasons, raw)

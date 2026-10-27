@@ -1,16 +1,28 @@
-# PROVISIONAL — development placeholders. Must be replaced by eval/calibrate_thresholds.py (R8).
-provenance:
-  status: PROVISIONAL
-  generated_by: hand-written placeholder
 signal:
-  snr_absent_db: 3.0
-  snr_weak_db: 8.0
+  snr_absent_db: 0.0
+  snr_weak_db: 4.0
 match:
   min_track_s: 20
-  rho1_min: 0.7
-  margin_min: 0.15
+  rho1_min: 0.8
+  margin_min: 0.01
 continuity:
-  edit_significance_sigma: 6.0
-  edit_min_rad: 0.6
+  edit_significance_sigma: 10.0
+  edit_min_rad: 0.1
 facecheck:
   ratio_anomaly: 0.5
+provenance:
+  status: PROVISIONAL
+  note: 'PROVISIONAL: calibrated on SYNTHETIC data only; recalibrate on the real dataset
+    (M9, H5)'
+  generated_by: eval/calibrate_thresholds.py v1.0
+  date: '2026-10-27T03:48:08.984059+00:00'
+  run_dir: results\eval\2026-10-27\synthetic-v1-fallback
+  calibration_clips: 22
+  data_sha256: ed8004b5b62e0c1b910bdb438edc8e00ddf9a837b8e5b43f44e496bbcb9de5df
+  target_false_contradicted_rate: 0.01
+  calibration_fit:
+    false_contradicted: 0.0
+    coverage: 0.5625
+    wrong_time: 0
+    edit_detection: 0.4
+    n_auth: 17

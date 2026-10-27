@@ -20,7 +20,7 @@ The components below are the system design. All components have code in the repo
 | Jobs queue | CDK in `infra/` | Amazon SQS | Decouples the API from the engine workers. Worker autoscaling uses queue depth. |
 | Engine worker | `engine/`, `agent/`, `mcp_server/` | Amazon ECS on Graviton4 `c8g`, `linux/arm64`, OpenCV 5 (stock wheel); COOL AMI supported by the stack when `aws.cool_ami_id` is set | One task holds the agent orchestrator, the MCP client, and the MCP server `gridprint-engine` (stdio transport). |
 | GRIDPRINT Engine | `engine/gridprint_engine/` | inside the worker | OpenCV 5 analysis stages S1–S15 (SPEC Part 8). Python package with no AWS imports. |
-| GRIDPRINT Agent | `agent/` | inside the worker | Plans and adapts the analysis with engine tools. Planner: Claude on Amazon Bedrock, or the deterministic fallback planner. Never writes a verdict. |
+| GRIDPRINT Agent | `agent/` | inside the worker | Plans and adapts the analysis with engine tools. Planner: an LLM on Amazon Bedrock (Amazon Nova Lite through a cross-account role, D-026), with the deterministic fallback planner for any failed model step. Never writes a verdict. |
 | Reference Store | DynamoDB `GridLog` | Amazon DynamoDB | Grid frequency per zone and UTC second. Key `zone#YYYYMMDD` + epoch second. |
 | GRIDPRINT Node | `node/` | ESP32 + GPS PPS at a mains socket (through a certified plug-in AC-to-AC adapter) | Measures grid frequency each UTC second. Publishes over MQTT/TLS to AWS IoT Core. |
 | Ingest | `node/ingest/` | AWS Lambda (IoT topic rule) | Writes Node samples to `GridLog`. Median over nodes in one zone. |
@@ -28,7 +28,7 @@ The components below are the system design. All components have code in the repo
 | Stores | CDK | Amazon DynamoDB, Amazon S3 | `Jobs`, `Reviews`, `GridLog`, `TraceIndex` tables. Upload and results buckets with SSE-KMS and lifecycle deletion. |
 | Observability | CDK | Amazon CloudWatch | Structured JSON logs, metrics, dashboards (jobs, stage latency, verdict counts, agent iterations, errors, Node freshness), alarms. |
 | Evaluation | `eval/` | developer machine or AWS | Simulator, dataset validator, edit generator, threshold calibration, reports into `results/`. |
-| Benchmark | `bench/` | EC2 instances (configs A, B, C) | COOL vs stock OpenCV 5 on Graviton vs x86 (SPEC Part 12). |
+| Benchmark | `bench/` | EC2 instances (configs A, B, C) | Stock OpenCV 5 on x86 (A) and Graviton (B), COOL on Graviton (C) (SPEC Part 12). A and B ran on 2026-10-27 (`results/bench/2026-10-27/`); C waits for the COOL subscription. |
 
 ## 3. Data flow for one job
 
@@ -81,7 +81,7 @@ The engine has no AWS imports. All access to storage and data goes through three
 
 ## 6. Agent and MCP
 
-- The orchestrator (`agent/orchestrator.py`) runs the planner loop. The planner is `planner_bedrock.py` (Claude on Amazon Bedrock, model ID pinned in `config/default.yaml`) or `fallback_planner.py` (rules for B1–B6).
+- The orchestrator (`agent/orchestrator.py`) runs the planner loop. The planner is `planner_bedrock.py` (Amazon Bedrock Converse API with tool use, model ID pinned in `config/default.yaml`) or `fallback_planner.py` (rules for B1–B6).
 - `config/default.yaml` sets `agent.planner: bedrock` with `bedrock.model_id: us.amazon.nova-lite-v1:0`, called through a cross-account role (D-026). The fallback planner runs any step where the model call fails, and the trace records which planner made each decision.
 - `policies.py` enforces budgets and order rules in code, not only in the prompt.
 - The MCP server `gridprint-engine` runs in the same worker task as the orchestrator. Transport: stdio.
@@ -92,8 +92,8 @@ The engine has no AWS imports. All access to storage and data goes through three
 - Production engine containers are `linux/arm64` and run on Graviton `c8g` instances. The API runs on Fargate `linux/arm64`.
 - The `linux/amd64` engine image exists only for the x86 baseline of the COOL benchmark (SPEC Part 12, configuration A). It is not deployed in the production stack.
 - Images are built by `infra/build_images.py`: the `linux/arm64` images on a Graviton EC2 build instance, from the committed tree, and pushed to Amazon ECR. The `linux/amd64` engine image (benchmark only) is built with `--amd64`. All engine images use `infra/docker/engine.Dockerfile`, the same engine code, the same pinned Python dependencies (`uv.lock`), and the same OpenCV 5 release (`opencv-python-headless==5.0.0.93`, DECISIONS D-003). Configuration C replaces stock OpenCV 5 with the COOL build on Graviton.
-- The benchmark parity check compares ENF tracks and verdicts from A, B, and C.
-- If COOL cannot be obtained (V5), production runs stock OpenCV 5 on Graviton, the reason is documented, and the COOL award is not claimed.
+- The benchmark parity check compares ENF tracks and verdicts across configurations (A and B so far).
+- COOL is not active (V5: Marketplace subscription pending, H1). Production runs stock OpenCV 5 on Graviton, and the COOL award is not claimed.
 
 ## 8. Security boundaries
 
