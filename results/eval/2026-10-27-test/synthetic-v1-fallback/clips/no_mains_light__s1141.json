@@ -1,0 +1,69 @@
+{
+ "name": "no_mains_light__s1141",
+ "condition": "no_mains_light",
+ "split": "test",
+ "label": "SYNTHETIC",
+ "class": "authentic-without-mains-light",
+ "expected_verdict": "INCONCLUSIVE",
+ "planner": "fallback",
+ "wall_s": 261.4128824000363,
+ "truth_start_utc": 1768668437.0,
+ "video_s": 35.96666666666667,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "SIGNAL_ABSENT",
+  "READOUT_FROM_SIDECAR",
+  "HIGH_COMPRESSION",
+  "USER_INPUT_REQUESTED"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 1.6564,
+  "S2_linear": 8.0367,
+  "S3_readout": 0.0004,
+  "S4_motion": 104.1638,
+  "S5_segment": 0.0075,
+  "S7_rowsignal": 22.4415,
+  "S6_patches": 22.7202,
+  "S8_phase": 31.5785,
+  "S14_overlay": 64.6011,
+  "S15_report": 5.2421
+ },
+ "band_snr_db": -9.7117650434746,
+ "agent": {
+  "tool_calls": 13,
+  "extractions": 5,
+  "first_extraction_weak": true,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 5,
+  "budget_exhausted": false,
+  "user_input_requested": [
+   "original_file"
+  ],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "HIGH_COMPRESSION",
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": -9.7117650434746,
+  "axis_ambiguous": false
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\no_mains_light__s1141\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\no_mains_light__s1141\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\no_mains_light__s1141\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\no_mains_light__s1141\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\no_mains_light__s1141\\enf_track.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\no_mains_light__s1141\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "enf_rmse_mhz": 277.78156740840694,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

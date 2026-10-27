@@ -1,0 +1,94 @@
+{
+ "name": "web_compression__s1090",
+ "condition": "web_compression",
+ "split": "calibration",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 407.67165879998356,
+ "truth_start_utc": 1768573974.0,
+ "video_s": 35.96666666666667,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_FROM_SIDECAR",
+  "NO_UNIQUE_MATCH",
+  "HIGH_COMPRESSION"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 4.3592,
+  "S2_linear": 18.8021,
+  "S3_readout": 0.0162,
+  "S4_motion": 164.9122,
+  "S5_segment": 0.018,
+  "S7_rowsignal": 11.8008,
+  "S6_patches": 31.5499,
+  "S8_phase": 13.8714,
+  "S10_match": 1.9397,
+  "S11_continuity": 0.0039,
+  "S12_face": 0.0032,
+  "S14_overlay": 148.7876,
+  "S15_report": 10.325
+ },
+ "band_snr_db": 9.863972471622834,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "HIGH_COMPRESSION",
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": 9.863972471622834,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.8032186101922333,
+   "rho2": 0.7579434176355409,
+   "margin": 0.045275192556692434,
+   "length_s": 35.0,
+   "best_offset_utc": 1768573974.1645672,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": [
+   {
+    "t_s": 16.099999999999994,
+    "z": 4.156823790220421,
+    "rad": 0.12792107655418583,
+    "gap": false
+   },
+   {
+    "t_s": 32.19999999999999,
+    "z": 3.1457643588950175,
+    "rad": 0.1328181283788883,
+    "gap": false
+   }
+  ]
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\web_compression__s1090\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "enf_rmse_mhz": 1.9463938960713136,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

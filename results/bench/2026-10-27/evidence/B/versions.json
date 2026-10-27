@@ -1,0 +1,8 @@
+{
+  "cv2_version": "5.0.0",
+  "cv2_file": "/usr/local/lib64/python3.11/site-packages/cv2/__init__.py",
+  "python": "3.11.17 (main, Oct  9 2026, 00:00:00) [GCC 11.5.0 20240719 (Red Hat 11.5.0-5)]",
+  "platform": "Linux-6.18.56-125.164.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "machine": "aarch64",
+  "numpy": "2.4.6"
+}

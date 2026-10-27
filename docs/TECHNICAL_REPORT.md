@@ -140,30 +140,56 @@ Region: `us-east-1` (DECISIONS D-005). `make deploy` creates all stacks; `make d
 
 ### Deployment status (2026-10-27)
 
-Account 643700104680, region `us-east-1`, resource prefix `orchard` (D-021).
+Account 643700104680, region `us-east-1`, resource prefix `orchard` (D-021). Nine of ten stacks are deployed.
+
+Public endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (API Gateway → VPC link → internal ALB → Fargate arm64 API; web app on the same origin).
 
 | Stack | Status | Note |
 |---|---|---|
 | Network | Deployed | |
 | Storage | Deployed | S3 buckets with SSE-KMS |
 | Data | Deployed | DynamoDB `Jobs`, `Reviews`, `GridLog`, `TraceIndex` |
-| AI | Deployed | IAM permission for the pinned Bedrock model. Bedrock model access waits for AWS account verification (H1); runs use the fallback planner. |
+| AI | Deployed | Planner model Amazon Nova Lite on Amazon Bedrock through a cross-account role (D-026); the deterministic guard and fallback planner cover rejected or failed model steps. |
 | Auth | Deployed | Cognito user pool with `reviewer` group |
 | Compute | Deployed | ECS cluster; Graviton4 `c8g.xlarge` worker Auto Scaling group, at most one instance within the account vCPU quota (D-024); SQS queue and DLQ |
-| API | Deployed | Fargate `linux/arm64` behind an internal ALB. A public HTTPS endpoint through Amazon API Gateway is in progress. |
+| API | Deployed | Fargate `linux/arm64` behind an internal ALB. Public HTTPS through Amazon API Gateway (HTTP API) and a VPC link to the ALB (D-025). The web app is served from the same origin. |
 | IoT | Deployed | IoT topic rule and ingest Lambda |
 | Observability | Deployed | CloudWatch dashboard and alarms |
-| Web | Not deployed | CloudFront requires AWS account verification (H1). |
+| Web | Not deployed | CloudFront requires AWS account verification (H1). The web app is served by the API service instead. |
 
 Images: `linux/arm64`, built on a Graviton EC2 build instance by `infra/build_images.py` and pushed to Amazon ECR. They run on Graviton.
 
 COOL: not active. The Marketplace subscription is pending (H1). The engine runs stock OpenCV 5.0.0 on Graviton. The COOL award is not claimed unless the benchmark in §7 runs.
 
-End-to-end runs on AWS are in progress.
+### End-to-end runs on AWS
+
+Each run below is a demo case run on the deployed system. The job ran on a Graviton4 `c8g.xlarge` ECS worker, with the planner on Amazon Bedrock (Amazon Nova Lite) and the grid reference read from DynamoDB. The input clips are **SYNTHETIC**: rolling-shutter simulator clips from `eval/make_demo_inputs.py`, all with true recording start 2026-01-20T10:00:00Z. They are not real camera recordings.
+
+Evidence per job: `results/aws/<job_id>/` (`result.json`, `trace.json`, `report.html`, `report.pdf`, plots). The table is generated from `results/aws/index.json` (written by `scripts/collect_aws_runs.py`). "Error" is the recording-time estimate minus the true start. "Total stage time" is the sum of `stage_timings_s`.
+
+<!-- aws-runs:begin (generated from results/aws/index.json) -->
+| Job | Demo case | Target verdict | Measured verdict | Lifecycle | Reasons | Recording-time estimate (true start 2026-01-20T10:00:00Z) | Band SNR | Total stage time | Source |
+|---|---|---|---|---|---|---|---|---|---|
+| `aws3-capture-verified-040158` | capture-verified (SYNTHETIC) | `VERIFIED` | `VERIFIED` | `FINAL` | `READOUT_FROM_SIDECAR`, `MATCH_OK` | 2026-01-20T10:00:00.020533+00:00, error +0.021 s | 11.32 dB | 53.7 s | <!-- src: results/aws/index.json#aws3-capture-verified-040158.verdict --> <!-- src: results/aws/index.json#aws3-capture-verified-040158.time_estimate_iso --> <!-- src: results/aws/index.json#aws3-capture-verified-040158.band_snr_db --> <!-- src: results/aws/index.json#aws3-capture-verified-040158.stage_timings_s --> |
+| `aws3-cut-1s-040211` | cut-1s (SYNTHETIC) | `CONTRADICTED` | `VERIFIED` | `FINAL` | `READOUT_ESTIMATED`, `MATCH_OK`, `CLAIM_TIME_MATCH` | 2026-01-20T10:00:00.469923+00:00, error +0.470 s | 11.37 dB | 60.5 s | <!-- src: results/aws/index.json#aws3-cut-1s-040211.verdict --> <!-- src: results/aws/index.json#aws3-cut-1s-040211.time_estimate_iso --> <!-- src: results/aws/index.json#aws3-cut-1s-040211.band_snr_db --> <!-- src: results/aws/index.json#aws3-cut-1s-040211.stage_timings_s --> |
+| `aws3-dropped-frames-040218` | dropped-frames (SYNTHETIC) | `VERIFIED` (`DROPPED_FRAMES_EXPLAINED`) | `VERIFIED` | `FINAL` | `READOUT_FROM_SIDECAR`, `MATCH_OK`, `DROPPED_FRAMES_EXPLAINED` | 2026-01-20T10:00:00.014252+00:00, error +0.014 s | 11.43 dB | 52.1 s | <!-- src: results/aws/index.json#aws3-dropped-frames-040218.verdict --> <!-- src: results/aws/index.json#aws3-dropped-frames-040218.time_estimate_iso --> <!-- src: results/aws/index.json#aws3-dropped-frames-040218.band_snr_db --> <!-- src: results/aws/index.json#aws3-dropped-frames-040218.stage_timings_s --> |
+| `aws4-agent-recovery-041816` | agent-recovery (SYNTHETIC) | second-pass verdict after re-planning | `INCONCLUSIVE` | `FINAL` | `READOUT_ESTIMATED`, `NO_REFERENCE_COVERAGE` | none | 7.54 dB | 56.6 s | <!-- src: results/aws/index.json#aws4-agent-recovery-041816.verdict --> <!-- src: results/aws/index.json#aws4-agent-recovery-041816.time_estimate_iso --> <!-- src: results/aws/index.json#aws4-agent-recovery-041816.band_snr_db --> <!-- src: results/aws/index.json#aws4-agent-recovery-041816.stage_timings_s --> |
+| `aws4-capture-verified-041747` | capture-verified (SYNTHETIC) | `VERIFIED` | `VERIFIED` | `FINAL` | `READOUT_FROM_SIDECAR`, `MATCH_OK` | 2026-01-20T09:59:59.973488+00:00, error -0.027 s | 6.61 dB | 52.5 s | <!-- src: results/aws/index.json#aws4-capture-verified-041747.verdict --> <!-- src: results/aws/index.json#aws4-capture-verified-041747.time_estimate_iso --> <!-- src: results/aws/index.json#aws4-capture-verified-041747.band_snr_db --> <!-- src: results/aws/index.json#aws4-capture-verified-041747.stage_timings_s --> |
+| `aws4-cut-1s-041731` | cut-1s (SYNTHETIC) | `CONTRADICTED` | `VERIFIED` | `FINAL` | `READOUT_ESTIMATED`, `MATCH_OK`, `CLAIM_TIME_MATCH` | 2026-01-20T10:00:00.471766+00:00, error +0.472 s | 11.38 dB | 46.3 s | <!-- src: results/aws/index.json#aws4-cut-1s-041731.verdict --> <!-- src: results/aws/index.json#aws4-cut-1s-041731.time_estimate_iso --> <!-- src: results/aws/index.json#aws4-cut-1s-041731.band_snr_db --> <!-- src: results/aws/index.json#aws4-cut-1s-041731.stage_timings_s --> |
+| `aws4-daylight-only-041808` | daylight-only (SYNTHETIC) | `INCONCLUSIVE` | `INCONCLUSIVE` | `DRAFT` | `SIGNAL_ABSENT`, `READOUT_ESTIMATED`, `HIGH_COMPRESSION`, `USER_INPUT_REQUESTED` | none | -11.00 dB | 15.2 s | <!-- src: results/aws/index.json#aws4-daylight-only-041808.verdict --> <!-- src: results/aws/index.json#aws4-daylight-only-041808.time_estimate_iso --> <!-- src: results/aws/index.json#aws4-daylight-only-041808.band_snr_db --> <!-- src: results/aws/index.json#aws4-daylight-only-041808.stage_timings_s --> |
+| `aws4-dropped-frames-041757` | dropped-frames (SYNTHETIC) | `VERIFIED` (`DROPPED_FRAMES_EXPLAINED`) | `VERIFIED` | `FINAL` | `READOUT_ESTIMATED`, `MATCH_OK` | 2026-01-20T10:00:00.109978+00:00, error +0.110 s | 8.07 dB | 42.8 s | <!-- src: results/aws/index.json#aws4-dropped-frames-041757.verdict --> <!-- src: results/aws/index.json#aws4-dropped-frames-041757.time_estimate_iso --> <!-- src: results/aws/index.json#aws4-dropped-frames-041757.band_snr_db --> <!-- src: results/aws/index.json#aws4-dropped-frames-041757.stage_timings_s --> |
+| `aws4-insertion-041739` | insertion (SYNTHETIC) | `CONTRADICTED` | `job failed (no result)` | `None` |  | none | n/a | 0.0 s | <!-- src: results/aws/index.json#aws4-insertion-041739.verdict --> <!-- src: results/aws/index.json#aws4-insertion-041739.time_estimate_iso --> <!-- src: results/aws/index.json#aws4-insertion-041739.band_snr_db --> <!-- src: results/aws/index.json#aws4-insertion-041739.stage_timings_s --> |
+<!-- aws-runs:end -->
+
+Findings from these runs:
+- The capture-verified and dropped-frames cases gave their target verdicts on AWS.
+- The `cut-1s` case did **not** give its target verdict. The continuity check (`check_continuity`) found no edit event, so the job ended `VERIFIED`. This is a missed edit on a SYNTHETIC clip; it is listed as a failure case. The report does not claim edit detection on AWS from these runs.
+- Cases without a row (insertion, daylight-only, agent-recovery) have no AWS run evidence yet.
+
+Agent trace evidence (`results/aws/*/trace.json`): every step has `planner: "bedrock"` and `model_id: "us.amazon.nova-lite-v1:0"`. In each run the code-enforced guard rejected the model's proposal and substituted a rule step twice. The `decision_reason` reads "guard: planner proposed extract_flicker … (frequency or axis override before the first extraction); fallback rule: …" (steps 4 and 5). The model had tried to override the nominal frequency or readout axis before the first flicker extraction; the guard ran the deterministic rules (rank light patches, then a first extraction on all eligible patches). The last step is forced by the policy "report must be rendered". Behaviour B2 (readout unknown, so blind estimation) appears in the `cut-1s` run: `estimate_readout` returned `READOUT_ESTIMATED` and the verdict carries that reason. B1 and B3–B6 did not trigger in these runs (no weak signal, no high motion, no `CONTRADICTED` verdict). They are shown by the agent tests (`agent/tests/test_agent.py`).
 
 x86 and Arm: production containers are `linux/arm64`. The `linux/amd64` image exists only for the x86 baseline in the COOL benchmark.
 
-Deployment status, instance configuration, and the endpoint URL are added after milestone M8.
 
 ## 7. COOL benchmark
 
@@ -174,15 +200,17 @@ Protocol (SPEC Part 12): same engine code and pinned inputs (`bench/inputs.txt`)
 
 Metrics: throughput (video-seconds per wall-second), per-stage latency p50/p95, CPU utilization, memory, cost per hour of video (on-demand price from the AWS Price List API divided by throughput). At least five runs per configuration, mean and standard deviation. Parity check of ENF tracks and verdicts across A, B, C. Evidence that COOL executes: build information, loaded library paths, version string, profiler capture.
 
-Results: the tables for this section are generated by `eval/make_report.py` from `results/bench/<date>/`. No result is written by hand.
+COOL could not be obtained (V5: Marketplace subscription pending, H1), so the COOL award is not claimed. This section reports A vs B only, measured on 2026-10-27 on AWS (run `results/bench/2026-10-27/`). Both instances ran OpenCV 5.0.0 on Amazon Linux 2023 with the same pinned input. The input is a real recording: the public CC BY-SA clip listed in `bench/inputs.txt` and `docs/LICENSES.md`. Five runs per configuration; instances were terminated after the run.
 
-- COOL version and instance configuration: (generated)
-- Throughput and latency table: (generated)
-- Cost table: (generated)
-- Parity report: (generated)
-- Stages that COOL accelerates and stages it does not: (generated from the profile)
+| Config | Instance | Arch | Throughput (video-s per wall-s), mean ± std | S2 linear p50 | S4 motion p50 | S8 phase p50 | Peak RSS | On-demand price | Cost per video-hour |
+|---|---|---|---|---|---|---|---|---|---|
+| A | `c7i.2xlarge` | x86_64 | 0.916 ± 0.003 <!-- src: results/bench/2026-10-27/A/summary.json#throughput_video_s_per_wall_s --> | 5.12 s <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S2_linear.p50 --> | 2.38 s <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S4_motion.p50 --> | 1.61 s <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S8_phase.p50 --> | 2000 MB <!-- src: results/bench/2026-10-27/A/summary.json#peak_rss_mb_max --> | $0.357/h <!-- src: results/bench/2026-10-27/cost.json#configs.A.ec2_usd_per_hour --> | $0.390 <!-- src: results/bench/2026-10-27/cost.json#configs.A.cost_per_video_hour_usd --> |
+| B | `c8g.2xlarge` (Graviton4) | aarch64 | 1.201 ± 0.002 <!-- src: results/bench/2026-10-27/B/summary.json#throughput_video_s_per_wall_s --> | 4.24 s <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S2_linear.p50 --> | 1.65 s <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S4_motion.p50 --> | 0.98 s <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S8_phase.p50 --> | 1958 MB <!-- src: results/bench/2026-10-27/B/summary.json#peak_rss_mb_max --> | $0.319/h <!-- src: results/bench/2026-10-27/cost.json#configs.B.ec2_usd_per_hour --> | $0.266 <!-- src: results/bench/2026-10-27/cost.json#configs.B.cost_per_video_hour_usd --> |
 
-If COOL cannot be obtained (V5), this section states that the COOL award is not claimed and reports A vs B only.
+Findings:
+- Graviton4 processes the same video faster and at lower cost per video-hour than the x86 baseline of equal vCPU count (table above; full per-stage p50/p95 in the `summary.json` files).
+- Parity: verdicts are identical on A and B <!-- src: results/bench/2026-10-27/parity.json#pairs.0.verdicts_identical -->. The ENF tracks differ by up to 0.568 Hz <!-- src: results/bench/2026-10-27/parity.json#pairs.0.max_abs_enf_diff_hz -->, outside the 0.001 Hz tolerance. The clip has no usable flicker signal (verdict `INCONCLUSIVE`, `SIGNAL_ABSENT`), so the tracks are noise estimates and small floating-point differences between the two builds move them freely. A parity check on a clip with a strong signal is still open.
+- Evidence of the software stack on each instance: `results/bench/2026-10-27/evidence/{A,B}/` (OpenCV build information, loaded libraries, `lscpu`, instance identity, `pip freeze`).
 
 ## 8. Agent design and evaluation
 

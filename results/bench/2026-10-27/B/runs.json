@@ -1,0 +1,107 @@
+[
+ {
+  "run": 0,
+  "input": "data/public/fluorescent_beat_effect.mp4",
+  "wall_s": 12.627013114,
+  "cpu_s": 17.64,
+  "video_s": 15.133333333333333,
+  "cpu_util": 0.17462562049256458,
+  "verdict": "INCONCLUSIVE",
+  "stage_timings_s": {
+   "S1_ingest": 1.0459,
+   "S2_linear": 4.2561,
+   "S7_rowsignal": 0.4107,
+   "S3_readout": 3.3223,
+   "S4_motion": 1.6433,
+   "S5_segment": 0.0001,
+   "S6_patches": 1.1428,
+   "S8_phase": 0.982,
+   "S12_face": 0.0001
+  },
+  "peak_rss_mb": 1323.828125
+ },
+ {
+  "run": 1,
+  "input": "data/public/fluorescent_beat_effect.mp4",
+  "wall_s": 12.625886331000004,
+  "cpu_s": 17.61,
+  "video_s": 15.133333333333333,
+  "cpu_util": 0.17434419590768288,
+  "verdict": "INCONCLUSIVE",
+  "stage_timings_s": {
+   "S1_ingest": 1.0378,
+   "S2_linear": 4.2541,
+   "S7_rowsignal": 0.4091,
+   "S3_readout": 3.3444,
+   "S4_motion": 1.6458,
+   "S5_segment": 0.0001,
+   "S6_patches": 1.14,
+   "S8_phase": 0.9757,
+   "S12_face": 0.0001
+  },
+  "peak_rss_mb": 1891.2265625
+ },
+ {
+  "run": 2,
+  "input": "data/public/fluorescent_beat_effect.mp4",
+  "wall_s": 12.580865345000007,
+  "cpu_s": 17.53,
+  "video_s": 15.133333333333333,
+  "cpu_util": 0.17417323370930643,
+  "verdict": "INCONCLUSIVE",
+  "stage_timings_s": {
+   "S1_ingest": 1.0387,
+   "S2_linear": 4.2415,
+   "S7_rowsignal": 0.4076,
+   "S3_readout": 3.3237,
+   "S4_motion": 1.6448,
+   "S5_segment": 0.0001,
+   "S6_patches": 1.1322,
+   "S8_phase": 0.974,
+   "S12_face": 0.0001
+  },
+  "peak_rss_mb": 1924.53515625
+ },
+ {
+  "run": 3,
+  "input": "data/public/fluorescent_beat_effect.mp4",
+  "wall_s": 12.581943960000004,
+  "cpu_s": 17.550000000000004,
+  "video_s": 15.133333333333333,
+  "cpu_util": 0.17435699975888302,
+  "verdict": "INCONCLUSIVE",
+  "stage_timings_s": {
+   "S1_ingest": 1.038,
+   "S2_linear": 4.2154,
+   "S7_rowsignal": 0.411,
+   "S3_readout": 3.3276,
+   "S4_motion": 1.6496,
+   "S5_segment": 0.0001,
+   "S6_patches": 1.1441,
+   "S8_phase": 0.9777,
+   "S12_face": 0.0001
+  },
+  "peak_rss_mb": 1957.79296875
+ },
+ {
+  "run": 4,
+  "input": "data/public/fluorescent_beat_effect.mp4",
+  "wall_s": 12.584985610999993,
+  "cpu_s": 17.570000000000007,
+  "video_s": 15.133333333333333,
+  "cpu_util": 0.17451350902462323,
+  "verdict": "INCONCLUSIVE",
+  "stage_timings_s": {
+   "S1_ingest": 1.038,
+   "S2_linear": 4.2149,
+   "S7_rowsignal": 0.4103,
+   "S3_readout": 3.3185,
+   "S4_motion": 1.6521,
+   "S5_segment": 0.0001,
+   "S6_patches": 1.1474,
+   "S8_phase": 0.9855,
+   "S12_face": 0.0001
+  },
+  "peak_rss_mb": 1957.79296875
+ }
+]

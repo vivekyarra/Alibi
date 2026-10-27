@@ -1,0 +1,12 @@
+{
+ "tolerance_hz": 0.001,
+ "pairs": [
+  {
+   "a": "A",
+   "b": "B",
+   "max_abs_enf_diff_hz": 0.5677151317372662,
+   "within_tolerance": false,
+   "verdicts_identical": true
+  }
+ ]
+}

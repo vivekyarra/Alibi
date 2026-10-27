@@ -4,23 +4,16 @@ Status values: `BLOCKED-HUMAN` (waiting for a person), `DONE` (validated by scri
 
 ---
 
-## H1 — AWS account, account verification, quotas, Bedrock access, COOL subscription — BLOCKED-HUMAN
+## H1 — AWS account: remaining items — BLOCKED-HUMAN
 
-Done (2026-10-27): steps 1–3 (account 643700104680, deployer access, CLI profile `gridprint` in `us-east-1`) and the CDK bootstrap. Nine stacks are deployed (`docs/TECHNICAL_REPORT.md` §6).
+Done (2026-10-27): account 643700104680, deployer access, CLI profile `gridprint` in `us-east-1`, CDK bootstrap. Nine of ten stacks are deployed; the public endpoint is https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (API Gateway, D-025); the planner runs on Amazon Nova Lite through a cross-account role (D-026). Evidence: `results/aws/`.
 
-Done steps, for reference:
-1. Sign in to the AWS account you will use for the competition.
-2. Create an IAM user or IAM Identity Center permission set for deployment. Attach the policy in `infra/iam/deployer-policy.json`.
-3. On this machine, create the CLI profile named `gridprint` in region `us-east-1`: `aws configure --profile gridprint` (or `aws configure sso --profile gridprint`). Do not put keys in the repository.
-4. Bootstrap CDK once: `npx aws-cdk@2 bootstrap --profile gridprint`.
-
-Open items (each needs the account owner):
-1. **AWS account verification.** AWS Console → Support Center → open the case or notice about account verification and complete it. This unblocks CloudFront (the Web stack) and Amazon Bedrock.
-2. **EC2 vCPU quota increase.** AWS Console → Service Quotas → Amazon EC2 → "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances" (`L-1216C47A`) → Request increase. Ask for at least 32 vCPUs. This restores the default worker size and allows the benchmark instances (D-024).
-3. **Bedrock model access.** After verification: Bedrock console (`us-east-1`) → Model access → enable Anthropic Claude Sonnet 4.6. Accept the Anthropic use-case form if asked. Then set `bedrock.enabled: true` and `agent.planner: bedrock` in `config/default.yaml`.
-4. **COOL subscription.** Open the AWS Marketplace listing "Cloud Optimized OpenCV For AWS Graviton4" (`https://aws.amazon.com/marketplace/pp/prodview-fdvbfiewzuehs`) and subscribe. Note the AMI ID for `us-east-1` and put it in `config/default.yaml` under `aws.cool_ami_id`.
-5. **Budget alarm.** If it does not exist yet: AWS Console → Billing → Budgets → Create budget → Cost budget, with an email alarm at 80 % of your limit.
-6. Validate:
+Remaining items (each needs the account owner):
+1. **AWS account verification (unblocks CloudFront).** AWS Console → Support Center → open the account-verification case or notice and complete it. Then run `make deploy` to add the Web stack (CloudFront).
+2. **EC2 vCPU quota increase.** AWS Console → Service Quotas → Amazon EC2 → "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances" (`L-1216C47A`) → Request increase to at least 32 vCPUs. This restores the default worker size and allows the benchmark instances (D-024).
+3. **Claude model access through AWS Marketplace needs a valid payment method.** AWS Console → Billing and Cost Management → Payment preferences → add or fix a valid payment method. Then Bedrock console (`us-east-1`) → Model access → enable Anthropic Claude Sonnet 4.6 (accept the Anthropic use-case form if asked). Only after that, switch the planner model in `config/default.yaml`. Until then the planner stays on Amazon Nova Lite (D-026).
+4. **COOL subscription.** Open the AWS Marketplace listing "Cloud Optimized OpenCV For AWS Graviton4" (`https://aws.amazon.com/marketplace/pp/prodview-fdvbfiewzuehs`) and subscribe (needs the payment method from item 3). Put the `us-east-1` AMI ID in `config/default.yaml` under `aws.cool_ami_id`.
+5. Validate:
    ```bash
    make verify-aws
    ```
@@ -64,7 +57,7 @@ Open items (each needs the account owner):
 
 ## H5 — Record the real dataset — BLOCKED-HUMAN
 
-### H5-a — Download the public ENF video datasets (needs your login; the agent cannot create accounts)
+### H5-a — Download the public ENF video datasets (needs your login; the agent cannot create accounts) — BLOCKED-HUMAN
 Both sets have real rolling-shutter videos plus a recorded mains reference.
 1. EV-ENFD (Xu et al., CVPR 2023, code MIT): open the TeraBox link in https://github.com/xlx-creater/E-ENF (README, "Data").
    Download the video sequences and the `ENF_Reference` folder (each `.wav` is one hour of grid voltage).
@@ -89,7 +82,9 @@ Follow `eval/FACE_COMPOSITES.md`. Every person signs `eval/templates/consent_for
 
 ## H8 — Record and edit the ≤ 5-minute video — BLOCKED-HUMAN
 
-Use `docs/VIDEO_SCRIPT.md`. Upload as public or unlisted. Put the link in `README.md` (line "Video:"). `scripts/final_check.py` checks the link exists; record the duration with `python scripts/check_video_duration.py <file>`.
+1. **Team clip needed.** Record a short clip of the team (consenting members only) and save it as `video/assets/team.mp4`. `video/scenes.yaml` uses this file; until it exists, `video/make_video.py` shows a placeholder card in the team scene.
+2. Build and check the video per `docs/VIDEO_SCRIPT.md`. Any demo clip shown must be labelled SYNTHETIC where it comes from the simulator.
+3. Upload as public or unlisted. Put the link in `README.md` (line "Video:") and in `docs/SUBMISSION.md` (Links). `scripts/final_check.py` checks the link exists; record the duration with `python scripts/check_video_duration.py <file>`.
 
 ## H9 — Submit on Devpost — BLOCKED-HUMAN
 

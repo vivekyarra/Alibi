@@ -1,0 +1,27 @@
+{
+  "collected_utc": "2026-10-27T02:19:14+00:00",
+  "files": {
+    "build_information.txt": {
+      "marker_hits": {
+        "kleidicv": 4,
+        "kleidi": 4,
+        "cool": 0,
+        "opencv": 3
+      }
+    },
+    "versions.json": {},
+    "loaded_libraries.txt": {
+      "count": 47,
+      "marker_hits": {
+        "kleidicv": 0,
+        "kleidi": 0,
+        "cool": 0,
+        "opencv": 14
+      }
+    }
+  },
+  "perf": {
+    "status": "skipped",
+    "reason": "no --cmd given"
+  }
+}

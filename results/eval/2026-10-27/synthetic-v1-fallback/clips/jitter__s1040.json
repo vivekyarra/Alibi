@@ -1,0 +1,100 @@
+{
+ "name": "jitter__s1040",
+ "condition": "jitter",
+ "split": "calibration",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 355.37216660002014,
+ "truth_start_utc": 1768483175.0,
+ "video_s": 35.967420496891606,
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_ESTIMATED",
+  "NO_UNIQUE_MATCH",
+  "TIMESTAMP_JITTER_HIGH"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 3.136,
+  "S2_linear": 16.7429,
+  "S7_rowsignal": 12.7028,
+  "S3_readout": 45.0939,
+  "S4_motion": 92.9305,
+  "S5_segment": 0.0506,
+  "S6_patches": 38.4856,
+  "S8_phase": 25.0874,
+  "S10_match": 4.3386,
+  "S11_continuity": 0.006,
+  "S12_face": 0.0027,
+  "S14_overlay": 108.3847,
+  "S15_report": 13.132
+ },
+ "band_snr_db": 11.1779909931869,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 0,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_ESTIMATED",
+   "TIMESTAMP_JITTER_HIGH"
+  ],
+  "band_snr_db": 11.1779909931869,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.7328393784655547,
+   "rho2": 0.7250440656957988,
+   "margin": 0.007795312769755869,
+   "length_s": 35.0,
+   "best_offset_utc": 1768482519.3582969,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": [
+   {
+    "t_s": 17.332744444444444,
+    "z": 3.1137682297368943,
+    "rad": 0.9535170912421007,
+    "gap": false
+   },
+   {
+    "t_s": 28.166733333333333,
+    "z": 4.8122655577673195,
+    "rad": 3.057536955746437,
+    "gap": false
+   },
+   {
+    "t_s": 35.26537777777778,
+    "z": 3.2594252672278925,
+    "rad": 1.2361027440805898,
+    "gap": false
+   }
+  ]
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27\\synthetic-v1-fallback\\work\\jitter__s1040\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "enf_rmse_mhz": 44.92517723709132,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

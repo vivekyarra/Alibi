@@ -1,0 +1,79 @@
+{
+ "name": "daylight_partial__s1151",
+ "condition": "daylight_partial",
+ "split": "test",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 404.4294480999815,
+ "truth_start_utc": 1768790017.0,
+ "video_s": 35.96666666666667,
+ "verdict": "VERIFIED",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_ESTIMATED",
+  "MATCH_OK"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 5.2226,
+  "S2_linear": 13.2051,
+  "S7_rowsignal": 21.7048,
+  "S3_readout": 51.5945,
+  "S4_motion": 136.6456,
+  "S5_segment": 0.0112,
+  "S6_patches": 38.5982,
+  "S8_phase": 20.5513,
+  "S10_match": 1.5049,
+  "S11_continuity": 0.0021,
+  "S12_face": 0.0011,
+  "S14_overlay": 114.8383,
+  "S15_report": 4.9549
+ },
+ "band_snr_db": 5.359920296453062,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 1,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_ESTIMATED"
+  ],
+  "band_snr_db": 5.359920296453062,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.9887324896701691,
+   "rho2": 0.9630979925359814,
+   "margin": 0.02563449713418775,
+   "length_s": 35.0,
+   "best_offset_utc": 1768790017.1969523,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": []
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\daylight_partial__s1151\\band_amplitude.png"
+ },
+ "time_error_s": 0.19695234298706055,
+ "time_uncertainty_s": 2.444264265720046,
+ "zone": "SIM50",
+ "enf_rmse_mhz": 1.156598449991461,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

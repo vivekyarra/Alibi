@@ -75,5 +75,135 @@
    "S14_overlay": 36.9424,
    "S15_report": 1.0727
   }
+ },
+ {
+  "job_id": "aws4-agent-recovery-041816",
+  "verdict": "INCONCLUSIVE",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "READOUT_ESTIMATED",
+   "NO_REFERENCE_COVERAGE"
+  ],
+  "time_estimate_iso": null,
+  "band_snr_db": 7.539332816617346,
+  "stage_timings_s": {
+   "S1_ingest": 0.5777,
+   "S2_linear": 2.4379,
+   "S7_rowsignal": 2.6242,
+   "S3_readout": 7.8005,
+   "S4_motion": 6.744,
+   "S5_segment": 0.9506,
+   "S6_patches": 5.5234,
+   "S8_phase": 4.6962,
+   "S10_match": 0.1805,
+   "S14_overlay": 24.2106,
+   "S15_report": 0.8063
+  }
+ },
+ {
+  "job_id": "aws4-capture-verified-041747",
+  "verdict": "VERIFIED",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "READOUT_FROM_SIDECAR",
+   "MATCH_OK"
+  ],
+  "time_estimate_iso": "2026-01-20T09:59:59.973488+00:00",
+  "band_snr_db": 6.614609559814535,
+  "stage_timings_s": {
+   "S1_ingest": 0.2958,
+   "S2_linear": 2.1547,
+   "S3_readout": 0.0,
+   "S4_motion": 6.4506,
+   "S5_segment": 0.9503,
+   "S7_rowsignal": 1.3239,
+   "S6_patches": 1.5129,
+   "S8_phase": 0.7567,
+   "S10_match": 0.7072,
+   "S11_continuity": 0.0009,
+   "S14_overlay": 37.317,
+   "S15_report": 1.0563
+  }
+ },
+ {
+  "job_id": "aws4-cut-1s-041731",
+  "verdict": "VERIFIED",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "READOUT_ESTIMATED",
+   "MATCH_OK",
+   "CLAIM_TIME_MATCH"
+  ],
+  "time_estimate_iso": "2026-01-20T10:00:00.471766+00:00",
+  "band_snr_db": 11.376864427453565,
+  "stage_timings_s": {
+   "S1_ingest": 0.2926,
+   "S2_linear": 2.1276,
+   "S7_rowsignal": 2.5711,
+   "S3_readout": 4.4656,
+   "S6_patches": 3.1795,
+   "S4_motion": 6.3441,
+   "S5_segment": 0.9508,
+   "S8_phase": 2.4438,
+   "S10_match": 0.2308,
+   "S14_overlay": 22.8081,
+   "S15_report": 0.9082
+  }
+ },
+ {
+  "job_id": "aws4-daylight-only-041808",
+  "verdict": "INCONCLUSIVE",
+  "lifecycle_state": "DRAFT",
+  "reasons": [
+   "SIGNAL_ABSENT",
+   "READOUT_ESTIMATED",
+   "HIGH_COMPRESSION",
+   "USER_INPUT_REQUESTED"
+  ],
+  "time_estimate_iso": null,
+  "band_snr_db": -10.996643949422392,
+  "stage_timings_s": {
+   "S1_ingest": 0.0534,
+   "S2_linear": 0.8365,
+   "S7_rowsignal": 1.1071,
+   "S3_readout": 4.6561,
+   "S4_motion": 1.7013,
+   "S5_segment": 0.417,
+   "S6_patches": 2.3712,
+   "S8_phase": 4.0717
+  }
+ },
+ {
+  "job_id": "aws4-dropped-frames-041757",
+  "verdict": "VERIFIED",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "READOUT_ESTIMATED",
+   "MATCH_OK"
+  ],
+  "time_estimate_iso": "2026-01-20T10:00:00.109978+00:00",
+  "band_snr_db": 8.066753447894417,
+  "stage_timings_s": {
+   "S1_ingest": 0.3257,
+   "S2_linear": 2.1445,
+   "S3_readout": 2.0851,
+   "S7_rowsignal": 2.6154,
+   "S4_motion": 6.4908,
+   "S5_segment": 1.006,
+   "S6_patches": 1.5211,
+   "S8_phase": 0.7494,
+   "S10_match": 0.7262,
+   "S14_overlay": 24.0282,
+   "S15_report": 1.1517
+  }
+ },
+ {
+  "job_id": "aws4-insertion-041739",
+  "verdict": null,
+  "lifecycle_state": null,
+  "reasons": null,
+  "time_estimate_iso": null,
+  "band_snr_db": null,
+  "stage_timings_s": null
  }
 ]

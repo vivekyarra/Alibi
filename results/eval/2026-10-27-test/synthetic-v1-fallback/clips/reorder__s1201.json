@@ -1,0 +1,119 @@
+{
+ "name": "reorder__s1201",
+ "condition": "reorder",
+ "split": "test",
+ "label": "SYNTHETIC",
+ "class": "edited",
+ "expected_verdict": "CONTRADICTED",
+ "planner": "fallback",
+ "wall_s": 411.1928624000284,
+ "truth_start_utc": 1768575283.0,
+ "video_s": 69.96666666666667,
+ "verdict": "CONTRADICTED",
+ "lifecycle_state": "PENDING_REVIEW",
+ "reasons": [
+  "READOUT_FROM_SIDECAR",
+  "NO_UNIQUE_MATCH",
+  "EDIT_CANDIDATE",
+  "SEGMENT_OFFSET_INCONSISTENT",
+  "DROPPED_FRAMES_EXPLAINED"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 2.8501,
+  "S2_linear": 38.2312,
+  "S3_readout": 0.0006,
+  "S4_motion": 111.556,
+  "S5_segment": 0.0089,
+  "S7_rowsignal": 11.217,
+  "S6_patches": 25.77,
+  "S8_phase": 6.4723,
+  "S10_match": 0.8817,
+  "S11_continuity": 0.0159,
+  "S12_face": 0.0035,
+  "S14_overlay": 207.3359,
+  "S15_report": 6.4946
+ },
+ "band_snr_db": 11.025224775721618,
+ "agent": {
+  "tool_calls": 11,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 1,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": true
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_FROM_SIDECAR"
+  ],
+  "band_snr_db": 11.025224775721618,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.6547266275516092,
+   "rho2": 0.6287717961444808,
+   "margin": 0.025954831407128398,
+   "length_s": 69.0,
+   "best_offset_utc": 1768574642.1236339,
+   "coverage": true,
+   "segment_stats": [
+    {
+     "rho1": 0.9907400893610994,
+     "offset": 1768575282.9808614,
+     "margin": 0.030137925000769505
+    },
+    {
+     "rho1": 0.8708849069823121,
+     "offset": 1768577636.9263852,
+     "margin": 0.012180235106511894
+    }
+   ]
+  },
+  "boundaries": [
+   {
+    "t_s": 2.566666665999989,
+    "z": 26.41917969999762,
+    "rad": 1.0417735851283663,
+    "gap": false
+   },
+   {
+    "t_s": 36.0,
+    "z": 0.0,
+    "rad": NaN,
+    "gap": true
+   },
+   {
+    "t_s": 33.033333333,
+    "z": 7.428942806182527,
+    "rad": 0.8331384875328105,
+    "gap": false
+   },
+   {
+    "t_s": 66.0,
+    "z": 0.0,
+    "rad": NaN,
+    "gap": true
+   }
+  ]
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\reorder__s1201\\band_amplitude.png"
+ },
+ "time_error_s": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [
+  2.566666665999989
+ ],
+ "dropped_false_alarm": false
+}

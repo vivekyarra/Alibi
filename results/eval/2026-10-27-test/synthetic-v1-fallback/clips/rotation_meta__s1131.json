@@ -1,0 +1,79 @@
+{
+ "name": "rotation_meta__s1131",
+ "condition": "rotation_meta",
+ "split": "test",
+ "label": "SYNTHETIC",
+ "class": "authentic-with-mains-light",
+ "expected_verdict": "VERIFIED",
+ "planner": "fallback",
+ "wall_s": 410.1920305999811,
+ "truth_start_utc": 1768914055.0,
+ "video_s": 35.96666666666667,
+ "verdict": "VERIFIED",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "READOUT_ESTIMATED",
+  "MATCH_OK"
+ ],
+ "stage_timings_s": {
+  "S1_ingest": 1.5695,
+  "S2_linear": 10.3896,
+  "S7_rowsignal": 30.3018,
+  "S3_readout": 48.816,
+  "S4_motion": 114.3187,
+  "S5_segment": 0.0643,
+  "S6_patches": 48.6354,
+  "S8_phase": 31.1033,
+  "S10_match": 2.9102,
+  "S11_continuity": 0.0015,
+  "S12_face": 0.0003,
+  "S14_overlay": 123.0315,
+  "S15_report": 5.2462
+ },
+ "band_snr_db": 11.136009409793497,
+ "agent": {
+  "tool_calls": 10,
+  "extractions": 1,
+  "first_extraction_weak": false,
+  "recovered_signal": false,
+  "unnecessary_calls": 0,
+  "policy_interventions": 1,
+  "budget_exhausted": false,
+  "user_input_requested": [],
+  "review_requested": false
+ },
+ "raw": {
+  "persistent_reasons": [
+   "READOUT_ESTIMATED"
+  ],
+  "band_snr_db": 11.136009409793497,
+  "axis_ambiguous": false,
+  "match": {
+   "rho1": 0.9920379461350217,
+   "rho2": 0.951994458863877,
+   "margin": 0.040043487271144707,
+   "length_s": 35.0,
+   "best_offset_utc": 1768914055.018312,
+   "coverage": true,
+   "segment_stats": []
+  },
+  "boundaries": []
+ },
+ "artifacts": {
+  "overlay_mp4": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\overlay.mp4",
+  "report_html": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\report.html",
+  "report_pdf": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\report.pdf",
+  "report_json": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\result.json",
+  "plot_enf_track": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\enf_track.png",
+  "plot_ncc_scan": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\ncc_scan.png",
+  "plot_phase_residual": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\phase_residual.png",
+  "plot_band_amplitude": "D:\\Open-cv\\.worktrees\\docs\\results\\eval\\2026-10-27-test\\synthetic-v1-fallback\\work\\rotation_meta__s1131\\band_amplitude.png"
+ },
+ "time_error_s": 0.01831197738647461,
+ "time_uncertainty_s": 2.0061676853122905,
+ "zone": "SIM50",
+ "enf_rmse_mhz": 2.1388435508438954,
+ "edits_true_t_s": [],
+ "edit_events_t_s": [],
+ "dropped_false_alarm": false
+}

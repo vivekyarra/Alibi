@@ -2,9 +2,9 @@
 
 GRIDPRINT checks if a video is real by reading the power-grid frequency from the flicker of indoor lights. The camera's rolling shutter records the flicker as faint horizontal bands. GRIDPRINT compares the measured frequency track with a reference log of the real grid.
 
-Endpoint: 
+Endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com
 
-The public HTTPS URL is added on this line at deployment.
+The endpoint is the live AWS deployment (`us-east-1`): Amazon API Gateway → internal Application Load Balancer → Fargate API, with jobs on Graviton4 ECS workers. The web app is served from the same address.
 
 **Live demonstration.** The team runs the full system with `make local` in a live screen-share on request. This runs the same engine, agent and web app as the AWS deployment, with local storage and the deterministic planner.
 
@@ -14,6 +14,19 @@ The public HTTPS URL is added on this line at deployment.
 2. Run a demo case, or upload your own MP4 or MOV file.
 3. Watch the job page. It shows progress, the live agent trace, the verdict card, the band overlay player with timeline markers, plots, and downloads (report PDF, report JSON, overlay MP4).
 4. Log in as a reviewer to see the approval screen for `CONTRADICTED` results.
+
+### How to verify a result on the live app
+
+1. Open a finished job page directly, for example
+   https://5u7suz00bi.execute-api.us-east-1.amazonaws.com/#/jobs/aws3-capture-verified-040158
+   Other finished jobs: `#/jobs/aws3-dropped-frames-040218`, `#/jobs/aws3-cut-1s-040211`.
+2. Check the verdict card (verdict, reasons, recording-time estimate), the plots, and the agent trace. Each trace step shows the planner, the tool, and the decision reason; steps where the code guard replaced the model's proposal start with "guard:".
+3. Download the report PDF or JSON from the job page and compare it with the copy in the repository under `results/aws/<job_id>/` (`result.json`, `trace.json`, `report.pdf`).
+4. The same job is also readable as JSON: `GET /v1/jobs/<job_id>`.
+
+These demo jobs use **SYNTHETIC** test clips made by the rolling-shutter simulator (`eval/make_demo_inputs.py`), not real camera recordings. Measured results for them are in `docs/TECHNICAL_REPORT.md` §6, including one case (`cut-1s`) that missed its target verdict.
+
+If you upload an ordinary phone video, expect `INCONCLUSIVE` in most cases: phone camera apps usually turn on anti-banding, which removes the flicker bands (see section 5). `INCONCLUSIVE` does not mean the video is fake.
 
 ## 2. Verdicts
 

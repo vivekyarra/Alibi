@@ -1,0 +1,255 @@
+Shutdown scheduled for Tue 2026-10-27 03:33:37 UTC, use 'shutdown -c' to cancel.
++ date -u +%FT%TZ
+2026-10-27T02:18:37Z
++ uname -a
+Linux ip-172-31-15-41.ec2.internal 6.18.56-125.164.amzn2023.x86_64 #2 SMP PREEMPT_DYNAMIC Mon Oct 19 19:39:29 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
++ dnf install -y python3.11 python3.11-pip unzip
+Amazon Linux 2023 repository                     88 MB/s |  86 MB     00:00    
+Amazon Linux 2023 Kernel Livepatch repository   704 kB/s |  89 kB     00:00    
+Package unzip-6.0-68.amzn2023.0.2.x86_64 is already installed.
+Dependencies resolved.
+================================================================================
+ Package                     Arch   Version                   Repository   Size
+================================================================================
+Installing:
+ python3.11                  x86_64 3.11.17-1.amzn2023.0.1    amazonlinux  28 k
+ python3.11-pip              noarch 22.3.1-2.amzn2023.0.15    amazonlinux 2.8 M
+Installing dependencies:
+ mpdecimal                   x86_64 2.5.1-3.amzn2023.0.3      amazonlinux 101 k
+ python3.11-libs             x86_64 3.11.17-1.amzn2023.0.1    amazonlinux 9.7 M
+ python3.11-pip-wheel        noarch 22.3.1-2.amzn2023.0.15    amazonlinux 1.4 M
+ python3.11-setuptools-wheel noarch 65.5.1-2.amzn2023.0.7     amazonlinux 717 k
+Installing weak dependencies:
+ libxcrypt-compat            x86_64 4.4.33-7.amzn2023         amazonlinux  92 k
+ python3.11-setuptools       noarch 65.5.1-2.amzn2023.0.7     amazonlinux 1.5 M
+
+Transaction Summary
+================================================================================
+Install  8 Packages
+
+Total download size: 16 M
+Installed size: 68 M
+Downloading Packages:
+(1/8): libxcrypt-compat-4.4.33-7.amzn2023.x86_6 3.2 MB/s |  92 kB     00:00    
+(2/8): python3.11-3.11.17-1.amzn2023.0.1.x86_64 975 kB/s |  28 kB     00:00    
+(3/8): mpdecimal-2.5.1-3.amzn2023.0.3.x86_64.rp 3.3 MB/s | 101 kB     00:00    
+(4/8): python3.11-pip-wheel-22.3.1-2.amzn2023.0  44 MB/s | 1.4 MB     00:00    
+(5/8): python3.11-pip-22.3.1-2.amzn2023.0.15.no  69 MB/s | 2.8 MB     00:00    
+(6/8): python3.11-setuptools-65.5.1-2.amzn2023.  41 MB/s | 1.5 MB     00:00    
+(7/8): python3.11-setuptools-wheel-65.5.1-2.amz  19 MB/s | 717 kB     00:00    
+(8/8): python3.11-libs-3.11.17-1.amzn2023.0.1.x  81 MB/s | 9.7 MB     00:00    
+--------------------------------------------------------------------------------
+Total                                            86 MB/s |  16 MB     00:00     
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1 
+  Installing       : libxcrypt-compat-4.4.33-7.amzn2023.x86_64              1/8 
+  Installing       : python3.11-pip-wheel-22.3.1-2.amzn2023.0.15.noarch     2/8 
+  Installing       : python3.11-setuptools-wheel-65.5.1-2.amzn2023.0.7.no   3/8 
+  Installing       : mpdecimal-2.5.1-3.amzn2023.0.3.x86_64                  4/8 
+  Installing       : python3.11-3.11.17-1.amzn2023.0.1.x86_64               5/8 
+  Installing       : python3.11-libs-3.11.17-1.amzn2023.0.1.x86_64          6/8 
+  Installing       : python3.11-setuptools-65.5.1-2.amzn2023.0.7.noarch     7/8 
+  Installing       : python3.11-pip-22.3.1-2.amzn2023.0.15.noarch           8/8 
+  Running scriptlet: python3.11-pip-22.3.1-2.amzn2023.0.15.noarch           8/8 
+  Verifying        : libxcrypt-compat-4.4.33-7.amzn2023.x86_64              1/8 
+  Verifying        : mpdecimal-2.5.1-3.amzn2023.0.3.x86_64                  2/8 
+  Verifying        : python3.11-3.11.17-1.amzn2023.0.1.x86_64               3/8 
+  Verifying        : python3.11-libs-3.11.17-1.amzn2023.0.1.x86_64          4/8 
+  Verifying        : python3.11-pip-22.3.1-2.amzn2023.0.15.noarch           5/8 
+  Verifying        : python3.11-pip-wheel-22.3.1-2.amzn2023.0.15.noarch     6/8 
+  Verifying        : python3.11-setuptools-65.5.1-2.amzn2023.0.7.noarch     7/8 
+  Verifying        : python3.11-setuptools-wheel-65.5.1-2.amzn2023.0.7.no   8/8 
+
+Installed:
+  libxcrypt-compat-4.4.33-7.amzn2023.x86_64                                     
+  mpdecimal-2.5.1-3.amzn2023.0.3.x86_64                                         
+  python3.11-3.11.17-1.amzn2023.0.1.x86_64                                      
+  python3.11-libs-3.11.17-1.amzn2023.0.1.x86_64                                 
+  python3.11-pip-22.3.1-2.amzn2023.0.15.noarch                                  
+  python3.11-pip-wheel-22.3.1-2.amzn2023.0.15.noarch                            
+  python3.11-setuptools-65.5.1-2.amzn2023.0.7.noarch                            
+  python3.11-setuptools-wheel-65.5.1-2.amzn2023.0.7.noarch                      
+
+Complete!
++ dnf install -y ffmpeg-free
+Last metadata expiration check: 0:00:05 ago on Tue Oct 27 02:18:53 2026.
+No match for argument: ffmpeg-free
+Error: Unable to find a match: ffmpeg-free
++ echo 'ffmpeg-free not available (not needed: engine reads video through PyAV)'
+ffmpeg-free not available (not needed: engine reads video through PyAV)
++ mkdir -p /opt/gp
++ cd /opt/gp
++ aws s3 cp s3://orchard-bench-768669378827/src/src.zip src.zip
+Completed 629.7 KiB/629.7 KiB (6.0 MiB/s) with 1 file(s) remainingdownload: s3://orchard-bench-768669378827/src/src.zip to ./src.zip
++ unzip -q -o src.zip
++ aws s3 cp s3://orchard-bench-768669378827/src/inputs.txt bench/inputs.txt
+Completed 301 Bytes/301 Bytes (8.2 KiB/s) with 1 file(s) remainingdownload: s3://orchard-bench-768669378827/src/inputs.txt to bench/inputs.txt
++ mkdir -p data/public data/gridlog_empty
++ aws s3 cp s3://orchard-bench-768669378827/src/fluorescent_beat_effect.mp4 data/public/fluorescent_beat_effect.mp4
+Completed 8.9 MiB/8.9 MiB (53.9 MiB/s) with 1 file(s) remainingdownload: s3://orchard-bench-768669378827/src/fluorescent_beat_effect.mp4 to data/public/fluorescent_beat_effect.mp4
++ sha256sum data/public/fluorescent_beat_effect.mp4
+b1101d4f30371132a23ddf4da29e03dc48db9731ba04b0fffb81d3afb5474db4  data/public/fluorescent_beat_effect.mp4
++ python3.11 -m pip install --no-cache-dir opencv-python-headless==5.0.0.93 numpy==2.4.6 av==18.1.0 pyyaml==6.0.3 pydantic==2.14.1 jinja2==3.1.6 matplotlib==3.11.2
+Collecting opencv-python-headless==5.0.0.93
+  Downloading opencv_python_headless-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl (61.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.2/61.2 MB 246.3 MB/s eta 0:00:00
+Collecting numpy==2.4.6
+  Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 223.3 MB/s eta 0:00:00
+Collecting av==18.1.0
+  Downloading av-18.1.0-cp311-abi3-manylinux_2_28_x86_64.whl (35.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.8/35.8 MB 61.1 MB/s eta 0:00:00
+Collecting pyyaml==6.0.3
+  Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 40.7 MB/s eta 0:00:00
+Collecting pydantic==2.14.1
+  Downloading pydantic-2.14.1-py3-none-any.whl (488 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 488.1/488.1 kB 91.3 MB/s eta 0:00:00
+Collecting jinja2==3.1.6
+  Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 649.0 MB/s eta 0:00:00
+Collecting matplotlib==3.11.2
+  Downloading matplotlib-3.11.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.9/9.9 MB 261.7 MB/s eta 0:00:00
+Collecting annotated-types>=0.6.0
+  Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Collecting pydantic-core==2.50.1
+  Downloading pydantic_core-2.50.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 91.3 MB/s eta 0:00:00
+Collecting typing-extensions>=4.16.0
+  Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 31.4 MB/s eta 0:00:00
+Collecting typing-inspection>=0.4.4
+  Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Collecting MarkupSafe>=2.0
+  Downloading markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Collecting contourpy>=1.0.1
+  Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 355.2/355.2 kB 191.1 MB/s eta 0:00:00
+Collecting cycler>=0.10
+  Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Collecting fonttools>=4.28.2
+  Downloading fonttools-4.67.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.5/5.5 MB 176.4 MB/s eta 0:00:00
+Collecting kiwisolver>=1.3.1
+  Downloading kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 617.4 MB/s eta 0:00:00
+Collecting packaging>=20.0
+  Downloading packaging-26.3-py3-none-any.whl (129 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 130.0/130.0 kB 672.3 MB/s eta 0:00:00
+Collecting pillow>=9
+  Downloading pillow-13.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 160.6 MB/s eta 0:00:00
+Collecting pyparsing>=3
+  Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 126.4/126.4 kB 614.1 MB/s eta 0:00:00
+Collecting python-dateutil>=2.7
+  Downloading python_dateutil-3.0.0-py2.py3-none-any.whl (94 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 94.7/94.7 kB 497.6 MB/s eta 0:00:00
+Collecting six>=1.6
+  Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Collecting tzdata
+  Downloading tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 348.0/348.0 kB 744.0 MB/s eta 0:00:00
+Installing collected packages: tzdata, typing-extensions, six, pyyaml, pyparsing, pillow, packaging, numpy, MarkupSafe, kiwisolver, fonttools, cycler, av, annotated-types, typing-inspection, python-dateutil, pydantic-core, opencv-python-headless, jinja2, contourpy, pydantic, matplotlib
+Successfully installed MarkupSafe-3.0.4 annotated-types-0.8.0 av-18.1.0 contourpy-1.3.3 cycler-0.12.1 fonttools-4.67.0 jinja2-3.1.6 kiwisolver-1.5.1 matplotlib-3.11.2 numpy-2.4.6 opencv-python-headless-5.0.0.93 packaging-26.3 pillow-13.0.0 pydantic-2.14.1 pydantic-core-2.50.1 pyparsing-3.3.3 python-dateutil-3.0.0 pyyaml-6.0.3 six-1.17.0 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
++ mkdir -p results/bench/2026-10-27/evidence/A
++ EV=results/bench/2026-10-27/evidence/A
++ python3.11 -m pip freeze
++ lscpu
++ cat /etc/os-release
+++ curl -s -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 300'
++ curl -s -H 'X-aws-ec2-metadata-token: AQAEABWK9pvFhiLM4oZ00QfXUN2FcwYj0wo8wc8eakmvOLaJv1Nvaw==' http://169.254.169.254/latest/dynamic/instance-identity/document
++ export PYTHONPATH=.:engine
++ PYTHONPATH=.:engine
++ export MPLBACKEND=Agg
++ MPLBACKEND=Agg
++ python3.11 -m bench.cool_evidence --label A
+{"out_dir": "/opt/gp/results/bench/2026-10-27/evidence/A", "perf": "skipped"}
++ python3.11 -m bench.run_bench --config A --runs 5 --inputs bench/inputs.txt --date 2026-10-27
+{
+ "throughput_video_s_per_wall_s": {
+  "mean": 0.916141939312045,
+  "std": 0.0028058387337305908,
+  "per_run": [
+   0.9132296027448652,
+   0.9161071797527053,
+   0.9136498293680508,
+   0.917860313557364,
+   0.9198627711372399
+  ]
+ },
+ "stage_latency_s": {
+  "S12_face": {
+   "p50": 0.0001,
+   "p95": 0.0001
+  },
+  "S1_ingest": {
+   "p50": 0.9612,
+   "p95": 0.96564
+  },
+  "S2_linear": {
+   "p50": 5.1233,
+   "p95": 5.20442
+  },
+  "S3_readout": {
+   "p50": 4.0016,
+   "p95": 4.0503
+  },
+  "S4_motion": {
+   "p50": 2.3848,
+   "p95": 2.39186
+  },
+  "S5_segment": {
+   "p50": 0.0001,
+   "p95": 0.0001
+  },
+  "S6_patches": {
+   "p50": 1.9642,
+   "p95": 1.9734
+  },
+  "S7_rowsignal": {
+   "p50": 0.7521,
+   "p95": 0.75652
+  },
+  "S8_phase": {
+   "p50": 1.614,
+   "p95": 1.63204
+  }
+ },
+ "cpu_util_mean": 0.18032641388804513,
+ "peak_rss_mb_max": 1999.91796875,
+ "config": "A",
+ "machine": "x86_64",
+ "platform": "Linux-6.18.56-125.164.amzn2023.x86_64-x86_64-with-glibc2.34",
+ "cpu_count": 8,
+ "opencv_version": "5.0.0",
+ "date": "2026-10-27T02:20:35.668823+00:00",
+ "inputs_file": "/opt/gp/bench/inputs.txt",
+ "runs": 5
+}
++ rm -rf results/bench/2026-10-27/A/work
++ aws s3 cp --recursive results/bench/2026-10-27/A s3://orchard-bench-768669378827/runs/2026-10-27/A/A
+Completed 1.1 KiB/4.0 KiB (31.3 KiB/s) with 3 file(s) remainingupload: results/bench/2026-10-27/A/summary.json to s3://orchard-bench-768669378827/runs/2026-10-27/A/A/summary.json
+Completed 1.1 KiB/4.0 KiB (31.3 KiB/s) with 2 file(s) remainingCompleted 1.6 KiB/4.0 KiB (36.4 KiB/s) with 2 file(s) remainingupload: results/bench/2026-10-27/A/tracks.npz to s3://orchard-bench-768669378827/runs/2026-10-27/A/A/tracks.npz
+Completed 1.6 KiB/4.0 KiB (36.4 KiB/s) with 1 file(s) remainingCompleted 4.0 KiB/4.0 KiB (85.5 KiB/s) with 1 file(s) remainingupload: results/bench/2026-10-27/A/runs.json to s3://orchard-bench-768669378827/runs/2026-10-27/A/A/runs.json
++ aws s3 cp --recursive results/bench/2026-10-27/evidence/A s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A
+Completed 7.4 KiB/16.4 KiB (182.5 KiB/s) with 8 file(s) remainingupload: results/bench/2026-10-27/evidence/A/build_information.txt to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/build_information.txt
+Completed 7.4 KiB/16.4 KiB (182.5 KiB/s) with 7 file(s) remainingCompleted 7.9 KiB/16.4 KiB (176.9 KiB/s) with 7 file(s) remainingupload: results/bench/2026-10-27/evidence/A/instance_identity.json to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/instance_identity.json
+Completed 7.9 KiB/16.4 KiB (176.9 KiB/s) with 6 file(s) remainingCompleted 11.3 KiB/16.4 KiB (247.4 KiB/s) with 6 file(s) remainingupload: results/bench/2026-10-27/evidence/A/loaded_libraries.txt to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/loaded_libraries.txt
+Completed 11.3 KiB/16.4 KiB (247.4 KiB/s) with 5 file(s) remainingCompleted 11.8 KiB/16.4 KiB (250.9 KiB/s) with 5 file(s) remainingupload: results/bench/2026-10-27/evidence/A/os_release.txt to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/os_release.txt
+Completed 11.8 KiB/16.4 KiB (250.9 KiB/s) with 4 file(s) remainingCompleted 12.2 KiB/16.4 KiB (251.7 KiB/s) with 4 file(s) remainingupload: results/bench/2026-10-27/evidence/A/pip_freeze.txt to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/pip_freeze.txt
+Completed 12.2 KiB/16.4 KiB (251.7 KiB/s) with 3 file(s) remainingCompleted 15.6 KiB/16.4 KiB (306.2 KiB/s) with 3 file(s) remainingupload: results/bench/2026-10-27/evidence/A/lscpu.txt to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/lscpu.txt
+Completed 15.6 KiB/16.4 KiB (306.2 KiB/s) with 2 file(s) remainingCompleted 15.9 KiB/16.4 KiB (309.8 KiB/s) with 2 file(s) remainingupload: results/bench/2026-10-27/evidence/A/versions.json to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/versions.json
+Completed 15.9 KiB/16.4 KiB (309.8 KiB/s) with 1 file(s) remainingCompleted 16.4 KiB/16.4 KiB (274.9 KiB/s) with 1 file(s) remainingupload: results/bench/2026-10-27/evidence/A/manifest.json to s3://orchard-bench-768669378827/runs/2026-10-27/A/evidence/A/manifest.json
++ finish
++ rc=0
+++ date -u +%FT%TZ
++ echo 'EXIT rc=0 2026-10-27T02:20:36Z'
+EXIT rc=0 2026-10-27T02:20:36Z
++ aws s3 cp /var/log/gridprint-bench.log s3://orchard-bench-768669378827/runs/2026-10-27/A/bench.log

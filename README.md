@@ -11,7 +11,7 @@ is not a deepfake classifier and not cryptographic proof.
 Entry for the OpenCV AI Competition 2026 (OpenCV 5 + AWS). The specification is in [SPEC.md](SPEC.md); current
 status is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-- Endpoint: see [docs/JUDGE_GUIDE.md](docs/JUDGE_GUIDE.md)
+- Live app (AWS, HTTPS): https://5u7suz00bi.execute-api.us-east-1.amazonaws.com — guide in [docs/JUDGE_GUIDE.md](docs/JUDGE_GUIDE.md)
 - Technical report: [docs/TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · diagrams in [docs/diagrams/](docs/diagrams/)
 - Responsible use: [docs/RESPONSIBLE_USE.md](docs/RESPONSIBLE_USE.md)
