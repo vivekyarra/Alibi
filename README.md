@@ -11,11 +11,14 @@
 [![AWS CDK v2](https://img.shields.io/badge/AWS-CDK%20v2-FF9900.svg?logo=amazonwebservices&logoColor=white)](infra/)
 [![Graviton4](https://img.shields.io/badge/AWS-Graviton4%20arm64-FF9900.svg)](bench/)
 
+**[Video](https://youtu.be/z8A503D4NjY)** ·
 **[Live app](https://5u7suz00bi.execute-api.us-east-1.amazonaws.com)** ·
 **[Judge guide](docs/JUDGE_GUIDE.md)** ·
 **[Technical report](docs/TECHNICAL_REPORT.md)** ·
 **[Architecture](docs/ARCHITECTURE.md)** ·
 **[Responsible use](docs/RESPONSIBLE_USE.md)**
+
+[![Watch the video](https://img.youtube.com/vi/z8A503D4NjY/maxresdefault.jpg)](https://youtu.be/z8A503D4NjY)
 
 *Entry for the OpenCV AI Competition 2026 (OpenCV 5 + AWS).*
 
