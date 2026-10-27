@@ -11,11 +11,44 @@ is not a deepfake classifier and not cryptographic proof.
 Entry for the OpenCV AI Competition 2026 (OpenCV 5 + AWS). The specification is in [SPEC.md](SPEC.md); current
 status is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-- Live app (AWS, HTTPS): https://5u7suz00bi.execute-api.us-east-1.amazonaws.com — guide in [docs/JUDGE_GUIDE.md](docs/JUDGE_GUIDE.md)
+## Live on AWS
+
+- **Live app (HTTPS):** https://5u7suz00bi.execute-api.us-east-1.amazonaws.com — walkthrough in [docs/JUDGE_GUIDE.md](docs/JUDGE_GUIDE.md)
+- **9 AWS CDK stacks deployed** in `us-east-1`: API Gateway → VPC link → internal ALB → Fargate `linux/arm64` API,
+  Graviton4 `c8g` ECS workers fed by SQS, DynamoDB, S3 with KMS, Cognito reviewer group, IoT Core ingest,
+  CloudWatch dashboards and alarms (technical report §6).
+- **Agent planner on Amazon Bedrock:** Amazon Nova Lite chooses the next OpenCV tool; code-enforced policies keep
+  every verdict deterministic and every step is traced (`results/aws/<job_id>/trace.json`).
+- **Real iPhone 13 recording on the live deployment:** job `cd65b6ea0c20` ran end to end on a Graviton4 worker. The
+  stock camera app's anti-banding had removed the flicker bands, so the engine reported `INCONCLUSIVE`
+  (`SIGNAL_ABSENT`) instead of guessing, and the agent adapted by asking for the original file and the camera model. <!-- src: results/aws/index.json#cd65b6ea0c20.verdict -->
+- **End-to-end AWS runs** with full evidence (result, trace, report PDF, plots) under `results/aws/`.
+
+## Graviton4 vs x86 (stock OpenCV 5.0.0, `results/bench/2026-10-27/`)
+
+| Metric | x86 `c7i.2xlarge` | Graviton4 `c8g.2xlarge` |
+|---|---|---|
+| Throughput, video-s per wall-s | 0.92 <!-- src: results/bench/2026-10-27/A/summary.json#throughput_video_s_per_wall_s --> | 1.20 <!-- src: results/bench/2026-10-27/B/summary.json#throughput_video_s_per_wall_s --> |
+| Cost per video-hour | $0.390 <!-- src: results/bench/2026-10-27/cost.json#configs.A.cost_per_video_hour_usd --> | $0.266 <!-- src: results/bench/2026-10-27/cost.json#configs.B.cost_per_video_hour_usd --> |
+
+Same engine, same input, five runs per configuration; Graviton4 processes more video per second at a lower cost per
+hour of video (technical report §7).
+
+## Evaluation
+
+- **0 false `CONTRADICTED`** on authentic clips of the frozen-threshold test split (SYNTHETIC simulator clips). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.false_contradicted_rate -->
+- Agent traces for each behaviour: `results/agent_traces/`.
+- Full SYNTHETIC tables and the real-recording runs: technical report §9.
+
+## Documents
+
 - Technical report: [docs/TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · diagrams in [docs/diagrams/](docs/diagrams/)
-- Responsible use: [docs/RESPONSIBLE_USE.md](docs/RESPONSIBLE_USE.md)
-- Video: the link is added at submission (at most 5 minutes)
+- Video: the link is on the Devpost page.
+
+## Responsible use
+
+See [docs/RESPONSIBLE_USE.md](docs/RESPONSIBLE_USE.md).
 
 ## What is in the repository
 

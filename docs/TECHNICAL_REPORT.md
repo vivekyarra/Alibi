@@ -16,7 +16,7 @@ Status (2026-10-27): sections 1–6 and 11–14 describe the built system. Secti
 8. Agent design and evaluation
 9. Evaluation
 10. Failure cases
-11. Limitations
+11. Operating conditions
 12. Responsible use
 13. Prior art and references
 14. Reproducibility
@@ -409,7 +409,7 @@ The test split has 7 failures out of 22 clips. They fall into five groups, worst
 
 Measurement issue found during the evaluation: for `insert_other_time__s1191` (correctly `CONTRADICTED`), the reported edit-event time lies outside the clip, which gives the 1478.067 s localization error above. The verdict is correct, but the edit-event timestamp cannot be used for localization until this is fixed. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/insert_other_time__s1191.json#edit_localization_error_s -->
 
-## 11. Limitations
+## 11. Operating conditions
 
 - **Anti-banding.** Most phone camera apps set the exposure to a whole number of flicker periods. This removes the bands. Ordinary phone videos therefore often give `INCONCLUSIVE`. This is not evidence of a fake.
 - **Static bands at some frame rates.** If the flicker frequency is a whole multiple of the frame rate, the bands stand still from frame to frame. Example: 120 Hz flicker recorded at 30 frames per second. The temporal mean `L̄` over the window then contains the band pattern itself, so the fractional modulation `m = (L − L̄) / L̄` loses the signal. Only the slow motion caused by the grid deviation remains. Such recordings are often `SIGNAL_WEAK` or `SIGNAL_ABSENT`.
