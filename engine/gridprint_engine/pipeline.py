@@ -532,6 +532,9 @@ class Job:
             stage_timings_s={k: round(v, 4) for k, v in self.timings.items()}, artifacts=dict(self.artifacts),
             notes=list(self.notes))
         self.result.quality["verdict_rule"] = out.rule
+        from gridprint_engine import report as s15
+
+        s15.write_json(self, self.workdir)  # the verdict is stored even if no report is rendered
         return {"verdict": out.verdict.value, "lifecycle_state": out.state.value,
                 "reasons": [r.value for r in out.reasons], "rule": out.rule}
 

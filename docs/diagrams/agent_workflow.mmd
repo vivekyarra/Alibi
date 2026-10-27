@@ -14,7 +14,7 @@ flowchart TB
   end
 
   subgraph DECISION["Decision: planner + policies"]
-    PL{"Planner<br/>Bedrock Claude or<br/>deterministic fallback"}
+    PL{"Planner<br/>Bedrock LLM (Nova Lite)<br/>+ deterministic fallback<br/>per step"}
     POL["policies.py<br/>iteration and tool-call budget,<br/>compute_verdict last,<br/>no FINAL while PENDING_REVIEW,<br/>no edits to thresholds or verdicts"]
     PL --- POL
   end

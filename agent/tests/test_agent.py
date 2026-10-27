@@ -198,3 +198,30 @@ def test_bedrock_planner_is_policed():
 def test_tool_config_lists_all_tools():
     names = {t["toolSpec"]["name"] for t in tool_config()["tools"]}
     assert policies.ALL_TOOLS <= names
+
+
+class FailingProbeTools(ScriptedTools):
+    """probe_video fails once, then succeeds."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.probe_failed = False
+
+    async def call(self, tool: str, args: dict[str, Any]) -> dict[str, Any]:
+        if tool == "probe_video" and not self.probe_failed:
+            self.calls.append((tool, args))
+            self.probe_failed = True
+            raise RuntimeError("Unable to allocate memory")
+        return await super().call(tool, args)
+
+
+def test_llm_guard_replaces_repeated_failures_and_out_of_order_calls():
+    # an LLM that ignores errors: always asks for motion analysis
+    client = FakeBedrock([{"tool": "analyze_motion", "input": {"strictness": "normal"}}])
+    t = FailingProbeTools()
+    trace, _ = run(t, BedrockPlanner(client, "test-model"))
+    names = tools_called(t)
+    assert names[0] == "probe_video" and names[1] == "compute_verdict"  # guard: unreadable input ends the job
+    assert any("guard:" in s.decision_reason for s in trace.steps)
+    assert names.count("analyze_motion") <= 2  # the repeated call is not retried endlessly
+    assert names[-1] == "render_report"  # the job always ends with a report

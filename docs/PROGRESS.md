@@ -22,12 +22,15 @@ Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BL
 ## M2 — Engine S1–S10 — OPEN
 
 - Done: unit tests for linearization, float32/float64 types, idle-gap zero-fill, clock-bias removal, estimator agreement, readout, matching (`engine/gridprint_engine/tests/test_units.py`).
-- Found by the video integration tests (`engine/gridprint_engine/tests/test_video.py`, 4 of 8 failing on 2026-10-26): the clean 160×120 clip did not reach VERIFIED and a VFR timestamp check failed. Under diagnosis.
+- Video integration tests: 8 of 8 pass (`engine/gridprint_engine/tests/test_video.py`). Motion now registers each frame directly to the reference frame (D-022).
+- Stress and fuzz tests pass (`tests/test_stress.py`).
+- Remaining for formal acceptance: commit the evaluation results under `results/`.
 
 ## M3 — Engine S11–S15 — OPEN
 
 - Done: verdict rules and R1–R3, R9 tests; report HTML/PDF/JSON and overlay generation; claims_lint on templates.
-- Found by the video integration tests: the 1 s cut was not CONTRADICTED and the dropped-frame clip produced an edit candidate in the small-clip configuration. Under diagnosis.
+- Video integration tests: 8 of 8 pass (`engine/gridprint_engine/tests/test_video.py`), including the re-timed cut (`CONTRADICTED`) and dropped frames (`DROPPED_FRAMES_EXPLAINED`). Continuity uses two-sided line fits (D-023, replaces D-014).
+- Remaining for formal acceptance: commit the evaluation results under `results/`.
 
 ## M4 — Node and reference — BLOCKED-HUMAN (H2)
 
@@ -45,11 +48,15 @@ Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BL
 ## M7 — Agent — OPEN
 
 - Done: MCP server (12 tools, stdio test), fallback planner (B1–B6), Bedrock planner, policies, trace; `agent/tests` (13 passed); adversarial-planner fuzz (200 runs) in `tests/test_stress.py`.
-- Remaining: saved traces from real runs showing B1–B6 under `results/agent_traces/`; Bedrock planner run (blocked: account verification, D-021).
+- Remaining: saved traces from real runs showing B1–B6; the evaluation run commits them under `results/`. Bedrock planner: Amazon Nova Lite through a cross-account role (D-026); the fallback planner covers failed model calls.
 
 ## M8 — AWS deployment — OPEN
 
-- Account and profile ready (D-021). Remaining: build images, `make deploy`, end-to-end run on the endpoint.
+- Account 643700104680, region `us-east-1`, profile `gridprint`, resource prefix `orchard` (D-021).
+- Deployed: Network, Storage (KMS), Data, Ai, Auth, Compute (Graviton4 `c8g.xlarge` workers, max 1 per D-024; SQS with DLQ), Api (Fargate `linux/arm64` behind an internal ALB), Iot, Observability.
+- Images: `linux/arm64`, built on a Graviton EC2 build instance by `infra/build_images.py`.
+- In progress: public HTTPS endpoint through API Gateway; end-to-end run on AWS.
+- Blockers: CloudFront (Web stack) needs AWS account verification (H1); EC2 vCPU quota increase (H1).
 
 ## M9 — Real evaluation — BLOCKED-HUMAN (H5–H7)
 

@@ -2,10 +2,11 @@
 
 This is the plan for human task H8 (`SPEC.md` Part 14.4). The final video must not be longer than five minutes.
 
-Number rule: this script contains no measured number. Each place that needs a measured value says "[value from results]" and has a source tag. Before recording, replace each placeholder with the value from the named file and keep the tag in this file. The `<date>` in each tag is the frozen results folder.
+Number rule: this script contains no measured number. Each place that needs a measured value says "[value from results]" and has a source tag. Before recording, replace each "[value from results]" marker with the value from the named file and keep the tag in this file. The `<date>` in each tag is the frozen results folder.
 
 Recording rules:
-- Every result on screen comes from the deployed endpoint. No mock screens.
+- Every result on screen comes from the live pipeline: the AWS endpoint, or `make local` when the endpoint is not public. No mock screens.
+- Synthetic results on screen carry the label SYNTHETIC.
 - Show the verdict card text and icon, not only color.
 - Show the overlay label "Visualization of measured flicker. Not itself evidence." whenever the overlay is on screen.
 - Do not use the words in the forbidden-claims list (SPEC R5).
@@ -16,7 +17,7 @@ Recording rules:
 
 | Item | Content |
 |---|---|
-| Voice | "AI can fake a video. Now people call real videos fake. We prove a video is real with the light in the room." |
+| Voice | "AI can fake a video. Now people call real videos fake. We check whether a video is real with the light in the room." |
 | Shot 1 | Close shot of a white wall under a mains-powered lamp, recorded with GRIDPRINT Capture. The band overlay shows bands moving across the wall. |
 | Shot 2 | Title card: "GRIDPRINT". |
 
@@ -60,7 +61,8 @@ Recording rules:
 
 | Item | Content |
 |---|---|
-| Voice | "The engine runs OpenCV 5 on AWS Graviton with COOL. The agent uses Claude on Amazon Bedrock and calls engine tools through MCP. The reference grid log comes from our GPS-timed Node." |
+| Voice | "The engine runs OpenCV 5 on AWS Graviton. The agent plans each job and calls engine tools through MCP. Its planner is Claude on Amazon Bedrock, with a deterministic planner as fallback. The reference grid log comes from our GPS-timed Node." |
+| Voice check | Before recording, match each sentence to the facts on that day: say "with COOL" only if the COOL benchmark ran (`results/bench/`); say "Claude on Amazon Bedrock" planned this job only if the shown trace has planner type `bedrock`; say "GPS-timed Node" only if the shown reference came from Node data (H2), otherwise name the source shown in the report. |
 | Shot 15 | Architecture diagram (`docs/diagrams/architecture.svg`). Highlight engine stages, Graviton workers, Node path. |
 | Shot 16 | Benchmark chart from `results/bench/<date>/`. Throughput for configurations A, B, C: [value from results] <!-- src: results/bench/<date>/summary.json#throughput_A --> , [value from results] <!-- src: results/bench/<date>/summary.json#throughput_B --> , [value from results] <!-- src: results/bench/<date>/summary.json#throughput_C --> |
 | Shot 17 | Cost per hour of video for each configuration: [value from results] <!-- src: results/bench/<date>/summary.json#cost_per_video_hour --> |

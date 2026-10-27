@@ -207,6 +207,9 @@ class ComputeStack(Stack):
                                                           read_only=True))
 
         # Least privilege for the worker.
+        if cfg.bedrock_role_arn:  # planner model hosted in another account: assume only that role (D-026)
+            self.task_role.add_to_policy(iam.PolicyStatement(actions=["sts:AssumeRole"],
+                                                             resources=[cfg.bedrock_role_arn]))
         storage.uploads.grant_read_write(self.task_role)
         storage.results.grant_read_write(self.task_role)
         for table in data.tables:

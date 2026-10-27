@@ -2,7 +2,11 @@
 
 GRIDPRINT checks if a video is real by reading the power-grid frequency from the flicker of indoor lights. The camera's rolling shutter records the flicker as faint horizontal bands. GRIDPRINT compares the measured frequency track with a reference log of the real grid.
 
-Endpoint: (set after M8 deploy)
+Endpoint: 
+
+The public HTTPS URL is added on this line at deployment.
+
+**Live demonstration.** The team runs the full system with `make local` in a live screen-share on request. This runs the same engine, agent and web app as the AWS deployment, with local storage and the deterministic planner.
 
 ## 1. What you can do on the endpoint
 
@@ -25,9 +29,9 @@ GRIDPRINT gives exactly three verdicts:
 
 ## 3. Demo cases
 
-All demo cases run through the deployed pipeline (`POST /v1/demo-cases/{id}/run`). No result is stored in advance.
+All demo cases run through the live pipeline (`POST /v1/demo-cases/{id}/run`). No result is stored in advance. The latest measured verdicts are in `results/`. The "Target verdict" column is the result that `SPEC.md` defines for each case; the verdict you see is the one the pipeline measures on the run.
 
-| # | Case | Expected result |
+| # | Case | Target verdict |
 |---|---|---|
 | 1 | Capture clip | `VERIFIED` with recording time |
 | 2 | Same clip with a one-second cut | `CONTRADICTED`, then reviewer approval |
@@ -38,9 +42,9 @@ All demo cases run through the deployed pipeline (`POST /v1/demo-cases/{id}/run`
 | 7 | Agent recovery: first pass `SIGNAL_WEAK`, the agent selects new patches, the signal locks | Final verdict from the second pass; the trace shows the change of plan |
 | 8 | Face-composite clip (consenting team members) | Face-region result labeled `EXPERIMENTAL`. This result is never the only basis for `CONTRADICTED`. |
 
-## 4. Reviewer demo login
+## 4. Reviewer login
 
-A reviewer demo account exists for judges. The username and password are in the submission form. They are not in this repository.
+Reviewer credentials for the endpoint are provided to judges on request. They are not in this repository. With `make local`, the reviewer token is in `work/local_reviewer_token.txt`.
 
 Use the reviewer screen to approve or reject a `CONTRADICTED` result. A rejection makes the report final with verdict `INCONCLUSIVE` and reason `REVIEWER_REJECTED`. The note you write is stored.
 

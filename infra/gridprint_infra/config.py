@@ -68,7 +68,8 @@ def load(config_dir: Path = CONFIG_DIR) -> InfraConfig:
     return InfraConfig(
         region=aws["region"],
         profile=aws["profile"],
-        bedrock_model_id=raw["bedrock"]["model_id"],
+        # in-account Claude model kept for the AI stack policy (planner model may live in another account, D-026)
+        bedrock_model_id=raw["bedrock"].get("in_account_model_id", raw["bedrock"]["model_id"]),
         upload_retention_hours=float(limits["upload_retention_hours"]),
         results_retention_days=int(limits["results_retention_days"]),
         presign_expiry_s=int(limits["presign_expiry_s"]),

@@ -55,8 +55,8 @@ Each entry: source URL or command, result, date, decision. Status is one of `VER
 ## V11 — GPS PPS with ESP32 and MQTT/TLS to IoT Core — BLOCKED-HUMAN
 - Needs hardware (H2). Firmware uses ESP-IDF GPIO interrupt + `esp_timer_get_time()` for PPS and zero-cross capture, and `esp-mqtt` with TLS client certificates. Validation: `node/selftest.md` checklist + `node/ingest/data_quality.py`.
 
-## V12 — On-demand prices — BLOCKED-HUMAN
-- Needs AWS account (H1). `bench/prices.py` reads prices through the AWS Price List API (`pricing:GetProducts`, endpoint region `us-east-1`) and stores the raw response with date in `results/bench/<date>/prices.json`. No price is written by hand.
+## V12 — On-demand prices — OPEN
+- The AWS account exists (H1). Prices are fetched by `bench/prices.py` when the benchmark runs. `bench/prices.py` reads prices through the AWS Price List API (`pricing:GetProducts`, endpoint region `us-east-1`) and stores the raw response with date in `results/bench/<date>/prices.json`. No price is written by hand.
 
 ## Extra — CI action versions — VERIFIED (2026-10-26)
 - Command: `curl https://api.github.com/repos/<repo>/releases/latest` → `actions/checkout v7.0.1`, `astral-sh/setup-uv v10.3.2`, `actions/setup-node v7.1.0`, `aquasecurity/trivy-action v0.36.0`. Pinned in `.github/workflows/ci.yml`.

@@ -11,6 +11,7 @@ bedrock:
   # Amazon Nova Lite through a role in the model account (D-026). Anthropic models on Bedrock need a
   # Marketplace payment method that neither account has yet; Nova is billed directly by AWS.
   model_id: us.amazon.nova-lite-v1:0
+  in_account_model_id: global.anthropic.claude-sonnet-4-6   # AI stack policy; usable once Claude access is granted
   region: us-east-1
   role_arn: arn:aws:iam::768669378827:role/orchard-planner
   external_id: orchard-planner

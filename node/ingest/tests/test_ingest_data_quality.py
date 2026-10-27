@@ -24,7 +24,7 @@ def test_gaps_coverage_and_outliers():
 
 
 def test_cli_exit_codes(tmp_path, capsys):
-    sp.run_local(tmp_path, sp.messages("SIM50", ["n1"], T, 3600, seed=2))
+    sp.run_local(tmp_path, sp.messages("SIM50", ["n1"], T, 3600, seed=2, quality="gps"))  # GPS-labelled test rows
     assert dq.main(["--zone", "SIM50", "--hours", "1", "--end", str(T + 3599), "--root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "coverage_pct=100.000" in out and "gps_lock_pct=100.000" in out and "PASS" in out
