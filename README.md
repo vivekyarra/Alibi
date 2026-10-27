@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/devpost/thumbnail.png" alt="GRIDPRINT: the power grid is the witness" width="820">
-
 # GRIDPRINT
 
 **Checks that a video is real by reading the power grid in the flicker of the room lights.**
