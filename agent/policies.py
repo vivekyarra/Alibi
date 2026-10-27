@@ -66,11 +66,10 @@ def enforce(a: Action, st: PolicyState) -> tuple[Action, str | None]:
     if a.tool == "extract_flicker" and st.iterations >= st.max_iterations:
         st.budget_exhausted = True
         return Action("compute_verdict", {}, "policy: iteration budget exhausted (B5)"), "iteration budget"
-    if st.verdict_done and a.tool in ANALYSIS_TOOLS:
-        return Action(None, {}, "policy: compute_verdict must be the last analysis call"), \
-            f"{a.tool} after verdict blocked"
-    if st.verdict_done and a.tool == "compute_verdict":
-        return Action(None, {}, "policy: verdict already computed"), "repeat verdict blocked"
+    if st.verdict_done and a.tool in ANALYSIS_TOOLS | {"compute_verdict"}:
+        nxt, _ = enforce(Action(None, {}, ""), st)  # finish the job: review if needed, then the report
+        nxt.reason = f"policy: {a.tool} after the verdict is not allowed; " + (nxt.reason or "job complete")
+        return nxt, f"{a.tool} after verdict blocked"
     if a.tool == "render_report":
         if not st.verdict_done:
             return Action("compute_verdict", {}, "policy: verdict before report"), "report before verdict"

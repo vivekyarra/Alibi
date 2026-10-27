@@ -15,12 +15,20 @@ cases:
     expected_verdict: CONTRADICTED
     source: synthetic
     video: data/demo/cut-1s.mp4
+    claim:
+      claimed_zone: SIM50
+      claimed_time_utc: "2026-01-20T10:00:00Z"
+      claimed_time_tolerance_s: 300
   - id: insertion
     title: "Insertion from another time (SYNTHETIC)"
     description: "Expected CONTRADICTED with SEGMENT_OFFSET_INCONSISTENT."
     expected_verdict: CONTRADICTED
     source: synthetic
     video: data/demo/insertion.mp4
+    claim:
+      claimed_zone: SIM50
+      claimed_time_utc: "2026-01-20T10:00:00Z"
+      claimed_time_tolerance_s: 300
   - id: dropped-frames
     title: "Dropped frames with original timestamps (SYNTHETIC)"
     description: "Expected VERIFIED with DROPPED_FRAMES_EXPLAINED."

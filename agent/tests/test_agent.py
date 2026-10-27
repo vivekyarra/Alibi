@@ -148,7 +148,7 @@ def test_policy_blocks_final_report_for_contradicted_and_analysis_after_verdict(
     a, note = policies.enforce(Action("render_report", {"final": True}, "x"), st)
     assert a.tool == "render_report" and a.args["final"] is False and note
     a, _ = policies.enforce(Action("extract_flicker", {}, "x"), st)
-    assert a.tool is None
+    assert a.tool == "render_report" and a.args["final"] is False  # no analysis after the verdict
 
 
 def test_policy_strips_threshold_arguments():
@@ -241,3 +241,12 @@ def test_llm_guard_blocks_premature_overrides_and_identical_repeats():
     assert sum(1 for n, a in t.calls if n == "propose_patches" and a.get("strategy") == "top") <= 1
     assert any("frequency or axis override" in s.decision_reason for s in trace.steps)
     assert t.calls[-1][0] == "render_report"
+
+
+def test_policy_after_verdict_finishes_with_report():
+    st = PolicyState(max_iterations=6, max_tool_calls=30, verdict_done=True, verdict="INCONCLUSIVE")
+    a, note = policies.enforce(Action("compute_verdict", {}, "again"), st)
+    assert a.tool == "render_report" and a.args["final"] is True and note
+    st2 = PolicyState(max_iterations=6, max_tool_calls=30, verdict_done=True, verdict="CONTRADICTED")
+    a, _ = policies.enforce(Action("match_reference", {}, "late"), st2)
+    assert a.tool == "request_human_review"
