@@ -10,7 +10,7 @@ Run: `synthetic-v1-fallback`, date 2026-10-27-test, planner `fallback`, threshol
 |---|---|
 | False-CONTRADICTED rate on authentic clips | 0.0% [0.0–18.4] (k=0, n=17) |
 | VERIFIED coverage, mains-lit clips | 75.0% [50.5–89.8] (k=12, n=16) |
-| Edit detection rate | 20.0% [3.6–62.4] (k=1, n=5) |
+| Edit detection rate | 40.0% [11.8–76.9] (k=2, n=5) |
 | Dropped-frame false alarms | 0.0% [0.0–79.3] (k=0, n=1) |
 | Agent task success | 68.2% [47.3–83.6] (k=15, n=22) |
 | Agent recovery rate | 33.3% [6.1–79.2] (k=1, n=3) |

@@ -10,6 +10,14 @@ import numpy as np
 
 VERDICTS = ["VERIFIED", "CONTRADICTED", "INCONCLUSIVE", None]
 CLASSES = ["authentic-with-mains-light", "authentic-without-mains-light", "edited", "synthetic"]
+# reasons behind verdict rule S13.2 (CONTRADICTED because of an edit, not because of a claimed-time mismatch)
+EDIT_REASONS = frozenset({"EDIT_CANDIDATE", "SEGMENT_OFFSET_INCONSISTENT"})
+
+
+def edit_detected(r: dict[str, Any]) -> bool:
+    """An edited clip counts as detected when its verdict is CONTRADICTED with an edit reason. Whether the ground
+    truth gives an edit time does not matter (a reorder has none); localization error is a separate metric."""
+    return r.get("verdict") == "CONTRADICTED" and bool(EDIT_REASONS & set(r.get("reasons") or []))
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float | None, float | None, float | None]:
@@ -53,7 +61,7 @@ def summarize(recs: list[dict[str, Any]]) -> dict[str, Any]:
     te = [abs(r["time_error_s"]) for r in recs if r.get("verdict") == "VERIFIED" and r.get("time_error_s") is not None]
     out["time_error_verified_s"] = _dist(te)
     out["enf_rmse_mhz"] = _dist([r["enf_rmse_mhz"] for r in recs if r.get("enf_rmse_mhz") is not None])
-    out["edit_detection"] = rate(sum(bool(r.get("edit_detected")) for r in edited), len(edited))
+    out["edit_detection"] = rate(sum(edit_detected(r) for r in edited), len(edited))
     loc = [e for r in edited for e in (r.get("edit_localization_error_s") or [])]
     out["edit_localization_error_s"] = _dist(loc)
     dropped = [r for r in recs if r["condition"] == "dropped_frames"]

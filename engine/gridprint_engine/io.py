@@ -125,6 +125,12 @@ class Timing:
     gaps: list[GapEvent] = field(default_factory=list)
     wall_start_utc: float | None = None
     assumption: str = ""
+    # in-clip (presentation) time of every frame, pts relative to the first frame. Differs from t_s when the
+    # sensor timestamps of a spliced clip come from another recording; reported event times use this axis.
+    clip_t_s: np.ndarray | None = None
+
+    def clip_times(self) -> np.ndarray:
+        return self.clip_t_s if self.clip_t_s is not None else self.t_s
 
 
 def _robust_linear_fit(x: np.ndarray, y: np.ndarray, iters: int = 5) -> tuple[float, float, np.ndarray]:
@@ -158,16 +164,18 @@ def compute_timing(pts_s: np.ndarray, sidecar: CaptureSidecar | None, gap_factor
         wall = None
         assumption = "pts_is_first_row_exposure_start"
     t = ts - ts[0]
+    pts = np.asarray(pts_s, dtype=np.float64)
+    clip_t = pts - pts[0] if len(pts) == len(t) else t
     dt = np.diff(t)
     med = float(np.median(dt)) if len(dt) else 0.0
-    gaps = [GapEvent(frame_index=i + 1, t_s=float(t[i + 1]), size_s=float(d - med))
+    gaps = [GapEvent(frame_index=i + 1, t_s=float(clip_t[i + 1]), size_s=float(d - med))
             for i, d in enumerate(dt) if med > 0 and d > gap_factor * med]
     n_idx = np.round(t / med).astype(np.float64) if med > 0 else np.arange(len(t), dtype=np.float64)
     _, _, res = _robust_linear_fit(n_idx, t)
     ares = np.abs(res) * 1e3
     return Timing(t_s=t, exposure_s=expo, source=source, jitter_p50_ms=float(np.percentile(ares, 50)),
                   jitter_p95_ms=float(np.percentile(ares, 95)), median_dt_s=med, gaps=gaps,
-                  wall_start_utc=wall, assumption=assumption)
+                  wall_start_utc=wall, assumption=assumption, clip_t_s=clip_t)
 
 
 @dataclass
