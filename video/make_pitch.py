@@ -97,7 +97,17 @@ SECTIONS = [
                    "Then it slides that track along the grid reference log.",
                    "One clear match gives a recording time. A cut or an insertion breaks the match."]),
     ]),
-    ("04", "THE PRODUCT", [
+    ("04", "REAL EVIDENCE", [
+        ("realclip", ["We filmed a real room with a normal phone.",
+                      "This is an iPhone 13 video, recorded today under indoor mains light in India."]),
+        ("realrun", ["The OpenCV 5 engine measured the full clip.",
+                     "It found no clean flicker in this clip.",
+                     "So GRIDPRINT said INCONCLUSIVE. It did not guess."]),
+        ("reallive", ["We also ran the same clip live on AWS.",
+                      "LIVE_SENTENCE",
+                      "A missing signal never counts against a video."]),
+    ]),
+    ("05", "THE PRODUCT", [
         ("home", ["GRIDPRINT runs live on AWS today. This is the web app.",
                   "You upload a video. You can add a claimed grid zone and a claimed recording time."]),
         ("cases", ["Ready-made example cases run through the same live pipeline.",
@@ -109,22 +119,20 @@ SECTIONS = [
                    "It calls engine tools through an MCP server, and it logs every step."]),
         ("reviewer", ["A CONTRADICTED result is never final on its own.",
                       "A human reviewer must approve it first."]),
-        ("limits", ["The limitations page tells users what GRIDPRINT cannot do.",
-                    "Clear limits are part of the product."]),
     ]),
-    ("05", "BUILT ON AWS", [
-        ("arch", ["A video arrives through API Gateway and a load balancer.",
-                  "An API service on Fargate stores it in S3 with KMS keys, and puts a job on an SQS queue.",
-                  "Workers on Graviton4 run the OpenCV 5 engine in fifteen stages.",
+    ("06", "BUILT ON AWS", [
+        ("arch", ["A video arrives through API Gateway and an Application Load Balancer.",
+                  "An API service on AWS Fargate stores it in S3 with KMS keys, and puts a job on an SQS queue.",
+                  "Workers on Amazon ECS with Graviton4 run the OpenCV 5 engine in fifteen stages.",
                   "An agent with twelve MCP tools uses Amazon Nova Lite on Bedrock to plan each run, inside strict policies.",
-                  "DynamoDB keeps jobs and the grid log. IoT Core brings in grid data. Cognito signs in reviewers."]),
+                  "DynamoDB keeps jobs and the grid log. IoT Core and Lambda bring in grid data.",
+                  "Cognito signs in reviewers. CloudWatch watches the system, and the AWS CDK deploys it all."]),
         ("bench", ["We measured the same engine on Graviton and on x86.",
                    "Graviton processed more video per second, at a lower cost per video hour."]),
     ]),
-    ("06", "THE VERDICT", [
+    ("07", "THE VERDICT", [
         ("close", ["GRIDPRINT gives exactly three verdicts: VERIFIED, CONTRADICTED, or INCONCLUSIVE.",
                    "A missing signal never counts against a video.",
-                   "It needs mains lighting, and many phone videos will be INCONCLUSIVE.",
                    "GRIDPRINT. Evidence from the light in the room."]),
     ]),
 ]
@@ -366,7 +374,7 @@ def v_bulb(img, d, t, D, c):
 
 def v_pain(img, d, t, D, c):
     fr = c.clip_blur[int(t * 30) % len(c.clip_blur)]
-    img.paste(Image.fromarray(fr), (0, 0))
+    img.paste(Image.fromarray(fr).resize((W, H), Image.BILINEAR), (0, 0))
     heading(img, d, "Real footage needs a defence.", t, 130, 64)
     items = [("Newsrooms", "verify footage before publishing", "\u2709"),
              ("Courts", "decide which video to trust", "\u2696"),
@@ -571,26 +579,52 @@ def v_limits(img, d, t, D, c):
     browser(img, d, c.shots["limits"], "#/limitations", cam, cur, [], t)
 
 
-# --- architecture
-NODES = {  # id: (x, y, w, h, title, subtitle, appear_sentence)
-    "cap": (70, 170, 260, 96, "Capture app / Upload", "Android + web", 0),
-    "apigw": (400, 170, 250, 96, "API Gateway", "HTTPS entry", 0),
-    "alb": (720, 170, 220, 96, "ALB", "load balancer", 0),
-    "api": (1010, 170, 300, 96, "Fargate API", "arm64", 1),
-    "s3": (1400, 120, 280, 80, "S3 + KMS", "videos, reports", 1),
-    "sqs": (1400, 240, 280, 80, "SQS", "job queue", 1),
-    "eng": (70, 380, 860, 300, "ECS workers \u00b7 Graviton4 c8g", "OpenCV 5 engine \u00b7 15 stages", 2),
-    "agent": (1010, 380, 330, 120, "Agent + MCP server", "12 tools \u00b7 policies", 3),
-    "bed": (1400, 380, 330, 120, "Amazon Bedrock", "Amazon Nova Lite planner", 3),
-    "ddb": (1010, 580, 330, 100, "DynamoDB", "jobs \u00b7 grid log", 4),
-    "iot": (1400, 580, 330, 100, "IoT Core", "grid node ingest", 4),
-    "cog": (1010, 740, 330, 90, "Cognito", "reviewer sign-in", 4),
-    "cw": (1400, 740, 330, 90, "CloudWatch", "logs \u00b7 metrics", 4),
-}
-EDGES = [("cap", "apigw"), ("apigw", "alb"), ("alb", "api"), ("api", "s3"), ("api", "sqs"), ("sqs", "eng"),
-         ("eng", "agent"), ("agent", "bed"), ("eng", "ddb"), ("iot", "ddb"), ("cog", "api"), ("eng", "s3")]
+# --- architecture (boxes sized to their text)
+ROWS = [  # (y, height, [(id, title, subtitle, appear_sentence)])
+    (118, 92, [("cap", "Capture app / Upload", "Android app \u00b7 web upload", 0),
+               ("apigw", "Amazon API Gateway", "HTTPS entry", 0),
+               ("alb", "Application Load Balancer", "VPC link", 0),
+               ("api", "AWS Fargate", "API service \u00b7 arm64", 1)]),
+    (262, 300, [("bed", "Amazon Bedrock", "Amazon Nova Lite planner", 3),
+                ("agent", "Agent + MCP server", "12 tools \u00b7 policies", 3),
+                ("eng", "Amazon ECS \u00b7 Graviton4 c8g", "OpenCV 5 engine \u00b7 15 stages", 2),
+                ("sqs", "Amazon SQS", "job queue + DLQ", 1)]),
+    (612, 92, [("cog", "Amazon Cognito", "reviewer sign-in", 5),
+               ("ddb", "Amazon DynamoDB", "jobs \u00b7 grid log", 4),
+               ("s3", "Amazon S3 + AWS KMS", "videos \u00b7 reports \u00b7 encrypted", 1),
+               ("iot", "AWS IoT Core + AWS Lambda", "grid Node ingest", 4)]),
+    (756, 80, [("ecr", "Amazon ECR", "container images", 2),
+               ("cw", "Amazon CloudWatch", "logs \u00b7 metrics \u00b7 alarms", 5),
+               ("cdk", "AWS CDK", "infrastructure as code", 5)]),
+]
+EDGES = [("cap", "apigw"), ("apigw", "alb"), ("alb", "api"), ("api", "sqs"), ("sqs", "eng"), ("eng", "agent"),
+         ("agent", "bed"), ("eng", "s3"), ("eng", "ddb"), ("iot", "ddb"), ("ecr", "eng"), ("cog", "api"), ("api", "s3")]
 CHIPS = ["LUT linearisation", "goodFeaturesToTrack", "calcOpticalFlowPyrLK", "findHomography USAC_MAGSAC",
          "DISOpticalFlow", "dnn person masks", "FaceDetectorYN", "cv2.solve phase fit", "cv2.dft"]
+TF, SF, CF = 24, 18, 16
+NODES: dict = {}
+
+
+def layout_arch():
+    if NODES:
+        return
+    probe = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    chip_w = max(probe.textlength(ch, font=F(CF, "m")) for ch in CHIPS) + 20
+    for y, h_, items in ROWS:
+        ws = []
+        for nid, ti, sub, s in items:
+            w_ = max(probe.textlength(ti, font=F(TF, "b")), probe.textlength(sub, font=F(SF, "r"))) + 40
+            if nid == "eng":
+                w_ = max(w_, 3 * chip_w + 2 * 10 + 36)
+            ws.append(w_)
+        gap = (W - 2 * 70 - sum(ws)) / max(1, len(ws) - 1)
+        x = 70.0
+        for (nid, ti, sub, s), w_ in zip(items, ws):
+            hh = h_ if nid == "eng" else min(h_, 92)
+            yy = y + (h_ - hh) / 2
+            NODES[nid] = (x, yy, w_, hh, ti, sub, s)
+            x += w_ + gap
+    NODES["_chip_w"] = chip_w
 
 
 def anchor(n, other):
@@ -598,23 +632,26 @@ def anchor(n, other):
     ox, oy, ow, oh = NODES[other][:4]
     cx, cy, ocx, ocy = x + w_ / 2, y + h_ / 2, ox + ow / 2, oy + oh / 2
     dx, dy = ocx - cx, ocy - cy
-    if abs(dx) * h_ > abs(dy) * w_:
+    if abs(dy) < 1e-6 or abs(dx) * h_ > abs(dy) * w_:
         return (x + w_ if dx > 0 else x, cy)
     return (cx, y + h_ if dy > 0 else y)
 
 
 def v_arch(img, d, t, D, c):
+    layout_arch()
     st = c.sent_t
-    vis = {n for n, v in NODES.items() if t >= st[min(v[6], len(st) - 1)]}
+    nodes = {k: v for k, v in NODES.items() if not k.startswith("_")}
+    vis = {n for n, v in nodes.items() if t >= st[min(v[6], len(st) - 1)]}
     for a, b in EDGES:
         if a in vis and b in vis:
             p, q = anchor(a, b), anchor(b, a)
-            d.line((p, q), fill=(60, 110, 100), width=3)
+            d.line((p, q), fill=(60, 120, 108), width=3)
             for k in range(2):
-                u = (t * 0.6 + k * 0.5 + hash(a + b) % 7 * 0.1) % 1.0
+                u = (t * 0.55 + k * 0.5 + (sum(map(ord, a + b)) % 7) * 0.1) % 1.0
                 px, py = lerp(p[0], q[0], u), lerp(p[1], q[1], u)
                 d.ellipse((px - 7, py - 7, px + 7, py + 7), fill=ACC)
-    for n, (x, y, w_, h_, ti, sub, s) in NODES.items():
+    chip_w = NODES["_chip_w"]
+    for n, (x, y, w_, h_, ti, sub, s) in nodes.items():
         if n not in vis:
             continue
         a = ease((t - st[min(s, len(st) - 1)]) / 0.5)
@@ -622,14 +659,14 @@ def v_arch(img, d, t, D, c):
         ld = ImageDraw.Draw(lay)
         yy = y + (1 - a) * 20
         ld.rounded_rectangle((x, yy, x + w_, yy + h_), 14, fill=(18, 34, 40, int(245 * a)), outline=ACC + (int(255 * a),), width=2)
-        ld.text((x + 18, yy + 16), ti, font=F(26, "b"), fill=FG + (int(255 * a),))
-        ld.text((x + 18, yy + 52), sub, font=F(20, "r"), fill=MUTED + (int(255 * a),))
+        ld.text((x + 20, yy + 14), ti, font=F(TF, "b"), fill=FG + (int(255 * a),))
+        ld.text((x + 20, yy + 50), sub, font=F(SF, "r"), fill=MUTED + (int(255 * a),))
         if n == "eng":
             for i, ch in enumerate(CHIPS):
                 ca = ease((t - st[2] - 0.4 - i * 0.25) / 0.3) * a
-                cx_, cy_ = x + 18 + (i % 3) * 280, yy + 100 + (i // 3) * 62
-                ld.rounded_rectangle((cx_, cy_, cx_ + 268, cy_ + 48), 8, fill=(30, 60, 52, int(255 * ca)))
-                ld.text((cx_ + 134, cy_ + 24), ch, font=F(19, "m"), fill=(200, 255, 225, int(255 * ca)), anchor="mm")
+                cx_, cy_ = x + 18 + (i % 3) * (chip_w + 10), yy + 92 + (i // 3) * 64
+                ld.rounded_rectangle((cx_, cy_, cx_ + chip_w, cy_ + 52), 8, fill=(30, 60, 52, int(255 * ca)))
+                ld.text((cx_ + chip_w / 2, cy_ + 26), ch, font=F(CF, "m"), fill=(200, 255, 225, int(255 * ca)), anchor="mm")
         img.alpha_composite(lay)
 
 
@@ -675,20 +712,61 @@ def v_close(img, d, t, D, c):
     for i in (1, 2):
         if t > 1.5:
             d.text((110 + i * 580, 430), sub[i], font=F(22, "r"), fill=MUTED)
-    s2 = c.sent_t[2] if len(c.sent_t) > 2 else 3
-    if t > s2:
-        heading(img, d, "Limits: needs mains lighting \u00b7 many phone videos give INCONCLUSIVE \u00b7 real-world evaluation pending.",
-                t, 520, 28, delay=s2, color=MUTED)
-    s3 = c.sent_t[3] if len(c.sent_t) > 3 else 6
+    s3 = c.sent_t[2] if len(c.sent_t) > 2 else 6
     if t > s3:
         heading(img, d, "GRIDPRINT", t, 610, 96, delay=s3, color=ACC)
         heading(img, d, REPO, t, 740, 44, delay=s3 + 0.4)
         heading(img, d, "OpenCV 5  \u00b7  AWS  \u00b7  live at " + APP_URL, t, 810, 26, delay=s3 + 0.6, color=MUTED)
 
 
+# --- real evidence: iPhone 13 recording, engine run, live AWS job
+def v_realclip(img, d, t, D, c):
+    heading(img, d, "A real room. A normal phone.", t, 100, 60)
+    fr = c.phone[int(t * 30) % len(c.phone)]
+    paste_np(img, fr, (330, 200, 330 + 1260, 200 + 709))
+    rrect(d, (350, 220, 870, 270), fill=(10, 16, 20), outline=ACC, r=10)
+    d.text((370, 245), "\u25cf REAL RECORDING \u00b7 iPhone 13 \u00b7 1080p30", font=F(22, "b"), fill=ACC, anchor="lm")
+    source_tag(d, "data/real/phone2.mov", 935)
+
+
+def v_realrun(img, d, t, D, c):
+    heading(img, d, "The engine ran the full clip.", t, 100, 56)
+    i = int(t * 30) % len(c.povl)
+    paste_np(img, c.povl[i], (110, 220, 110 + 960, 220 + int(960 * c.povl[0].shape[0] / c.povl[0].shape[1])))
+    d.text((110, 190), "OpenCV 5 engine overlay (engine output)", font=F(24, "b"), fill=ACC)
+    q = c.preal
+    rows = [("Verdict", q["verdict"]), ("Reasons", " \u00b7 ".join(q["reasons"])),
+            ("Band SNR", f"{q['quality']['band_snr_db']:.2f} dB"), ("DFT peak", f"{q['quality']['dft_peak_hz']:.4f} Hz")]
+    x0, y0 = 1130, 220
+    rrect(d, (x0, y0, 1810, y0 + 470), fill=PANEL, outline=LINE)
+    for k, (a_, b_) in enumerate(rows):
+        al = ease((t - 0.6 - k * 0.5) / 0.4)
+        yy = y0 + 40 + k * 105
+        alpha_text(img, (x0 + 30, yy), a_, F(24, "r"), MUTED, al)
+        col = VCOL.get(b_, FG)
+        alpha_text(img, (x0 + 30, yy + 34), b_, F(34 if k != 1 else 26, "b"), col, al)
+    s2 = c.sent_t[2] if len(c.sent_t) > 2 else D * 0.6
+    if t > s2:
+        heading(img, d, "No guess. Honest answer.", t, 720, 44, x=x0, delay=s2, color=ACC)
+    source_tag(d, "results/video/engine_runs/real-phone2/video_result.json", 935)
+
+
+def v_reallive(img, d, t, D, c):
+    if c.shots.get("realjob") is None:
+        heading(img, d, "Live on AWS", t, 300, 80)
+        return
+    sh = c.shots["realjob"]
+    s1 = c.sent_t[1] if len(c.sent_t) > 1 else D / 2
+    cam = track([(0, (960, 560, 1500)), (1.0, (960, 560, 1500)), (2.4, (960, 380, 1150)), (s1, (960, 400, 1150)),
+                 (s1 + 1.2, (960, 580, 1150)), (D, (960, 590, 1150))], t)
+    cur = track([(0, (1500, 900)), (2.2, (520, 400)), (s1 + 1.4, (600, 548)), (D - 0.5, (680, 626)), (D, (680, 627))], t)
+    browser(img, d, sh, "#/jobs/cd65b6ea0c20", cam, cur, [], t)
+
+
+
 VIS = {"hook": v_hook, "dismiss": v_dismiss, "bulb": v_bulb, "pain": v_pain, "flicker": v_flicker, "rolling": v_rolling,
        "overlay": v_overlay, "track": v_track, "home": v_home, "cases": v_cases, "job": v_job, "trace": v_trace,
-       "reviewer": v_reviewer, "limits": v_limits, "arch": v_arch, "bench": v_bench, "close": v_close}
+       "reviewer": v_reviewer, "realclip": v_realclip, "realrun": v_realrun, "reallive": v_reallive, "arch": v_arch, "bench": v_bench, "close": v_close}
 
 
 # ----------------------------------------------------------------------------- build
@@ -697,18 +775,68 @@ def srt_time(s: float) -> str:
     return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
 
 
+def render_range(c, timeline, srt, total, f0, f1, out):
+    cmd = ["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+           "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-pix_fmt", "yuv420p", str(out)]
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    seg = 0
+    for fi in range(f0, f1):
+        tg = fi / FPS
+        while seg < len(timeline) - 1 and tg >= timeline[seg][0] + timeline[seg][1]:
+            seg += 1
+        t0s, D, num, title, key, st, sents = timeline[seg]
+        t = tg - t0s
+        c.sent_t = st
+        img = background().convert("RGBA")
+        d = ImageDraw.Draw(img)
+        VIS[key](img, d, t, D, c)
+        d = ImageDraw.Draw(img)
+        tagline(d, num, title)
+        for (a, b, s) in srt:
+            if a - 0.05 <= tg < b + 0.25:
+                caption(img, s)
+                break
+        arr = np.asarray(img.convert("RGB"))
+        fade = min(1.0, t / 0.3, (D - t) / 0.3)
+        if tg > total - 1.0:
+            fade = 0.0
+        if fade < 1:
+            arr = (arr.astype(np.float32) * max(0.0, fade)).astype(np.uint8)
+        proc.stdin.write(arr.tobytes())
+        if (fi - f0) % 300 == 0:
+            print(f"part {out.name} frame {fi - f0}/{f1 - f0} ({key})", flush=True)
+    proc.stdin.close()
+    proc.wait()
+
+
 def main() -> int:
     BUILD.mkdir(parents=True, exist_ok=True)
     c = Ctx()
     clip = load_frames(PUBLIC_CLIP)
     c.clip = clip
-    c.clip_blur = [np.clip(cv2.GaussianBlur(cv2.resize(f, (W, H)), (0, 0), 18) * 0.35, 0, 255).astype(np.uint8)
+    c.clip_blur = [np.clip(cv2.GaussianBlur(cv2.resize(f, (960, 540)), (0, 0), 9) * 0.35, 0, 255).astype(np.uint8)
                    for f in clip[::2]]
     c.clip_blur = [x for x in c.clip_blur for _ in (0, 1)]
     c.ovl = load_frames(RUNS / "public_fluorescent" / "public_fluorescent" / "overlay.mp4")
     c.enf = Image.open(RUNS / "capture_verified" / "capture_verified" / "enf_track.png").convert("RGB")
     c.ncc = Image.open(RUNS / "capture_verified" / "capture_verified" / "ncc_scan.png").convert("RGB")
-    c.shots = {k: Image.open(LIVE / f"{k}.png").convert("RGB") for k in ("home", "job", "reviewer", "limits")}
+    c.shots = {k: Image.open(LIVE / f"{k}.png").convert("RGB") for k in ("home", "job", "reviewer")}
+    rj = LIVE / "realjob.png"
+    c.shots["realjob"] = Image.open(rj).convert("RGB") if rj.exists() else None
+    c.phone = load_frames(ROOT / "data" / "real" / "phone2.mov", (960, 540), maxn=300)
+    c.povl = load_frames(RUNS / "real-phone2" / "real-phone2" / "overlay.mp4", None, maxn=360)
+    c.preal = json.loads((RUNS / "real-phone2" / "video_result.json").read_text())
+    lj = LIVE / "job_cd65b6ea0c20.json"
+    live = json.loads(lj.read_text()) if lj.exists() else {}
+    if live.get("verdict"):
+        live_sentence = f"The live app gives the same kind of answer: {live['verdict']}." if live["verdict"] == c.preal["verdict"]             else f"The live app returned {live['verdict']}."
+    else:
+        live_sentence = "Then the live agent asked the user one question: which camera made this video?"
+    for _, _, bl in SECTIONS:
+        for _, sents in bl:
+            for i_, s_ in enumerate(sents):
+                if s_ == "LIVE_SENTENCE":
+                    sents[i_] = live_sentence
     tp = ROOT / "results" / "agent_traces" / "clean__s1001.json"
     c.trace, c.trace_name = json.loads(tp.read_text()), tp.name
     c.cost = json.loads((BENCH / "cost.json").read_text())
@@ -762,39 +890,31 @@ def main() -> int:
                 img.convert("RGB").resize((960, 540)).save(BUILD / f"still_{num}_{key}_{int(frac * 100)}.png")
         return 0
     out_mp4 = OUT / "gridprint_submission.mp4"
-    cmd = ["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-           "-i", str(wav_p), "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
-           "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", str(out_mp4)]
-    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     nfr = int(total * FPS)
-    seg = 0
-    for fi in range(nfr):
-        tg = fi / FPS
-        while seg < len(timeline) - 1 and tg >= timeline[seg][0] + timeline[seg][1]:
-            seg += 1
-        t0s, D, num, title, key, st, sents = timeline[seg]
-        t = tg - t0s
-        c.sent_t = st
-        img = background().convert("RGBA")
-        d = ImageDraw.Draw(img)
-        VIS[key](img, d, t, D, c)
-        d = ImageDraw.Draw(img)
-        tagline(d, num, title)
-        for (a, b, s) in srt:
-            if a - 0.05 <= tg < b + 0.25:
-                caption(img, s)
-                break
-        arr = np.asarray(img.convert("RGB"))
-        fade = min(1.0, t / 0.3, (D - t) / 0.3) if key != "hook" or t > 0.3 else t / 0.3
-        if tg > total - 1.0:
-            fade = 0.0
-        if fade < 1:
-            arr = (arr.astype(np.float32) * max(0.0, fade)).astype(np.uint8)
-        proc.stdin.write(arr.tobytes())
-        if fi % 300 == 0:
-            print(f"frame {fi}/{nfr} ({key})", flush=True)
-    proc.stdin.close()
-    proc.wait()
+    NP = 6
+    bounds = [nfr * k // NP for k in range(NP + 1)]
+    if "--part" in sys.argv:
+        k = int(sys.argv[sys.argv.index("--part") + 1])
+        render_range(c, timeline, srt, total, bounds[k], bounds[k + 1], BUILD / f"part_{k}.mp4")
+        return 0
+    procs = [subprocess.Popen([sys.executable, __file__, "--part", str(k)]) for k in range(NP)]
+    for pr in procs:
+        if pr.wait() != 0:
+            raise RuntimeError("part render failed")
+    lst = BUILD / "parts.txt"
+    lst.write_text("".join(f"file '{(BUILD / f'part_{k}.mp4').as_posix()}'\n" for k in range(NP)))
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(wav_p),
+                    "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", str(out_mp4)], check=True)
+    # gallery stills
+    sd = OUT / "stills"
+    sd.mkdir(parents=True, exist_ok=True)
+    picks = {"01_title": ("flicker", 0.25), "02_problem": ("dismiss", 0.8), "03_how_it_works": ("rolling", 0.85),
+             "04_real_run": ("realrun", 0.9), "05_live_app_verdict": ("job", 0.4), "06_architecture": ("arch", 0.97)}
+    for name, (key, frac) in picks.items():
+        for t0s, D, *_rest in timeline:
+            if _rest[2] == key:
+                subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{t0s + D * frac:.2f}", "-i", str(out_mp4),
+                                "-frames:v", "1", str(sd / f"{name}.png")], check=True)
 
     (OUT / "gridprint_submission.srt").write_text(
         "".join(f"{i + 1}\n{srt_time(a)} --> {srt_time(b)}\n{s}\n\n" for i, (a, b, s) in enumerate(srt)), encoding="utf-8")
@@ -804,7 +924,7 @@ def main() -> int:
           "Sources on screen: live AWS app screenshots (`video/assets/live/`, captured with headless Chrome), "
           "`data/public/fluorescent_beat_effect.mp4` (Wikimedia Commons, CC BY-SA 3.0), engine outputs in "
           "`results/video/engine_runs/`, agent trace `results/agent_traces/clean__s1001.json`, benchmark "
-          "`results/bench/2026-10-27/`.", ""]
+          "`results/bench/2026-10-27/`, real iPhone 13 clip `data/real/phone2.mov` with engine run `results/video/engine_runs/real-phone2/` and live job `cd65b6ea0c20`.", ""]
     for t0s, D, num, title, key, st, sents in timeline:
         md += [f"## {num} {title} / {key}  ({srt_time(t0s)[:-4]} - {srt_time(t0s + D)[:-4]})", ""] + [f"- {s}" for s in sents] + [""]
     (ROOT / "docs" / "VIDEO_SCRIPT.md").write_text("\n".join(md), encoding="utf-8")
