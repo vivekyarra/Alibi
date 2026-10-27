@@ -105,3 +105,11 @@ Format: ID — date — decision — reason — alternatives considered.
 ## D-024 — 2026-10-27 — Worker instance size within the account vCPU quota
 - The deployment account has an on-demand standard vCPU quota of 8 (`service-quotas get-service-quota L-1216C47A`). The ASG could not launch `c8g.2xlarge` (8 vCPU) because another 2-vCPU instance already runs in the account ("You have requested more vCPU capacity than your current vCPU limit of 8").
 - Workers now use `c8g.xlarge` (4 vCPU, Graviton4) with at most one instance (`aws.worker_instance_type`, `aws.worker_max_instances`). A quota increase request (H1) restores the default sizes. The benchmark protocol (Part 12) still specifies equal-vCPU pairs and runs separately.
+
+## D-025 — 2026-10-27 — Public HTTPS endpoint through API Gateway while CloudFront is blocked
+- CloudFront in the deployment account needs AWS account verification (H1). The API stack adds an API Gateway HTTP API with a VPC link to the internal ALB; it gives a public HTTPS URL with no CloudFront. Stage throttling limits request rates (WAF cannot attach to HTTP APIs). The uploads bucket allows browser PUTs with presigned URLs from any origin; the signature limits what can be uploaded.
+
+## D-026 — 2026-10-27 — Planner model: Amazon Nova Lite through a cross-account role
+- Anthropic models on Bedrock are sold through AWS Marketplace; both accounts refuse them (no valid payment instrument on one, account verification pending on the other). SPEC Part 7 names an Anthropic model; V6's fallback order is another region, then the deterministic planner. Amazon Nova Lite (first-party, tool use through Converse) works in the second account today, and in a test it chose the B1 action (re-rank patches after SIGNAL_WEAK).
+- Decision: the LLM planner uses `us.amazon.nova-lite-v1:0` through role `orchard-planner` in account 768669378827. The role allows only `bedrock:InvokeModel` on that model and can be assumed only from the deployment account with the external ID. The worker's policy allows `sts:AssumeRole` on that one role. The deterministic fallback planner stays in place and takes over for any step where the model call fails; the trace marks every step's planner.
+- Switch back to Claude by changing `bedrock.model_id` once Marketplace access works; no code change.
