@@ -1,5 +1,19 @@
 [
  {
+  "job_id": "943b24f46a32",
+  "verdict": "INCONCLUSIVE",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "USER_INPUT_REQUESTED"
+  ],
+  "time_estimate_iso": null,
+  "band_snr_db": null,
+  "stage_timings_s": {
+   "S14_overlay": 0.0,
+   "S15_report": 0.6007
+  }
+ },
+ {
   "job_id": "aws3-capture-verified-040158",
   "verdict": "VERIFIED",
   "lifecycle_state": "FINAL",
@@ -205,5 +219,100 @@
   "time_estimate_iso": null,
   "band_snr_db": null,
   "stage_timings_s": null
+ },
+ {
+  "job_id": "cd65b6ea0c20",
+  "verdict": "INCONCLUSIVE",
+  "lifecycle_state": "DRAFT",
+  "reasons": [
+   "SIGNAL_ABSENT",
+   "READOUT_ESTIMATED",
+   "USER_INPUT_REQUESTED"
+  ],
+  "time_estimate_iso": null,
+  "band_snr_db": -7.1410614668336,
+  "stage_timings_s": {
+   "S1_ingest": 13.6506,
+   "S2_linear": 42.7896,
+   "S7_rowsignal": 1.7472,
+   "S3_readout": 5.4815,
+   "S4_motion": 2.2883,
+   "S5_segment": 0.6041,
+   "S6_patches": 3.2024,
+   "S8_phase": 9.3289
+  }
+ },
+ {
+  "job_id": "e5e8643a8662",
+  "verdict": "VERIFIED",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "READOUT_FROM_SIDECAR",
+   "MATCH_OK",
+   "DROPPED_FRAMES_EXPLAINED"
+  ],
+  "time_estimate_iso": "2026-01-20T10:00:00.014252+00:00",
+  "band_snr_db": 11.426580954399864,
+  "stage_timings_s": {
+   "S1_ingest": 0.2984,
+   "S2_linear": 2.1164,
+   "S3_readout": 0.0,
+   "S4_motion": 6.3535,
+   "S5_segment": 0.9316,
+   "S7_rowsignal": 1.1869,
+   "S6_patches": 1.482,
+   "S8_phase": 0.7538,
+   "S10_match": 0.6674,
+   "S11_continuity": 0.0009,
+   "S14_overlay": 35.8875,
+   "S15_report": 0.985
+  }
+ },
+ {
+  "job_id": "ea0208da7833",
+  "verdict": "INCONCLUSIVE",
+  "lifecycle_state": "DRAFT",
+  "reasons": [
+   "READOUT_ESTIMATED",
+   "NO_UNIQUE_MATCH"
+  ],
+  "time_estimate_iso": null,
+  "band_snr_db": 8.051949402243615,
+  "stage_timings_s": {
+   "S1_ingest": 0.299,
+   "S2_linear": 2.0913,
+   "S7_rowsignal": 2.3051,
+   "S3_readout": 4.2851,
+   "S4_motion": 6.4261,
+   "S5_segment": 0.9533,
+   "S6_patches": 3.1052,
+   "S8_phase": 2.3565,
+   "S10_match": 0.2061
+  }
+ },
+ {
+  "job_id": "f2f2bda20247",
+  "verdict": "VERIFIED",
+  "lifecycle_state": "FINAL",
+  "reasons": [
+   "READOUT_FROM_SIDECAR",
+   "MATCH_OK"
+  ],
+  "time_estimate_iso": "2026-01-20T10:00:00.020533+00:00",
+  "band_snr_db": 11.315922281294142,
+  "stage_timings_s": {
+   "S1_ingest": 0.2925,
+   "S2_linear": 2.1281,
+   "S3_readout": 0.0,
+   "S4_motion": 6.4318,
+   "S5_segment": 0.9351,
+   "S7_rowsignal": 1.1881,
+   "S6_patches": 1.4897,
+   "S8_phase": 0.7569,
+   "S10_match": 0.6921,
+   "S11_continuity": 0.0015,
+   "S14_overlay": 36.8304,
+   "S15_report": 0.9918
+  }
  }
 ]

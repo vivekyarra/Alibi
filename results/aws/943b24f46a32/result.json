@@ -1,0 +1,34 @@
+{
+ "job_id": "943b24f46a32",
+ "file_sha256": "",
+ "engine_version": "0.1.0",
+ "config_hash": "8f439372b865ee8e",
+ "thresholds_hash": "0161b96f77d3e925",
+ "verdict": "INCONCLUSIVE",
+ "lifecycle_state": "FINAL",
+ "reasons": [
+  "USER_INPUT_REQUESTED"
+ ],
+ "time_estimate_utc": null,
+ "time_estimate_iso": null,
+ "time_uncertainty_s": null,
+ "zone": null,
+ "match": null,
+ "continuity_events": [],
+ "face_region": null,
+ "quality": {
+  "verdict_rule": "S13.5",
+  "pdf_engine": "weasyprint"
+ },
+ "stage_timings_s": {
+  "S14_overlay": 0.0,
+  "S15_report": 0.6007
+ },
+ "artifacts": {
+  "report_html": "/app/work/jobs/943b24f46a32/report.html",
+  "report_pdf": "/app/work/jobs/943b24f46a32/report.pdf",
+  "report_json": "/app/work/jobs/943b24f46a32/result.json"
+ },
+ "reviewer": null,
+ "notes": []
+}

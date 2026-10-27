@@ -1,0 +1,75 @@
+{
+ "job_id": "943b24f46a32",
+ "steps": [
+  {
+   "index": 0,
+   "t_start": "2026-10-27T05:19:00.826535+00:00",
+   "t_end": "2026-10-27T05:19:06.050476+00:00",
+   "planner": "bedrock",
+   "model_id": "us.amazon.nova-lite-v1:0",
+   "tool": "probe_video",
+   "input_summary": "{\"job_id\":\"943b24f46a32\"}",
+   "output_summary": "{\"metadata\":{\"codec\":\"h264\",\"width\":320,\"height\":240,\"frames\":3060,\"bitrate\":475500,\"transfer\":\"bt709\",\"rotation_metadata_deg\":0},\"timestamp_source\":\"pts\",\"jitter_p95_ms\":0.0,\"gaps\":0,\"hdr\":false,\"high_compression\":false,\"sidecar\":false,\"notes\":[],\"axis_info\":\"unknown: both axes tested in S8\"}",
+   "decision_reason": "bedrock planner choice",
+   "duration_s": 5.2239,
+   "error": null,
+   "policy_note": null
+  },
+  {
+   "index": 1,
+   "t_start": "2026-10-27T05:19:06.050801+00:00",
+   "t_end": "2026-10-27T05:19:10.559898+00:00",
+   "planner": "bedrock",
+   "model_id": "us.amazon.nova-lite-v1:0",
+   "tool": "estimate_readout",
+   "input_summary": "{\"job_id\":\"943b24f46a32\",\"method\":\"auto\"}",
+   "output_summary": "",
+   "decision_reason": "bedrock planner choice",
+   "duration_s": 4.5091,
+   "error": "Error executing tool estimate_readout: stage order: 'probe' is not available yet",
+   "policy_note": null
+  },
+  {
+   "index": 2,
+   "t_start": "2026-10-27T05:19:10.560219+00:00",
+   "t_end": "2026-10-27T05:19:11.139172+00:00",
+   "planner": "bedrock",
+   "model_id": "us.amazon.nova-lite-v1:0",
+   "tool": "request_user_input",
+   "input_summary": "{\"job_id\":\"943b24f46a32\",\"kind\":\"camera_model\",\"message\":\"Readout time is unknown. Please give the camera model and video mode.\"}",
+   "output_summary": "{\"request_id\":\"943b24f46a32:camera_model\",\"status\":\"open\"}",
+   "decision_reason": "guard: planner proposed probe_video {} (identical call already made); fallback rule: B2: readout unknown after blind estimation",
+   "duration_s": 0.579,
+   "error": null,
+   "policy_note": null
+  },
+  {
+   "index": 3,
+   "t_start": "2026-10-27T05:19:11.139490+00:00",
+   "t_end": "2026-10-27T05:19:12.423261+00:00",
+   "planner": "bedrock",
+   "model_id": "us.amazon.nova-lite-v1:0",
+   "tool": "compute_verdict",
+   "input_summary": "{\"job_id\":\"943b24f46a32\"}",
+   "output_summary": "{\"verdict\":\"INCONCLUSIVE\",\"lifecycle_state\":\"DRAFT\",\"reasons\":[\"USER_INPUT_REQUESTED\"],\"rule\":\"S13.5\"}",
+   "decision_reason": "guard: planner proposed extract_flicker {'nominal_hz': 60, 'axis': 'rows+'} (frequency or axis override before the first extraction); fallback rule: B2: readout unknown; cannot model row timing",
+   "duration_s": 1.2838,
+   "error": null,
+   "policy_note": null
+  },
+  {
+   "index": 4,
+   "t_start": "2026-10-27T05:19:12.423582+00:00",
+   "t_end": "2026-10-27T05:19:13.481829+00:00",
+   "planner": "bedrock",
+   "model_id": "us.amazon.nova-lite-v1:0",
+   "tool": "render_report",
+   "input_summary": "{\"job_id\":\"943b24f46a32\",\"final\":true}",
+   "output_summary": "{\"artifacts\":{\"report_html\":\"/app/work/jobs/943b24f46a32/report.html\",\"report_pdf\":\"/app/work/jobs/943b24f46a32/report.pdf\",\"report_json\":\"/app/work/jobs/943b24f46a32/result.json\"},\"lifecycle_state\":\"FINAL\"}",
+   "decision_reason": "policy: report must be rendered",
+   "duration_s": 1.0582,
+   "error": null,
+   "policy_note": "report required"
+  }
+ ]
+}
