@@ -37,6 +37,8 @@ class StorageStack(Stack):
         # S3 lifecycle expiration counts whole days. limits.upload_retention_hours is rounded up.
         self.uploads = s3.Bucket(
             self, "Uploads",
+            cors=[s3.CorsRule(allowed_methods=[s3.HttpMethods.PUT], allowed_origins=["*"], allowed_headers=["*"],
+                              max_age=3000)],  # presigned PUT from the browser (D-025)
             lifecycle_rules=[s3.LifecycleRule(
                 id="expire-uploads",
                 expiration=Duration.days(cfg.upload_retention_days),

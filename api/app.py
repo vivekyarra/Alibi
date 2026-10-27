@@ -254,6 +254,11 @@ def create_app(ctx: Context | None = None, start_job: Any = None) -> FastAPI:
                 raise HTTPException(404, "not found")
             return FileResponse(p)
 
+    dist = REPO / "web" / "dist"
+    if dist.exists():  # the Verify web app, served from the same origin as the API
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/", StaticFiles(directory=dist, html=True), name="web")
     return app
 
 

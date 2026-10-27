@@ -46,12 +46,13 @@ def docker_context(dockerfile: str, paths: list[str]) -> list[str]:
 
 ENGINE_CONTEXT = docker_context("engine.Dockerfile",
                                 ["config", "engine", "agent", "mcp_server", "api", "node", "scripts"])
-API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "agent", "mcp_server", "node", "api"])
+API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "agent", "mcp_server", "node", "api", "web"])
 
 # Engineering constants for the worker task on c8g.2xlarge (8 vCPU, 16 GiB). Headroom is left for the
 # ECS agent and the OS. Documented in docs/agent_notes/infra.md.
-WORKER_CPU_UNITS = 7168
-WORKER_MEMORY_MIB = 13312
+# Worker task size per instance type: whole instance minus headroom for the ECS agent and OS.
+WORKER_SIZES = {"c8g.xlarge": (3584, 6656), "c8g.2xlarge": (7168, 13312), "c8g.4xlarge": (15360, 28672)}
+WORKER_CPU_UNITS, WORKER_MEMORY_MIB = WORKER_SIZES["c8g.2xlarge"]
 JOB_VISIBILITY_TIMEOUT_S = 1800   # > limits.decode_timeout_s plus analysis time
 DLQ_MAX_RECEIVES = 3
 METRIC_NAMESPACE = PREFIX.capitalize()
@@ -191,8 +192,8 @@ class ComputeStack(Stack):
             "engine",
             image=container_image(self, "EngineRepo", prebuilt, self.worker_image),
             command=WORKER_COMMAND,
-            cpu=WORKER_CPU_UNITS,
-            memory_limit_mib=WORKER_MEMORY_MIB,
+            cpu=WORKER_SIZES.get(cfg.worker_instance_type, WORKER_SIZES["c8g.2xlarge"])[0],
+            memory_limit_mib=WORKER_SIZES.get(cfg.worker_instance_type, WORKER_SIZES["c8g.2xlarge"])[1],
             environment=env,
             readonly_root_filesystem=False,
             logging=ecs.LogDrivers.aws_logs(stream_prefix="worker", log_group=self.log_group,

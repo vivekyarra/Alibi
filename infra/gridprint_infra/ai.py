@@ -41,3 +41,6 @@ class AiStack(Stack):
                 resources=bedrock_resource_arns(self, cfg.bedrock_model_id),
             )],
         )
+        if cfg.bedrock_role_arn:  # model hosted in another account: assume only that role (D-026)
+            self.invoke_policy.add_statements(iam.PolicyStatement(
+                sid="AssumePlannerRoleOnly", actions=["sts:AssumeRole"], resources=[cfg.bedrock_role_arn]))

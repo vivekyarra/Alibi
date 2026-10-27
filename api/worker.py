@@ -28,7 +28,9 @@ def make_planner(ctx: Context) -> Any:
     if cfg["agent"]["planner"] == "bedrock" and cfg["bedrock"]["enabled"]:
         from agent.planner_bedrock import BedrockPlanner, make_client
 
-        client = make_client(cfg["aws"]["profile"] if ctx.mode == "local" else None, cfg["aws"]["region"])
+        b = cfg["bedrock"]
+        profile = cfg["aws"]["profile"] if ctx.mode == "local" else None
+        client = make_client(profile, b.get("region", cfg["aws"]["region"]), b.get("role_arn"), b.get("external_id"))
         return BedrockPlanner(client, cfg["bedrock"]["model_id"], cfg["bedrock"]["max_tokens"])
     return FallbackPlanner()
 

@@ -50,6 +50,7 @@ class InfraConfig:
     cool_pythonpath: str
     cool_ld_library_path: str
     resource_prefix: str = DEFAULT_RESOURCE_PREFIX
+    bedrock_role_arn: str | None = None
     cool_host_paths: tuple[str, ...] = field(default=DEFAULT_COOL_HOST_PATHS)
 
     @property
@@ -81,6 +82,7 @@ def load(config_dir: Path = CONFIG_DIR) -> InfraConfig:
                                               DEFAULT_WAF_JOB_CREATE_LIMIT_5MIN)),
         node_zones=tuple(grid.get("node_zones", DEFAULT_NODE_ZONES)),
         resource_prefix=str(aws.get("resource_prefix", DEFAULT_RESOURCE_PREFIX)),
+        bedrock_role_arn=(raw.get("bedrock") or {}).get("role_arn"),
         cool_pythonpath=str(aws.get("cool_pythonpath", DEFAULT_COOL_PYTHONPATH)),
         cool_ld_library_path=str(aws.get("cool_ld_library_path", DEFAULT_COOL_LD_LIBRARY_PATH)),
     )

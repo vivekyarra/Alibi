@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aws_cdk import Duration, IgnoreMode, Stack
+from aws_cdk import CfnOutput, Duration, IgnoreMode, Stack
+from aws_cdk import aws_apigatewayv2 as apigw
+from aws_cdk import aws_apigatewayv2_integrations as apigw_int
 from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_ecr_assets as ecr_assets
 from aws_cdk import aws_ecs as ecs
@@ -70,6 +72,18 @@ class ApiStack(Stack):
         # Only clients inside the VPC (CloudFront VPC origin ENIs) can reach the internal ALB.
         self.service.load_balancer.connections.allow_from(ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.tcp(80),
                                                           "CloudFront VPC origin inside the VPC")
+
+        # Public HTTPS entry point without CloudFront (D-025): API Gateway HTTP API → VPC link → internal ALB.
+        # The VPC link ENIs sit inside the VPC, so the CIDR rule above admits them. Stage throttling limits
+        # abuse of anonymous upload creation (WAF cannot attach to HTTP APIs).
+        self.http_api = apigw.HttpApi(
+            self, "PublicApi",
+            default_integration=apigw_int.HttpAlbIntegration("AlbIntegration", self.service.listener),
+        )
+        stage = self.http_api.default_stage.node.default_child  # type: ignore[union-attr]
+        stage.default_route_settings = apigw.CfnStage.RouteSettingsProperty(  # type: ignore[union-attr]
+            throttling_burst_limit=cfg.waf_job_create_limit_5min * 2, throttling_rate_limit=10)
+        CfnOutput(self, "PublicEndpoint", value=self.http_api.api_endpoint)
 
         role = self.service.task_definition.task_role
         storage.uploads.grant_put(role)
