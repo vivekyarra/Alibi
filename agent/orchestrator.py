@@ -52,8 +52,12 @@ def _probe_ok(history: list[Step]) -> bool:
 
 
 def _needs_rule(a: Action, history: list[Step]) -> bool:
-    if any(h.tool == a.tool and h.args == a.args and h.error is not None for h in history):
-        return True
+    if a.tool not in {"render_report", "compute_verdict"} and any(h.tool == a.tool and h.args == a.args
+                                                                     for h in history):
+        return True  # identical call already made (failed or not): no new information
+    if a.tool == "extract_flicker" and (a.args.get("nominal_hz") or a.args.get("axis")) and not any(
+            h.tool == "extract_flicker" and h.result for h in history):
+        return True  # B1 allows switching frequency or axis only after a weak first extraction
     asked = {h.args.get("kind") for h in history if h.tool == "request_user_input"}
     if a.tool == "request_user_input" and a.args.get("kind") in asked:
         return True
@@ -61,8 +65,10 @@ def _needs_rule(a: Action, history: list[Step]) -> bool:
 
 
 def _why(a: Action, history: list[Step]) -> str:
-    if any(h.tool == a.tool and h.args == a.args and h.error is not None for h in history):
-        return "same call failed before"
+    if any(h.tool == a.tool and h.args == a.args for h in history):
+        return "identical call already made"
+    if a.tool == "extract_flicker" and not any(h.tool == "extract_flicker" and h.result for h in history):
+        return "frequency or axis override before the first extraction"
     if a.tool == "request_user_input":
         return "same request already made"
     return "video not probed yet"

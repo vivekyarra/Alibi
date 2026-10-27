@@ -225,3 +225,19 @@ def test_llm_guard_replaces_repeated_failures_and_out_of_order_calls():
     assert any("guard:" in s.decision_reason for s in trace.steps)
     assert names.count("analyze_motion") <= 2  # the repeated call is not retried endlessly
     assert names[-1] == "render_report"  # the job always ends with a report
+
+
+def test_llm_guard_blocks_premature_overrides_and_identical_repeats():
+    script = [{"tool": "probe_video"}, {"tool": "estimate_readout", "input": {"method": "auto"}},
+              {"tool": "analyze_motion", "input": {"strictness": "normal"}},
+              {"tool": "propose_patches", "input": {"strategy": "top"}},
+              {"tool": "extract_flicker", "input": {"nominal_hz": 60}},
+              {"tool": "propose_patches", "input": {"strategy": "top"}}]
+    client = FakeBedrock(script)
+    t = ScriptedTools()
+    trace, _ = run(t, BedrockPlanner(client, "test-model"))
+    ex = [a for n, a in t.calls if n == "extract_flicker"]
+    assert ex and "nominal_hz" not in ex[0]  # the first extraction used the zone default
+    assert sum(1 for n, a in t.calls if n == "propose_patches" and a.get("strategy") == "top") <= 1
+    assert any("frequency or axis override" in s.decision_reason for s in trace.steps)
+    assert t.calls[-1][0] == "render_report"
