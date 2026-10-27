@@ -389,7 +389,7 @@ Metrics (SPEC Part 11.5): confusion matrix against ground-truth classes, false-`
 | phone1 | `INCONCLUSIVE` | `SIGNAL_ABSENT`, `READOUT_ESTIMATED` | −5.68 dB | 120.0003 Hz | <!-- src: results/real/2026-10-27/phone1/video_result.json#quality --> |
 | phone2 | `INCONCLUSIVE` | `SIGNAL_ABSENT`, `READOUT_ESTIMATED` | −5.60 dB | 99.9957 Hz | <!-- src: results/real/2026-10-27/phone2/video_result.json#quality --> |
 
-The stock camera app uses auto exposure and anti-banding, which suppress the flicker bands. The engine therefore reports no usable signal and does not guess. This is the expected behaviour for ordinary phone video (§11), and the reason the Capture app turns anti-banding off. The weak spectral peak near 100 Hz in phone2 (twice the 50 Hz grid) is below the detection threshold and is not used.
+The stock camera app uses auto exposure and anti-banding, which suppress the flicker bands. The engine therefore reports no usable signal and does not guess. This is the expected behaviour for ordinary phone video (§11), and the reason the Capture app turns anti-banding off. The weak spectral peak near 100 Hz in phone2 (twice the 50 Hz grid) is below the detection threshold and is not used. The same phone2 recording was also uploaded to the live AWS deployment (job `cd65b6ea0c20`): the Graviton worker returned `INCONCLUSIVE` with `SIGNAL_ABSENT`, and the agent, reacting to the weak signal, asked for the original file and the camera model (behaviours B4 and B2 on real input) <!-- src: results/aws/index.json#cd65b6ea0c20.verdict -->.
 
 ## 10. Failure cases
 
