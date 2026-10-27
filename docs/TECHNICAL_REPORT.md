@@ -382,7 +382,7 @@ Dataset: `eval/DATASET.md`. Splits by recording day and phone. The false-`CONTRA
 
 Metrics (SPEC Part 11.5): confusion matrix against ground-truth classes, false-`CONTRADICTED` rate on authentic clips, `VERIFIED` coverage and `INCONCLUSIVE` rate per condition, time error for `VERIFIED` clips, edit detection rate and localization error, dropped-frame false alarms, signal survival per compression platform, experimental face-region results (separate), runtime per stage.
 
-**Status: first real recordings, no accuracy claim.** The real dataset has not been recorded yet (human task, see `docs/HUMAN_TASKS.md`), and the thresholds in use are `PROVISIONAL` (synthetic calibration). On 2026-10-27 two real clips were recorded on an iPhone 13 with the stock camera app (1080p, 30 fps, indoor mains lighting in India, 50 Hz grid, about 44 s each) and run through the full engine:
+**Status: first real recordings, no accuracy claim.** The real dataset has not been recorded yet (human task, see `docs/HUMAN_TASKS.md`), and the thresholds in use are `PROVISIONAL` (synthetic calibration). On 2026-10-27 two real clips were recorded on an iPhone 13 with the stock camera app (1080p, 30 fps, indoor mains lighting in India, 50 Hz grid, about 44 s each) and run through the full engine <!-- src: results/real/2026-10-27/phone1/run_meta.json#video -->:
 
 | Clip | Verdict | Reasons | Band SNR | DFT peak | Source |
 |---|---|---|---|---|---|
