@@ -23,3 +23,15 @@ infra/image_uris.json
 .worktrees/
 work_deploy*.log
 work_cdk_outputs.json
+
+# Local scratch and agent state (never commit)
+work_*.log
+work_*.json
+.claude/
+*.bin
+
+# Personal raw captures: large phone videos must never be committed
+data/real/
+*.mov
+*.MOV
+docs/devpost/*.zip

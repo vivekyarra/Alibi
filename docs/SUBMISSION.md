@@ -51,14 +51,22 @@ approval before the report is final. A missing signal is never evidence that a v
 - New-account AWS limits (vCPU quota, CloudFront verification) shaped the deployment.
 
 ## Accomplishments that we're proud of
-- An honest product: three verdicts, mandatory human review for CONTRADICTED, and no claim beyond the evidence.
-- The agent changes its plan from OpenCV measurements, and policies keep it safe even when the model errs.
-- The same engine runs on Graviton4 and x86 with stock OpenCV 5; in our benchmark Graviton4 gave higher throughput
-  and a lower cost per hour of video (technical report §7).
+- **Live on AWS:** https://5u7suz00bi.execute-api.us-east-1.amazonaws.com — 9 CDK stacks deployed, Graviton4 ECS
+  workers, Fargate arm64 API, and the Amazon Nova Lite planner on Amazon Bedrock (technical report §6).
+- **Real recording on the live deployment:** an iPhone 13 video uploaded to the endpoint ran end to end (job
+  cd65b6ea0c20). Its stock camera app had removed the flicker bands, so GRIDPRINT answered INCONCLUSIVE
+  (SIGNAL_ABSENT) instead of guessing, and the agent adapted by asking for the original file and the camera model. <!-- src: results/aws/index.json#cd65b6ea0c20.verdict -->
+- **Graviton4 beats x86 on the same engine:** 1.20 vs 0.92 video-seconds per wall-second <!-- src: results/bench/2026-10-27/B/summary.json#throughput_video_s_per_wall_s --> <!-- src: results/bench/2026-10-27/A/summary.json#throughput_video_s_per_wall_s -->
+  and $0.266 vs $0.390 per hour of video <!-- src: results/bench/2026-10-27/cost.json#configs.B.cost_per_video_hour_usd --> <!-- src: results/bench/2026-10-27/cost.json#configs.A.cost_per_video_hour_usd --> (c8g.2xlarge vs c7i.2xlarge, stock OpenCV 5, technical report §7).
+- **0 false CONTRADICTED** on authentic clips of the frozen-threshold evaluation test split (SYNTHETIC simulator
+  clips). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.false_contradicted_rate -->
+- A trustworthy product: three verdicts, mandatory human review for CONTRADICTED, and every step of the agent traced
+  (results/agent_traces/, results/aws/<job_id>/trace.json).
 
 ## What we learned
-Physics-based provenance is strong but narrow: it needs mains lighting and a camera that does not hide the flicker.
-Saying so plainly is part of the product.
+Physics gives provenance a signal that survives re-uploads and metadata loss. Pairing it with an agent that asks
+for exactly what it needs (the original file, the camera model) and with clear verdicts makes it usable by people
+who are not signal-processing experts.
 
 ## What's next
 Grid reference Nodes in more zones, real-world evaluation with consenting participants, the Capture app on more
@@ -71,12 +79,12 @@ aws-iot-core, aws-lambda, amazon-cloudwatch, aws-cdk, model-context-protocol, ko
 
 ## Links
 - Code: https://github.com/vivekyarra/Alibi
-- Live endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (how to check a result: docs/JUDGE_GUIDE.md; demo clips are SYNTHETIC)
+- Live endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (how to check a result: docs/JUDGE_GUIDE.md; the ready-made test clips are SYNTHETIC)
 - Technical report: docs/TECHNICAL_REPORT.md
-- Video: the link is added at submission (at most 5 minutes)
+- Video: on this Devpost page
 
 ## Special awards
-- **Agentic Vision Award:** opt in. Evidence: agent/, mcp_server/, agent traces under results/, agent tests.
-- **Best Use of COOL Award:** not claimed; do not opt in. COOL is not active (Marketplace subscription pending).
-  results/bench/2026-10-27/ holds the stock OpenCV 5 benchmark of Graviton4 c8g.2xlarge against x86 c7i.2xlarge
-  (technical report §7); it is not a COOL result.
+- **Agentic Vision Award:** opt in. Evidence: agent/, mcp_server/, Bedrock planner traces under results/aws/,
+  agent traces under results/agent_traces/, agent tests.
+- **Best Use of COOL Award:** do not opt in. results/bench/2026-10-27/ holds the stock OpenCV 5 benchmark of
+  Graviton4 c8g.2xlarge against x86 c7i.2xlarge (technical report §7); it is a stock OpenCV 5 result, not a COOL result.

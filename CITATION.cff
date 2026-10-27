@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use GRIDPRINT, please cite it as below."
+title: "GRIDPRINT: video authenticity from grid-frequency light flicker"
+type: software
+authors:
+  - name: "GRIDPRINT team"
+repository-code: "https://github.com/vivekyarra/Alibi"
+url: "https://github.com/vivekyarra/Alibi"
+license: Apache-2.0
+version: 0.1.0
+date-released: "2026-10-27"
+keywords:
+  - electric network frequency
+  - ENF
+  - rolling shutter
+  - video forensics
+  - OpenCV
