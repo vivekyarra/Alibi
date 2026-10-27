@@ -82,7 +82,7 @@ Follow `eval/FACE_COMPOSITES.md`. Every person signs `eval/templates/consent_for
 
 ## H8 — Record and edit the ≤ 5-minute video — BLOCKED-HUMAN
 
-1. **Team clip needed.** Record a short clip of the team (consenting members only) and save it as `video/assets/team.mp4`. `video/scenes.yaml` uses this file; until it exists, `video/make_video.py` shows a placeholder card in the team scene.
+1. **Team clip.** The submission video is built by `video/make_pitch.py`, which does not use a team clip.
 2. Build and check the video per `docs/VIDEO_SCRIPT.md`. Any demo clip shown must be labelled SYNTHETIC where it comes from the simulator.
 3. Upload as public or unlisted. Put the link in `README.md` (line "Video:") and in `docs/SUBMISSION.md` (Links). `scripts/final_check.py` checks the link exists; record the duration with `python scripts/check_video_duration.py <file>`.
 
