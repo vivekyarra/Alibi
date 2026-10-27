@@ -1,7 +1,7 @@
 # GRIDPRINT Node — Build and flash the firmware
 
 Human task H2, step 5. The firmware is ESP-IDF C for the ESP32 (written for ESP-IDF v5.x; it has not
-been compiled on hardware yet — see `docs/agent_notes/node_calibration.md`).
+been compiled on hardware yet).
 
 ## 1. Install ESP-IDF
 

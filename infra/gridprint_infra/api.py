@@ -1,6 +1,6 @@
 """API stack: FastAPI on Fargate linux/arm64 behind an internal ALB (SPEC 10.1, 10.6).
 
-Choice (docs/agent_notes/infra.md): Fargate service + ALB. The ALB is internal (private subnets) and
+Choice: Fargate service + ALB. The ALB is internal (private subnets) and
 CloudFront reaches it through a CloudFront VPC origin (Web stack), so the API is only reachable through
 CloudFront and its WAF web ACL.
 """

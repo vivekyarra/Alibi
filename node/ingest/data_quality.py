@@ -28,7 +28,7 @@ import yaml  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 PASS_COVERAGE_PCT = 99.0
 PASS_GPS_LOCK_PCT = 99.0
-# Outlier rules (engineering constants, see docs/agent_notes/node_calibration.md):
+# Outlier rules (engineering constants):
 OUTLIER_ABS_HZ = 1.0     # |f - nominal| above this
 OUTLIER_LOCAL_HZ = 0.05  # |f - running median over 61 s| above this
 MEDIAN_WIN_S = 61

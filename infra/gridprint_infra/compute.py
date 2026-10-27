@@ -49,7 +49,7 @@ ENGINE_CONTEXT = docker_context("engine.Dockerfile",
 API_CONTEXT = docker_context("api.Dockerfile", ["config", "engine", "agent", "mcp_server", "node", "api", "web"])
 
 # Engineering constants for the worker task on c8g.2xlarge (8 vCPU, 16 GiB). Headroom is left for the
-# ECS agent and the OS. Documented in docs/agent_notes/infra.md.
+# ECS agent and the OS.
 # Worker task size per instance type: whole instance minus headroom for the ECS agent and OS.
 WORKER_SIZES = {"c8g.xlarge": (3584, 6656), "c8g.2xlarge": (7168, 13312), "c8g.4xlarge": (15360, 28672)}
 WORKER_CPU_UNITS, WORKER_MEMORY_MIB = WORKER_SIZES["c8g.2xlarge"]

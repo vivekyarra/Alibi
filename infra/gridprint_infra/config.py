@@ -12,14 +12,14 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 CONFIG_DIR = REPO / "config"
 
-# Engineering constants for infrastructure (documented in docs/agent_notes/infra.md).
+# Engineering constants for infrastructure.
 DEFAULT_WORKER_INSTANCE_TYPE = "c8g.2xlarge"
 DEFAULT_WORKER_MAX_INSTANCES = 4
 DEFAULT_WAF_RATE_LIMIT_5MIN = 300          # all requests per client IP per 5 minutes
 DEFAULT_WAF_JOB_CREATE_LIMIT_5MIN = 20     # POST /v1/jobs (anonymous upload start) per IP per 5 minutes
 DEFAULT_COOL_HOST_PATHS = ("/opt/cool", "/opt/ffmpeg")
 # Path from the COOL Graviton4 Marketplace listing pattern `/opt/cool/python_3.12/site-packages/`,
-# changed to 3.11 to match the project Python. NOT verified on an instance (docs/agent_notes/infra.md).
+# changed to 3.11 to match the project Python. NOT verified on an instance.
 DEFAULT_COOL_PYTHONPATH = "/opt/cool/python_3.11/site-packages"
 DEFAULT_COOL_LD_LIBRARY_PATH = "/opt/cool/cpp_sdk/lib"
 DEFAULT_NODE_ZONES = ("IN",)
