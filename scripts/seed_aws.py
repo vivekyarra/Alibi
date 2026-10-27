@@ -20,15 +20,17 @@ sys.path[:0] = [str(REPO), str(REPO / "engine")]
 
 def main() -> int:
     from gridprint_engine.adapters import LocalGridLog
-
     from node.ingest.aws_gridlog import DynamoGridLog
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--results-bucket", required=True)
     ap.add_argument("--gridlog-table", required=True)
     ap.add_argument("--zone", default="SIM50")
-    ap.add_argument("--gridlog-root", default=str(REPO / "data" / "gridlog"))
+    ap.add_argument("--data-root", default=str(REPO), help="folder that holds data/demo and data/gridlog")
+    ap.add_argument("--gridlog-root", default=None)
     a = ap.parse_args()
+    root = Path(a.data_root)
+    a.gridlog_root = a.gridlog_root or str(root / "data" / "gridlog")
     cfg = yaml.safe_load((REPO / "config" / "default.yaml").read_text())
     s = boto3.Session(profile_name=cfg["aws"]["profile"], region_name=cfg["aws"]["region"])
     s3 = s.client("s3")
@@ -36,8 +38,8 @@ def main() -> int:
     for c in cases:
         for field in ("video", "sidecar"):
             rel = c.get(field)
-            if rel and (REPO / rel).exists():
-                s3.upload_file(str(REPO / rel), a.results_bucket, f"demo/{Path(rel).name}")
+            if rel and (root / rel).exists():
+                s3.upload_file(str(root / rel), a.results_bucket, f"demo/{Path(rel).name}")
                 print(f"uploaded demo/{Path(rel).name}")
     local = LocalGridLog(Path(a.gridlog_root))
     files = sorted((Path(a.gridlog_root) / a.zone).glob("*.csv"))

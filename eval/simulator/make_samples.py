@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from eval.simulator.render import SimConfig, simulate
 
 REPO = Path(__file__).resolve().parents[2]
-BASE = dict(width=160, height=120, duration_s=6.0, ref_margin_s=60, seed=21)
-SAMPLES = {
+BASE: dict[str, Any] = dict(width=160, height=120, duration_s=6.0, ref_margin_s=60, seed=21)
+SAMPLES: dict[str, dict[str, Any]] = {
     "clean_with_sidecar": {"sidecar": True},
     "cut_0p5s": {"edits": [{"type": "cut", "at_s": 3.1, "dur_s": 0.5}]},
     "dropped_frames": {"drop_frames": [(90, 4)]},
