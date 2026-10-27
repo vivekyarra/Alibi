@@ -382,7 +382,14 @@ Dataset: `eval/DATASET.md`. Splits by recording day and phone. The false-`CONTRA
 
 Metrics (SPEC Part 11.5): confusion matrix against ground-truth classes, false-`CONTRADICTED` rate on authentic clips, `VERIFIED` coverage and `INCONCLUSIVE` rate per condition, time error for `VERIFIED` clips, edit detection rate and localization error, dropped-frame false alarms, signal survival per compression platform, experimental face-region results (separate), runtime per stage.
 
-**Status: no real-world results.** The real dataset has not been recorded yet (human task, see `docs/HUMAN_TASKS.md`). No real-world accuracy is claimed. The thresholds in use are `PROVISIONAL` (synthetic calibration).
+**Status: first real recordings, no accuracy claim.** The real dataset has not been recorded yet (human task, see `docs/HUMAN_TASKS.md`), and the thresholds in use are `PROVISIONAL` (synthetic calibration). On 2026-10-27 two real clips were recorded on an iPhone 13 with the stock camera app (1080p, 30 fps, indoor mains lighting in India, 50 Hz grid, about 44 s each) and run through the full engine:
+
+| Clip | Verdict | Reasons | Band SNR | DFT peak | Source |
+|---|---|---|---|---|---|
+| phone1 | `INCONCLUSIVE` | `SIGNAL_ABSENT`, `READOUT_ESTIMATED` | −5.68 dB | 120.0003 Hz | <!-- src: results/real/2026-10-27/phone1/video_result.json#quality --> |
+| phone2 | `INCONCLUSIVE` | `SIGNAL_ABSENT`, `READOUT_ESTIMATED` | −5.60 dB | 99.9957 Hz | <!-- src: results/real/2026-10-27/phone2/video_result.json#quality --> |
+
+The stock camera app uses auto exposure and anti-banding, which suppress the flicker bands. The engine therefore reports no usable signal and does not guess. This is the expected behaviour for ordinary phone video (§11), and the reason the Capture app turns anti-banding off. The weak spectral peak near 100 Hz in phone2 (twice the 50 Hz grid) is below the detection threshold and is not used.
 
 ## 10. Failure cases
 
