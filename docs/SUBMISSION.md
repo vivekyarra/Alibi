@@ -81,7 +81,7 @@ aws-iot-core, aws-lambda, amazon-cloudwatch, aws-cdk, model-context-protocol, ko
 - Code: https://github.com/vivekyarra/Alibi
 - Live endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (how to check a result: docs/JUDGE_GUIDE.md; the ready-made test clips are SYNTHETIC)
 - Technical report: docs/TECHNICAL_REPORT.md
-- Video: on this Devpost page
+- Video: https://youtu.be/z8A503D4NjY
 
 ## Special awards
 - **Agentic Vision Award:** opt in. Evidence: agent/, mcp_server/, Bedrock planner traces under results/aws/,
