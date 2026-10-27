@@ -2,7 +2,7 @@
 
 GRIDPRINT checks if a video is real from the flicker of the lights in the room. It reads the power-grid frequency from rolling-shutter flicker bands with OpenCV 5 and compares it with a reference log of the real grid.
 
-Status (2026-10-27): sections 1–6 and 11–14 describe the built system. Sections 7–10 receive their tables from `eval/make_report.py` and the benchmark run. This report contains no measured number without a source tag (SPEC Part 14.3).
+Status (2026-10-27): sections 1–6 and 11–14 describe the built system. Sections 7–10 report measured results from `results/`: the Graviton vs x86 benchmark (§7) and the SYNTHETIC agent and pipeline evaluation (§8–§10); §6 has the AWS runs. Real-world results wait for the real dataset (H5). This report contains no measured number without a source tag (SPEC Part 14.3).
 
 ## Contents
 
@@ -62,7 +62,7 @@ Summary:
 - **Clients:** GRIDPRINT Capture (Android) and GRIDPRINT Verify (web).
 - **API:** FastAPI on ECS Fargate `linux/arm64`. Presigned S3 uploads. Jobs go to an SQS queue.
 - **Engine workers:** ECS on Graviton4 `c8g`, `linux/arm64`, OpenCV 5 (stock wheel). The stack also supports a COOL AMI when `aws.cool_ami_id` is set; COOL is not active yet (§6). Each worker task holds the agent orchestrator, the MCP client, and the MCP server `gridprint-engine` (stdio).
-- **Planner:** an LLM on Amazon Bedrock through the Converse API with tool use (`agent/planner_bedrock.py`; Amazon Nova Lite through a cross-account role, D-026; the model ID is configuration, so a Claude model works unchanged), with the deterministic fallback planner taking over for any step where the model call fails; the fallback planner can also run alone (`agent/fallback_planner.py`). The Bedrock planner is implemented and tested against a recorded-shape client. Bedrock access on the account waits for AWS account verification, so all runs so far use the fallback planner (D-021).
+- **Planner:** an LLM on Amazon Bedrock through the Converse API with tool use (`agent/planner_bedrock.py`; Amazon Nova Lite through a cross-account role, D-026; the model ID is configuration, so a Claude model works unchanged), with the deterministic fallback planner taking over for any step where the model call fails; the fallback planner can also run alone (`agent/fallback_planner.py`). The AWS runs in §6 use the Bedrock planner (Amazon Nova Lite); the SYNTHETIC evaluation suite in §8–§9 uses the fallback planner.
 - **Engine:** Python package `engine/gridprint_engine`, stages S1–S15. No AWS imports. Storage, grid log, and job store are reached through adapter interfaces.
 - **Reference:** GRIDPRINT Node (ESP32, GPS PPS, certified plug-in AC-to-AC adapter) → AWS IoT Core → Lambda → DynamoDB `GridLog`.
 - **Human control:** Cognito reviewer login; reviewer decisions stored in DynamoDB `Reviews`.
@@ -159,7 +159,7 @@ Public endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (API Gat
 
 Images: `linux/arm64`, built on a Graviton EC2 build instance by `infra/build_images.py` and pushed to Amazon ECR. They run on Graviton.
 
-COOL: not active. The Marketplace subscription is pending (H1). The engine runs stock OpenCV 5.0.0 on Graviton. The COOL award is not claimed unless the benchmark in §7 runs.
+COOL: not active, and the COOL award is not claimed. The Marketplace subscription is pending (H1). The engine runs stock OpenCV 5.0.0 on Graviton; §7 reports the Graviton vs x86 benchmark.
 
 ### End-to-end runs on AWS
 
@@ -188,29 +188,52 @@ Findings from these runs:
 
 Agent trace evidence (`results/aws/*/trace.json`): every step has `planner: "bedrock"` and `model_id: "us.amazon.nova-lite-v1:0"`. In each run the code-enforced guard rejected the model's proposal and substituted a rule step twice. The `decision_reason` reads "guard: planner proposed extract_flicker … (frequency or axis override before the first extraction); fallback rule: …" (steps 4 and 5). The model had tried to override the nominal frequency or readout axis before the first flicker extraction; the guard ran the deterministic rules (rank light patches, then a first extraction on all eligible patches). The last step is forced by the policy "report must be rendered". Behaviour B2 (readout unknown, so blind estimation) appears in the `cut-1s` run: `estimate_readout` returned `READOUT_ESTIMATED` and the verdict carries that reason. B1 and B3–B6 did not trigger in these runs (no weak signal, no high motion, no `CONTRADICTED` verdict). They are shown by the agent tests (`agent/tests/test_agent.py`).
 
-x86 and Arm: production containers are `linux/arm64`. The `linux/amd64` image exists only for the x86 baseline in the COOL benchmark.
+x86 and Arm: production containers are `linux/arm64`. The `linux/amd64` image exists only for the x86 baseline (configuration A) of the benchmark in §7.
 
 
 ## 7. COOL benchmark
 
-Protocol (SPEC Part 12): same engine code and pinned inputs (`bench/inputs.txt`), three configurations of equal vCPU and memory:
-- **A:** x86 instance, stock OpenCV 5 (`linux/amd64` image).
-- **B:** Graviton `c8g`, stock OpenCV 5 (`linux/arm64` image).
-- **C:** Graviton `c8g`, OpenCV 5 with COOL.
+**COOL award not claimed.** Configuration C (Graviton with COOL) needs the COOL AMI from AWS Marketplace, and that subscription is still pending (H1, V5). Configurations A and B ran on 2026-10-27: the same engine on x86 and on Graviton4, both with stock OpenCV 5.0.0. They show what the move to Graviton gives before any COOL acceleration.
 
-Metrics: throughput (video-seconds per wall-second), per-stage latency p50/p95, CPU utilization, memory, cost per hour of video (on-demand price from the AWS Price List API divided by throughput). At least five runs per configuration, mean and standard deviation. Parity check of ENF tracks and verdicts across A, B, C. Evidence that COOL executes: build information, loaded library paths, version string, profiler capture.
+Protocol (SPEC Part 12): same engine code and pinned inputs (`bench/inputs.txt`), configurations of equal vCPU and memory:
+- **A:** x86 `c7i.2xlarge`, stock OpenCV 5 (`linux/amd64` image).
+- **B:** Graviton4 `c8g.2xlarge`, stock OpenCV 5 (`linux/arm64` image).
+- **C:** Graviton `c8g`, OpenCV 5 with COOL. Not run (see above).
 
-COOL could not be obtained (V5: Marketplace subscription pending, H1), so the COOL award is not claimed. This section reports A vs B only, measured on 2026-10-27 on AWS (run `results/bench/2026-10-27/`). Both instances ran OpenCV 5.0.0 on Amazon Linux 2023 with the same pinned input. The input is a real recording: the public CC BY-SA clip listed in `bench/inputs.txt` and `docs/LICENSES.md`. Five runs per configuration; instances were terminated after the run.
+Metrics: throughput (video-seconds per wall-second), per-stage latency p50/p95, CPU utilization, memory, cost per hour of video (on-demand price from the AWS Price List API divided by throughput). Five runs per configuration, mean and standard deviation. Parity check of ENF tracks and verdicts across configurations. Evidence per instance: instance identity, `cv2.getBuildInformation()`, loaded library paths, versions, `lscpu`, `pip freeze`.
 
-| Config | Instance | Arch | Throughput (video-s per wall-s), mean ± std | S2 linear p50 | S4 motion p50 | S8 phase p50 | Peak RSS | On-demand price | Cost per video-hour |
-|---|---|---|---|---|---|---|---|---|---|
-| A | `c7i.2xlarge` | x86_64 | 0.916 ± 0.003 <!-- src: results/bench/2026-10-27/A/summary.json#throughput_video_s_per_wall_s --> | 5.12 s <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S2_linear.p50 --> | 2.38 s <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S4_motion.p50 --> | 1.61 s <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S8_phase.p50 --> | 2000 MB <!-- src: results/bench/2026-10-27/A/summary.json#peak_rss_mb_max --> | $0.357/h <!-- src: results/bench/2026-10-27/cost.json#configs.A.ec2_usd_per_hour --> | $0.390 <!-- src: results/bench/2026-10-27/cost.json#configs.A.cost_per_video_hour_usd --> |
-| B | `c8g.2xlarge` (Graviton4) | aarch64 | 1.201 ± 0.002 <!-- src: results/bench/2026-10-27/B/summary.json#throughput_video_s_per_wall_s --> | 4.24 s <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S2_linear.p50 --> | 1.65 s <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S4_motion.p50 --> | 0.98 s <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S8_phase.p50 --> | 1958 MB <!-- src: results/bench/2026-10-27/B/summary.json#peak_rss_mb_max --> | $0.319/h <!-- src: results/bench/2026-10-27/cost.json#configs.B.ec2_usd_per_hour --> | $0.266 <!-- src: results/bench/2026-10-27/cost.json#configs.B.cost_per_video_hour_usd --> |
+Input: one pinned real clip, the public Creative Commons (CC BY-SA) clip "Fluorescent beat effect" from Wikimedia Commons (license in `docs/LICENSES.md`), with an empty grid log. These are speed and cost measurements only; they say nothing about verification accuracy.
 
-Findings:
-- Graviton4 processes the same video faster and at lower cost per video-hour than the x86 baseline of equal vCPU count (table above; full per-stage p50/p95 in the `summary.json` files).
-- Parity: verdicts are identical on A and B <!-- src: results/bench/2026-10-27/parity.json#pairs.0.verdicts_identical -->. The ENF tracks differ by up to 0.568 Hz <!-- src: results/bench/2026-10-27/parity.json#pairs.0.max_abs_enf_diff_hz -->, outside the 0.001 Hz tolerance. The clip has no usable flicker signal (verdict `INCONCLUSIVE`, `SIGNAL_ABSENT`), so the tracks are noise estimates and small floating-point differences between the two builds move them freely. A parity check on a clip with a strong signal is still open.
-- Evidence of the software stack on each instance: `results/bench/2026-10-27/evidence/{A,B}/` (OpenCV build information, loaded libraries, `lscpu`, instance identity, `pip freeze`).
+### Results A vs B (stock OpenCV 5.0.0, `results/bench/2026-10-27/`)
+
+| Metric | A: x86 `c7i.2xlarge` | B: Graviton4 `c8g.2xlarge` |
+|---|---|---|
+| Throughput, video-s per wall-s (mean ± std, 5 runs) | 0.916 ± 0.003 <!-- src: results/bench/2026-10-27/A/summary.json#throughput_video_s_per_wall_s --> | 1.201 ± 0.002 <!-- src: results/bench/2026-10-27/B/summary.json#throughput_video_s_per_wall_s --> |
+| On-demand price, `us-east-1` | $0.357 per hour <!-- src: results/bench/2026-10-27/cost.json#configs.A.ec2_usd_per_hour --> | $0.31904 per hour <!-- src: results/bench/2026-10-27/cost.json#configs.B.ec2_usd_per_hour --> |
+| Cost per video-hour | $0.390 <!-- src: results/bench/2026-10-27/cost.json#configs.A.cost_per_video_hour_usd --> | $0.266 <!-- src: results/bench/2026-10-27/cost.json#configs.B.cost_per_video_hour_usd --> |
+| Mean CPU utilization (fraction of all vCPUs) | 0.180 <!-- src: results/bench/2026-10-27/A/summary.json#cpu_util_mean --> | 0.174 <!-- src: results/bench/2026-10-27/B/summary.json#cpu_util_mean --> |
+| Peak memory (RSS) | 1999.9 MB <!-- src: results/bench/2026-10-27/A/summary.json#peak_rss_mb_max --> | 1957.8 MB <!-- src: results/bench/2026-10-27/B/summary.json#peak_rss_mb_max --> |
+| Verdict, all runs | `INCONCLUSIVE` (5 of 5) <!-- src: results/bench/2026-10-27/A/runs.json#verdict --> | `INCONCLUSIVE` (5 of 5) <!-- src: results/bench/2026-10-27/B/runs.json#verdict --> |
+
+Stage latency p50 in seconds (S5 and S12 take about 0.0001 s on both and are left out): <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S5_segment.p50 --> <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S12_face.p50 -->
+
+| Stage | A: x86 `c7i.2xlarge` | B: Graviton4 `c8g.2xlarge` |
+|---|---|---|
+| S1 ingest | 0.961 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S1_ingest.p50 --> | 1.038 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S1_ingest.p50 --> |
+| S2 linear light | 5.123 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S2_linear.p50 --> | 4.242 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S2_linear.p50 --> |
+| S3 readout | 4.002 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S3_readout.p50 --> | 3.324 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S3_readout.p50 --> |
+| S4 motion | 2.385 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S4_motion.p50 --> | 1.646 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S4_motion.p50 --> |
+| S6 patches | 1.964 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S6_patches.p50 --> | 1.143 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S6_patches.p50 --> |
+| S7 row signal | 0.752 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S7_rowsignal.p50 --> | 0.410 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S7_rowsignal.p50 --> |
+| S8 phase | 1.614 <!-- src: results/bench/2026-10-27/A/summary.json#stage_latency_s.S8_phase.p50 --> | 0.978 <!-- src: results/bench/2026-10-27/B/summary.json#stage_latency_s.S8_phase.p50 --> |
+
+p95 values are in the same files. On this workload Graviton4 B processes more video per second than x86 A and costs less per hour of video, with stock OpenCV on both. Of the stages in the table, all except S1 (decoding with PyAV) are faster on B.
+
+**Parity.** Verdicts are identical on A and B. <!-- src: results/bench/2026-10-27/parity.json#pairs.0.verdicts_identical --> The ENF tracks are not within the 0.001 Hz tolerance (largest difference 0.568 Hz). <!-- src: results/bench/2026-10-27/parity.json#pairs.0.max_abs_enf_diff_hz --> This clip carries no usable grid signal, so its extracted tracks are noise, and small numeric differences between the x86 and Arm builds give different noise. Track parity can only be judged on a clip with a usable signal; that run is open, together with configuration C.
+
+Evidence that each run used the stated instance and build: `results/bench/2026-10-27/evidence/A/` and `evidence/B/` (`instance_identity.json`, `build_information.txt`, `loaded_libraries.txt`, `versions.json`, `lscpu.txt`, `pip_freeze.txt`). Per-run records: `A/runs.json`, `B/runs.json`; logs: `logs/`; prices: `prices.json` (AWS Price List API).
+
+Tooling in `bench/`: `run_bench.py` (runner), `configs.yaml` (configurations A, B, C), `inputs.txt` (pinned inputs), `make_inputs.py`, `prices.py` (AWS Price List API), `cool_evidence.py` (build info, loaded libraries, version capture), and `run_remote.md` (how to run it on EC2). Output goes to `results/bench/<date>/`. When the COOL subscription is active, configuration C runs with the same command and adds its row to these tables.
 
 ## 8. Agent design and evaluation
 
@@ -219,7 +242,7 @@ Findings:
 The runtime agent plans and adapts the analysis of each job. It is the agentic workflow of GRIDPRINT. The AI coding assistant that wrote code is not part of it.
 
 - **Perception:** OpenCV 5 stage outputs returned by MCP tools: band SNR, readout confidence, motion level, patch ranking, match statistics, continuity events.
-- **Decision:** a planner chooses the next tool call. Two planners use the same tools: Claude on Amazon Bedrock (`planner_bedrock.py`) and a deterministic fallback (`fallback_planner.py`). Policies in `policies.py` enforce budgets and order rules in code.
+- **Decision:** a planner chooses the next tool call. Two planners use the same tools: an LLM planner on Amazon Bedrock through the Converse API with tool use (`planner_bedrock.py`; Amazon Nova Lite `us.amazon.nova-lite-v1:0` through a cross-account role, D-026; the model ID is configuration) and a deterministic fallback (`fallback_planner.py`). Policies in `policies.py` enforce budgets and order rules in code.
 - **Action:** MCP tool calls to the `gridprint-engine` server, `request_user_input`, `request_human_review`, `render_report`.
 
 Required adaptive behaviors (SPEC Part 9.3):
@@ -237,19 +260,121 @@ The agent cannot write or change a verdict, thresholds, or reason codes. Every s
 
 ### Evaluation
 
-Metrics (SPEC Part 9.7) for both planners: task success, recovery rate, tool calls per job, unnecessary-call rate, human-review precision, budget-exhaustion rate.
+Metrics (SPEC Part 9.7): task success, recovery rate, tool calls per job, unnecessary-call rate, human-review precision, budget-exhaustion rate.
 
-Results: the tables for this section are generated by `eval/make_report.py` into `results/eval/<date>/`. Example traces for B1–B6 are stored under `results/`.
+**Planner coverage.** The evaluation suite below ran with the deterministic **fallback planner** only. The Bedrock planner was not run on the evaluation suite, so there are no Bedrock-planner metrics in this section. (The AWS demo runs in §6 used the Bedrock planner on the SYNTHETIC demo clips; they are not part of this evaluation.)
+
+All values are **SYNTHETIC** (simulator clips, `synthetic-v1` suite, test split, 22 clips, frozen thresholds). They are not real-world accuracy.
+
+| Agent metric (SYNTHETIC, fallback planner, test split) | Value [Wilson CI, 95 percent] |
+|---|---|
+| Task success (final verdict = expected verdict) | 68.2% [47.3–83.6] (k=15, n=22) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.task_success --> |
+| Recovery rate (first extraction weak, a later extraction usable) | 33.3% [6.1–79.2] (k=1, n=3) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.recovery_rate --> |
+| Unnecessary-call rate (repeated identical calls + tool errors) | 0.0% [0.0–1.7] (k=0, n=221) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.unnecessary_call_rate --> |
+| Human-review precision (`CONTRADICTED` jobs that were edited clips) | 100.0% [34.2–100.0] (k=2, n=2) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.human_review_precision --> |
+| Budget-exhaustion rate | 0.0% [0.0–14.9] (k=0, n=22) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.budget_exhaustion_rate --> |
+
+Tool calls per job: mean 10.05, median 10.0, max 13.0 (n=22). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.tool_calls_per_job -->
+`request_user_input` requests: one `original_file` request (B4). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.user_input_requests -->
+
+Task success is mostly an engine result: the fallback planner follows fixed rules, so a wrong verdict usually comes from the signal or the thresholds, not the plan (see §10).
+
+**Example traces.** Six full traces are copied unchanged from the evaluation runs to `results/agent_traces/`:
+
+| Trace | Behaviour shown | What happens |
+|---|---|---|
+| [`short_readout_long_expo__s1031.json`](../results/agent_traces/short_readout_long_expo__s1031.json) | B1 with recovery | The first extraction is weak. The agent re-ranks patches and extracts again on the top patches. The second track is usable, so matching continues. (This job then ended in a wrong-time `VERIFIED`; see §10.) |
+| [`weak_flicker__s1021.json`](../results/agent_traces/weak_flicker__s1021.json) | B1 → B5 | Re-rank patches, re-extract, switch nominal frequency, switch sensor axis; no usable signal, so `compute_verdict` gives `INCONCLUSIVE`. |
+| [`messaging_compression__s1100.json`](../results/agent_traces/messaging_compression__s1100.json) (calibration split) | B4, B1, B5 | Strong compression and a weak signal: `request_user_input(kind=original_file)`, then the B1 alternatives, then B5. |
+| [`no_mains_light__s1141.json`](../results/agent_traces/no_mains_light__s1141.json) | B4, B1, B5 | No mains-powered light: the same path ends `INCONCLUSIVE`. The missing signal is not treated as evidence of a fake. |
+| [`reorder__s1201.json`](../results/agent_traces/reorder__s1201.json) | B6 | Verdict `CONTRADICTED` → `request_human_review` → `render_report(final=false)` (pending review). |
+| [`clean__s1001.json`](../results/agent_traces/clean__s1001.json) | none (baseline) | Strong signal: the plain path probe → readout → motion → patches → extract → match → continuity → face check → verdict → final report. |
+
+Behaviours **B2** (readout unknown or low-confidence blind estimate → ask for camera model) and **B3** (`HIGH_MOTION` → strict motion analysis) did not trigger on any of the 44 suite clips, so no suite trace shows them. In the camera-motion clips the motion stage did not report high motion. B2 and B3 are covered only by the agent tests (`agent/tests/`).
 
 ## 9. Evaluation
 
-Real and synthetic results are reported in separate tables. Synthetic results are labeled `SYNTHETIC` and are never presented as real-world accuracy.
+Real and synthetic results are reported in separate tables. Synthetic results are labeled `SYNTHETIC` and are never presented as real-world accuracy (SPEC 11.1).
 
 ### Synthetic evaluation
 
-Simulator: `eval/simulator/`. It makes rolling-shutter videos with known ground truth (ENF track, flicker depth, readout time, exposure, timing jitter, dropped frames, motion, noise, compression, cuts and insertions).
+Simulator: `eval/simulator/`. It makes rolling-shutter videos with known ground truth (ENF track, flicker depth, readout time, exposure, timing jitter, dropped frames, motion, noise, compression, cuts and insertions). Suite `synthetic-v1` (`data/synthetic/v1/manifest.json`): 44 clips, 22 per split, one clip per condition per split. Each split has 16 authentic mains-lit clips, 1 authentic clip without mains light, and 5 edited clips. Every clip goes through the full agent (fallback planner) and engine.
 
-Results: generated by `eval/make_report.py` into `results/`. (Tables are inserted here from those files.)
+**All numbers in this section are SYNTHETIC. They measure the pipeline against simulator ground truth, not real-world accuracy.**
+
+Protocol (SPEC 11.4), followed in this order:
+1. Calibration split run with the placeholder thresholds → `results/eval/2026-10-27/synthetic-v1-fallback/`.
+2. `eval/calibrate_thresholds.py` grid search on the calibration split (target false-`CONTRADICTED` rate from `config/default.yaml`, no wrong-time `VERIFIED`). It wrote `config/thresholds.yaml` with provenance status `PROVISIONAL` (synthetic data only; must be recalibrated on the real dataset).
+3. Test split run **once** with the frozen thresholds → `results/eval/2026-10-27-test/synthetic-v1-fallback/` (`run_meta.json` records the thresholds hash).
+
+#### Test split (SYNTHETIC, frozen thresholds, fallback planner)
+
+Full summary: [`summary.md`](../results/eval/2026-10-27-test/synthetic-v1-fallback/summary.md); per-clip table: [`clips.csv`](../results/eval/2026-10-27-test/synthetic-v1-fallback/clips.csv).
+
+| Metric (SYNTHETIC) | Value [Wilson CI, 95 percent] |
+|---|---|
+| False-`CONTRADICTED` rate on authentic clips | 0.0% [0.0–18.4] (k=0, n=17) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.false_contradicted_rate --> |
+| `VERIFIED` coverage, mains-lit clips | 75.0% [50.5–89.8] (k=12, n=16) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.verified_coverage_mains --> |
+| Edit detection rate | 20.0% [3.6–62.4] (k=1, n=5) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.edit_detection --> |
+| Dropped-frame false alarms | 0.0% [0.0–79.3] (k=0, n=1) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.dropped_frame_false_alarm --> |
+| Agent task success (verdict = expected) | 68.2% [47.3–83.6] (k=15, n=22) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.task_success --> |
+| Agent recovery rate (weak first extraction later usable) | 33.3% [6.1–79.2] (k=1, n=3) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.recovery_rate --> |
+| Unnecessary-call rate | 0.0% [0.0–1.7] (k=0, n=221) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.unnecessary_call_rate --> |
+| Human-review precision | 100.0% [34.2–100.0] (k=2, n=2) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.human_review_precision --> |
+| Budget-exhaustion rate | 0.0% [0.0–14.9] (k=0, n=22) <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.agent.budget_exhaustion_rate --> |
+
+| class (SYNTHETIC) | VERIFIED | CONTRADICTED | INCONCLUSIVE | no result |
+|---|---|---|---|---|
+| authentic-with-mains-light | 12 | 0 | 4 | 0 <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.confusion.authentic-with-mains-light --> |
+| authentic-without-mains-light | 0 | 0 | 1 | 0 <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.confusion.authentic-without-mains-light --> |
+| edited | 2 | 2 | 1 | 0 <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.confusion.edited --> |
+
+Rows are ground-truth classes; columns are verdicts. The suite has no `synthetic` (generated-video) class.
+
+- Time error of `VERIFIED` clips: median 0.157 s, max 1342.182 s (n=14). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.time_error_verified_s -->
+- ENF track RMSE against ground truth: median 2.046 mHz, p95 202.644 mHz (n=16). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.enf_rmse_mhz -->
+- Edit localization error: one localized edit, error 1478.067 s (n=1); see §10. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.edit_localization_error_s -->
+- Runtime per job is dominated by motion analysis (S4, mean 114.32 s) and overlay rendering (S14, mean 128.92 s), measured on the development PC with four clips in parallel. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.runtime_per_stage_s.S4_motion --> <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.runtime_per_stage_s.S14_overlay -->
+- Pipeline errors: none. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/summary.json#test.errors -->
+
+**Edit-detection metric caveat.** The edit detection rate counts only edited clips whose ground truth lists an edit time. The `reorder` clip has no edit time in its ground truth, so its correct `CONTRADICTED` is not counted there. The `edited` row of the confusion matrix is the complete count.
+
+#### Calibration split (SYNTHETIC, placeholder thresholds)
+
+Full summary: [`summary.md`](../results/eval/2026-10-27/synthetic-v1-fallback/summary.md). These verdicts were produced with the hand-written placeholder thresholds **before** calibration, so they are not the operating point:
+
+| Metric (SYNTHETIC) | Value [Wilson CI, 95 percent] |
+|---|---|
+| False-`CONTRADICTED` rate on authentic clips | 0.0% [0.0–18.4] (k=0, n=17) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.false_contradicted_rate --> |
+| `VERIFIED` coverage, mains-lit clips | 0.0% [0.0–19.4] (k=0, n=16) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.verified_coverage_mains --> |
+| Edit detection rate | 0.0% [0.0–43.4] (k=0, n=5) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.edit_detection --> |
+| Dropped-frame false alarms | 0.0% [0.0–79.3] (k=0, n=1) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.dropped_frame_false_alarm --> |
+| Agent task success (verdict = expected) | 9.1% [2.5–27.8] (k=2, n=22) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.agent.task_success --> |
+| Agent recovery rate (weak first extraction later usable) | 14.3% [2.6–51.3] (k=1, n=7) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.agent.recovery_rate --> |
+| Unnecessary-call rate | 0.0% [0.0–1.7] (k=0, n=224) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.agent.unnecessary_call_rate --> |
+| Human-review precision | 100.0% [20.7–100.0] (k=1, n=1) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.agent.human_review_precision --> |
+| Budget-exhaustion rate | 0.0% [0.0–14.9] (k=0, n=22) <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.agent.budget_exhaustion_rate --> |
+
+| class (SYNTHETIC) | VERIFIED | CONTRADICTED | INCONCLUSIVE | no result |
+|---|---|---|---|---|
+| authentic-with-mains-light | 0 | 0 | 16 | 0 <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.confusion.authentic-with-mains-light --> |
+| authentic-without-mains-light | 0 | 0 | 1 | 0 <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.confusion.authentic-without-mains-light --> |
+| edited | 0 | 1 | 4 | 0 <!-- src: results/eval/2026-10-27/synthetic-v1-fallback/summary.json#calibration.confusion.edited --> |
+
+With the placeholder match margin, every mains-lit calibration clip ended `NO_UNIQUE_MATCH` or `SIGNAL_WEAK`. Replaying the calibration statistics with the selected thresholds gives `VERIFIED` coverage 0.5625 and edit detection 0.4 with no false `CONTRADICTED` (fit recorded in the thresholds file). <!-- cfg: config/thresholds.yaml#provenance.calibration_fit -->
+
+#### Reproduce
+
+```
+# from the repository root; PYTHONPATH must include the repo root and engine/
+python -m eval.run_eval --suite synthetic-v1 --split calibration --workers 4 --date 2026-10-27 --data data/synthetic/v1
+python -m eval.calibrate_thresholds results/eval/2026-10-27/synthetic-v1-fallback
+python -m eval.run_eval --suite synthetic-v1 --split test --workers 4 --date 2026-10-27-test --data data/synthetic/v1
+python -m eval.make_report results/eval/2026-10-27/synthetic-v1-fallback
+python -m eval.make_report results/eval/2026-10-27-test/synthetic-v1-fallback
+```
+
+To keep the repository small, overlay videos and per-job plots and PDFs were removed from `results/eval/` after the runs. Per-job `result.json`, `trace.json` and `job.json`, the clip records, the summaries and the failure-gallery PNG plots are kept. Re-running the commands regenerates the removed files.
 
 ### Real-world evaluation
 
@@ -257,11 +382,25 @@ Dataset: `eval/DATASET.md`. Splits by recording day and phone. The false-`CONTRA
 
 Metrics (SPEC Part 11.5): confusion matrix against ground-truth classes, false-`CONTRADICTED` rate on authentic clips, `VERIFIED` coverage and `INCONCLUSIVE` rate per condition, time error for `VERIFIED` clips, edit detection rate and localization error, dropped-frame false alarms, signal survival per compression platform, experimental face-region results (separate), runtime per stage.
 
-Results: generated by `eval/make_report.py` into `results/eval/<date>/`. (Tables are inserted here from those files.)
+**Status: no real-world results.** The real dataset has not been recorded yet (human task, see `docs/HUMAN_TASKS.md`). No real-world accuracy is claimed. The thresholds in use are `PROVISIONAL` (synthetic calibration).
 
 ## 10. Failure cases
 
-The failure-case gallery (at least ten cases, with overlays and plain explanations) is generated by `eval/make_report.py` into `results/eval/<date>/`. (Gallery is linked here from those files.)
+Galleries (generated by `eval/make_report.py`, SYNTHETIC):
+- Test split: [`failure_gallery/`](../results/eval/2026-10-27-test/synthetic-v1-fallback/failure_gallery/), listed with explanations at the end of its [`summary.md`](../results/eval/2026-10-27-test/synthetic-v1-fallback/summary.md).
+- Calibration split (placeholder thresholds): [`failure_gallery/`](../results/eval/2026-10-27/synthetic-v1-fallback/failure_gallery/).
+
+The galleries keep the ENF-track and phase-residual PNG plots; the overlay videos were removed for size (see §9).
+
+The test split has 7 failures out of 22 clips. They fall into five groups, worst first:
+
+1. **Missed edits that ended `VERIFIED`** (`cut_0p5s__s1161`, `cut_1s__s1171`). The short cuts were explained as dropped frames (`DROPPED_FRAMES_EXPLAINED`), and the remaining track still matched the true time. Match margins were 0.054 and 0.065, above the calibrated minimum. This is the most serious failure: an edited clip received `VERIFIED`. The same miss happened in the AWS run of the `cut-1s` demo case (§6). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/cut_0p5s__s1161.json#raw.match.margin --> <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/cut_1s__s1171.json#raw.match.margin -->
+2. **Wrong-time `VERIFIED`** (`short_readout_long_expo__s1031`). After B1 recovery the track was poor (ENF RMSE 177.598 mHz) and matched a reference time 1342.182 s away from the truth, with margin 0.016. The calibrated margin minimum (the lowest value in the search grid) let it through. Calibration had no wrong-time `VERIFIED` on its own split; the test split shows the margin threshold is too loose. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips.csv#short_readout_long_expo__s1031 --> <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/short_readout_long_expo__s1031.json#raw.match.margin -->
+3. **No unique match** (`jitter__s1041`, `web_compression__s1091`, and the edited `cut_2s__s1181`). The best and second-best reference offsets scored almost equally (margins 0.013, 0.005 and 0.003), so the verdict was `INCONCLUSIVE`. This is the intended safe outcome when the match is ambiguous. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/jitter__s1041.json#raw.match.margin --> <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/web_compression__s1091.json#raw.match.margin --> <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/cut_2s__s1181.json#raw.match.margin -->
+4. **Signal too weak** (`weak_flicker__s1021`, band SNR 3.062 dB). The agent tried every B1 alternative and then stopped with `INCONCLUSIVE` (B5). <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips.csv#weak_flicker__s1021 -->
+5. **HDR input** (`hdr__s1211`). The engine stops on HDR transfer functions by design (`HDR_UNSUPPORTED`), so the clip is `INCONCLUSIVE`; the manifest expected `VERIFIED`.
+
+Measurement issue found during the evaluation: for `insert_other_time__s1191` (correctly `CONTRADICTED`), the reported edit-event time lies outside the clip, which gives the 1478.067 s localization error above. The verdict is correct, but the edit-event timestamp cannot be used for localization until this is fixed. <!-- src: results/eval/2026-10-27-test/synthetic-v1-fallback/clips/insert_other_time__s1191.json#edit_localization_error_s -->
 
 ## 11. Limitations
 

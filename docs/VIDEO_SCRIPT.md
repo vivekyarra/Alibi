@@ -57,12 +57,12 @@ Recording rules:
 | Shot 13 | Band SNR before and after: [value from results] <!-- src: results/demo/<date>/case7_trace.json#band_snr_first --> and [value from results] <!-- src: results/demo/<date>/case7_trace.json#band_snr_final --> |
 | Shot 14 | Agent workflow diagram (`docs/diagrams/agent_workflow.svg`), highlight B1 and B6. |
 
-### 3:30–4:20 Architecture + measured COOL benchmark
+### 3:30–4:20 Architecture + measured Graviton benchmark
 
 | Item | Content |
 |---|---|
-| Voice | "The engine runs OpenCV 5 on AWS Graviton. The agent plans each job and calls engine tools through MCP. Its planner is Claude on Amazon Bedrock, with a deterministic planner as fallback. The reference grid log comes from our GPS-timed Node." |
-| Voice check | Before recording, match each sentence to the facts on that day: say "with COOL" only if the COOL benchmark ran (`results/bench/`); say "Claude on Amazon Bedrock" planned this job only if the shown trace has planner type `bedrock`; say "GPS-timed Node" only if the shown reference came from Node data (H2), otherwise name the source shown in the report. |
+| Voice | "The engine runs OpenCV 5 on AWS Graviton. The agent plans each job and calls engine tools through MCP. Its planner is Amazon Nova Lite on Amazon Bedrock, with a deterministic planner as fallback. The reference grid log comes from our GPS-timed Node." |
+| Voice check | Before recording, match each sentence to the facts on that day: say "with COOL" only if the COOL benchmark ran (`results/bench/`); say "Amazon Nova Lite on Amazon Bedrock" planned this job only if the shown trace has planner type `bedrock`; say "GPS-timed Node" only if the shown reference came from Node data (H2), otherwise name the source shown in the report. |
 | Shot 15 | Architecture diagram (`docs/diagrams/architecture.svg`). Highlight engine stages, Graviton workers, Node path. |
 | Shot 16 | Benchmark chart from `results/bench/<date>/`. Throughput for configurations A, B, C: [value from results] <!-- src: results/bench/<date>/summary.json#throughput_A --> , [value from results] <!-- src: results/bench/<date>/summary.json#throughput_B --> , [value from results] <!-- src: results/bench/<date>/summary.json#throughput_C --> |
 | Shot 17 | Cost per hour of video for each configuration: [value from results] <!-- src: results/bench/<date>/summary.json#cost_per_video_hour --> |

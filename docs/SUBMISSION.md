@@ -53,6 +53,8 @@ approval before the report is final. A missing signal is never evidence that a v
 ## Accomplishments that we're proud of
 - An honest product: three verdicts, mandatory human review for CONTRADICTED, and no claim beyond the evidence.
 - The agent changes its plan from OpenCV measurements, and policies keep it safe even when the model errs.
+- The same engine runs on Graviton4 and x86 with stock OpenCV 5; in our benchmark Graviton4 gave higher throughput
+  and a lower cost per hour of video (technical report §7).
 
 ## What we learned
 Physics-based provenance is strong but narrow: it needs mains lighting and a camera that does not hide the flicker.
@@ -71,9 +73,10 @@ aws-iot-core, aws-lambda, amazon-cloudwatch, aws-cdk, model-context-protocol, ko
 - Code: https://github.com/vivekyarra/Alibi
 - Live endpoint: https://5u7suz00bi.execute-api.us-east-1.amazonaws.com (how to check a result: docs/JUDGE_GUIDE.md; demo clips are SYNTHETIC)
 - Technical report: docs/TECHNICAL_REPORT.md
-- Video: (add the YouTube/Vimeo link after upload)
+- Video: the link is added at submission (at most 5 minutes)
 
 ## Special awards
 - **Agentic Vision Award:** opt in. Evidence: agent/, mcp_server/, agent traces under results/, agent tests.
-- **Best Use of COOL Award:** opt in only if the COOL benchmark evidence exists under results/bench/ by submission
-  time; otherwise do not opt in.
+- **Best Use of COOL Award:** not claimed; do not opt in. COOL is not active (Marketplace subscription pending).
+  results/bench/2026-10-27/ holds the stock OpenCV 5 benchmark of Graviton4 c8g.2xlarge against x86 c7i.2xlarge
+  (technical report §7); it is not a COOL result.

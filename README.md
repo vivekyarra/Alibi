@@ -15,7 +15,7 @@ status is in [docs/PROGRESS.md](docs/PROGRESS.md).
 - Technical report: [docs/TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · diagrams in [docs/diagrams/](docs/diagrams/)
 - Responsible use: [docs/RESPONSIBLE_USE.md](docs/RESPONSIBLE_USE.md)
-- Video: (not recorded yet — human task H8)
+- Video: the link is added at submission (at most 5 minutes)
 
 ## What is in the repository
 
@@ -30,7 +30,7 @@ status is in [docs/PROGRESS.md](docs/PROGRESS.md).
 | Camera calibration rig | `calibration_rig/` |
 | AWS infrastructure (CDK v2) | `infra/` |
 | Simulator and evaluation | `eval/` |
-| COOL benchmark | `bench/` |
+| Graviton vs x86 benchmark (COOL-ready) | `bench/` |
 
 ## Quick start (local)
 

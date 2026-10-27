@@ -67,6 +67,9 @@ Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BL
 
 ## M10 — COOL benchmark — OPEN / BLOCKED-HUMAN (COOL subscription)
 
+- Done: configurations A (x86 `c7i.2xlarge`) and B (Graviton4 `c8g.2xlarge`), stock OpenCV 5.0.0, five runs each, with cost, parity and per-instance evidence in `results/bench/2026-10-27/`; reported in `docs/TECHNICAL_REPORT.md` §7. COOL award not claimed.
+- Remaining: configuration C (COOL) after the Marketplace subscription (H1 item 4); ENF-track parity on a clip with a usable signal.
+
 ## M11 — Demo and UX — OPEN
 
 <!-- m11-aws:begin (from results/aws/index.json) -->
@@ -84,5 +87,8 @@ Status key: ACCEPTED (all criteria shown with evidence), OPEN (work remains), BL
 <!-- m11-aws:end -->
 
 ## M12 — Docs and video — OPEN (video: H8)
+
+- Done: all Part 14 documents exist; consistency pass on 2026-10-27 (planner Amazon Nova Lite per D-026, benchmark in report §7, COOL not claimed).
+- Remaining: video recording, upload and link (H8); README fresh-clone test result under `results/fresh_clone/`.
 
 ## M13 — Final check — OPEN (`scripts/final_check.py` reports the open items)
