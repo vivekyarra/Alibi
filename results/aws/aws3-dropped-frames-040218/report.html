@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRIDPRINT report aws3-dropped-frames-040218</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #1a1a1a; background: #ffffff;
+         max-width: 900px; margin: 0 auto; padding: 16px; line-height: 1.5; }
+  h1, h2, h3 { line-height: 1.25; }
+  .verdict { border: 3px solid #1a1a1a; border-radius: 8px; padding: 12px 16px; display: flex; gap: 16px;
+             align-items: center; }
+  .icon { font-size: 40px; font-weight: 700; width: 56px; height: 56px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center; border: 3px solid currentColor; }
+  .VERIFIED { color: #0b5d1e; } .CONTRADICTED { color: #8a1010; } .INCONCLUSIVE { color: #3d3d3d; }
+  .state { font-weight: 700; }
+  table { border-collapse: collapse; width: 100%; } td, th { border: 1px solid #757575; padding: 4px 8px;
+  text-align: left; vertical-align: top; }
+  .limits { border: 2px solid #1a1a1a; background: #f2f2f2; padding: 8px 16px; margin: 16px 0; }
+  .exp { border: 2px dashed #3d3d3d; padding: 8px 16px; }
+  img { max-width: 100%; height: auto; }
+  code { font-size: 0.9em; word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+<h1>GRIDPRINT analysis report</h1>
+<section aria-labelledby="h-verdict">
+<h2 id="h-verdict">Verdict</h2>
+<div class="verdict VERIFIED" role="status">
+  <span class="icon" aria-hidden="true">✓</span>
+  <div>
+    <div style="font-size:1.6em;font-weight:700">VERIFIED</div>
+    <div>A grid signal is present and matches the reference log at one time. No significant edit evidence was found.</div>
+    <div class="state">Report state: FINAL</div>
+  </div>
+</div>
+</section>
+
+<section aria-labelledby="h-summary">
+<h2 id="h-summary">Summary</h2>
+<table>
+<tr><th scope="row">Estimated recording start (UTC)</th><td>2026-01-20T10:00:00.014252+00:00 ± 1.5 s</td></tr>
+<tr><th scope="row">Grid zone</th><td>SIM50</td></tr>
+<tr><th scope="row">Reasons</th><td><ul><li><code>READOUT_FROM_SIDECAR</code> — Readout time came from the Capture sidecar.</li><li><code>MATCH_OK</code> — The track matches the reference log at one time.</li><li><code>DROPPED_FRAMES_EXPLAINED</code> — Frame gaps were found; the flicker phase across them is consistent (not an edit).</li></ul></td></tr>
+<tr><th scope="row">Match</th><td>peak correlation 0.980, next peak 0.784, track length 69 s</td></tr>
+</table>
+</section>
+
+<section aria-labelledby="h-plots">
+<h2 id="h-plots">Key plots</h2>
+<figure><img src="enf_track.png" alt="Grid frequency deviation measured from the video and the matched reference segment, plotted against time in the video."><figcaption>Measured grid frequency variation and matched reference.</figcaption></figure><figure><img src="ncc_scan.png" alt="Normalized correlation between the video track and the reference for every candidate start time in the search window."><figcaption>Correlation against candidate start times.</figcaption></figure><figure><img src="phase_residual.png" alt="Estimated flicker phase jump at each frame boundary. Solid vertical lines mark edit candidates; dotted lines mark frame-timestamp gaps."><figcaption>Phase jump at frame boundaries. Solid line: edit candidate. Dotted line: timestamp gap.</figcaption></figure><figure><img src="band_amplitude.png" alt="Fitted flicker band amplitude for each frame."><figcaption>Flicker band amplitude per frame (fractional modulation).</figcaption></figure>
+</section>
+
+<section class="limits" aria-labelledby="h-limits">
+<h2 id="h-limits">Limitations</h2>
+<ul>
+<li>GRIDPRINT reads the grid frequency from the flicker of mains-powered lights. It is not a deepfake classifier and it is not cryptographic proof.</li>
+<li>A missing signal is never evidence that a video is fake. Many phones hide the flicker ("anti-banding"), and daylight or battery lights do not flicker.</li>
+<li>A time estimate is possible only inside the time range of the reference log for the zone.</li>
+<li>Location output is limited to the grid zone. GRIDPRINT gives no finer location.</li>
+<li>Thresholds come from calibration data. Results outside the calibrated conditions carry more risk of error.</li>
+<li>A CONTRADICTED verdict needs approval by a human reviewer before the report is final.</li>
+</ul>
+</section>
+
+
+
+
+
+<section aria-labelledby="h-prov">
+<h2 id="h-prov">Provenance</h2>
+<table>
+<tr><th scope="row">File SHA-256</th><td><code>97bd81ea29c2a33b16465d912f7ac4e526a0425b1cc54b33e27aeb10b46074b9</code></td></tr>
+<tr><th scope="row">Engine version</th><td>0.1.0</td></tr>
+<tr><th scope="row">Config hash</th><td><code>8f439372b865ee8e</code></td></tr>
+<tr><th scope="row">Thresholds hash</th><td><code>5c105287d4e1c479</code></td></tr>
+<tr><th scope="row">Job</th><td><code>aws3-dropped-frames-040218</code></td></tr>
+</table>
+</section>
+
+<section aria-labelledby="h-appendix">
+<h2 id="h-appendix">Appendix</h2>
+<h3>Continuity events</h3>
+<table><tr><th scope="col">Kind</th><th scope="col">Time in video (s)</th><th scope="col">Phase jump (rad)</th><th scope="col">Significance</th></tr>
+<tr><td>DROPPED_FRAMES_EXPLAINED</td><td>20.20</td><td>-0.033</td><td>0.6</td></tr><tr><td>DROPPED_FRAMES_EXPLAINED</td><td>43.63</td><td>0.020</td><td>0.3</td></tr></table>
+
+<h3>Quality metrics</h3>
+<table><tr><th scope="row">axis</th><td>rows+</td></tr><tr><th scope="row">band_snr_db</th><td>11.426580954399864</td></tr><tr><th scope="row">bitrate</th><td>490747</td></tr><tr><th scope="row">bits_per_pixel</th><td>0.21453018834932053</td></tr><tr><th scope="row">camera_motion_px</th><td>0.032422965009069944</td></tr><tr><th scope="row">codec</th><td>h264</td></tr><tr><th scope="row">dft_peak_hz</th><td>100.02934814260769</td></tr><tr><th scope="row">estimators_agree</th><td>True</td></tr><tr><th scope="row">foreground_fraction</th><td>0.052121927458033575</td></tr><tr><th scope="row">frames</th><td>2085</td></tr><tr><th scope="row">height</th><td>240</td></tr><tr><th scope="row">jitter_p50_ms</th><td>3.3305269653283176e-07</td></tr><tr><th scope="row">jitter_p95_ms</th><td>3.338056941970535e-07</td></tr><tr><th scope="row">motion_level_px</th><td>0.10989784047152439</td></tr><tr><th scope="row">nominal_flicker_hz</th><td>100.0</td></tr><tr><th scope="row">opencv_frame_count</th><td>2085</td></tr><tr><th scope="row">phase_mean_flicker_hz</th><td>100.0261382279723</td></tr><tr><th scope="row">readout_s</th><td>0.025</td></tr><tr><th scope="row">readout_source</th><td>READOUT_FROM_SIDECAR</td></tr><tr><th scope="row">rotation_metadata_deg</th><td>0</td></tr><tr><th scope="row">segmentation</th><td>ok</td></tr><tr><th scope="row">static_fraction</th><td>1.0</td></tr><tr><th scope="row">timestamp_source</th><td>sensor</td></tr><tr><th scope="row">timing_assumption</th><td>sensor_timestamp_is_first_row_exposure_start</td></tr><tr><th scope="row">track_id</th><td>t1</td></tr><tr><th scope="row">track_samples</th><td>66</td></tr><tr><th scope="row">transfer</th><td>bt709</td></tr><tr><th scope="row">verdict_rule</th><td>S13.4</td></tr><tr><th scope="row">width</th><td>320</td></tr></table>
+<h3>Stage timings (s)</h3>
+<table><tr><th scope="row">S1_ingest</th><td>0.2987</td></tr><tr><th scope="row">S2_linear</th><td>2.1473</td></tr><tr><th scope="row">S3_readout</th><td>0.0</td></tr><tr><th scope="row">S4_motion</th><td>6.429</td></tr><tr><th scope="row">S5_segment</th><td>0.9464</td></tr><tr><th scope="row">S7_rowsignal</th><td>1.3119</td></tr><tr><th scope="row">S6_patches</th><td>1.5387</td></tr><tr><th scope="row">S8_phase</th><td>0.7588</td></tr><tr><th scope="row">S10_match</th><td>0.6712</td></tr><tr><th scope="row">S11_continuity</th><td>0.0009</td></tr></table>
+</section>
+</main>
+</body>
+</html>
