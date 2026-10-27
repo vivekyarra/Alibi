@@ -76,9 +76,17 @@ class ApiStack(Stack):
         # Public HTTPS entry point without CloudFront (D-025): API Gateway HTTP API → VPC link → internal ALB.
         # The VPC link ENIs sit inside the VPC, so the CIDR rule above admits them. Stage throttling limits
         # abuse of anonymous upload creation (WAF cannot attach to HTTP APIs).
+        # The VPC's default security group has no rules (CDK hardening), so the VPC link gets its own group with
+        # egress to the ALB only.
+        link_sg = ec2.SecurityGroup(self, "VpcLinkSg", vpc=vpc, allow_all_outbound=False,
+                                    description="API Gateway VPC link to the internal API load balancer")
+        link_sg.add_egress_rule(ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.tcp(80), "to the internal ALB")
+        vpc_link = apigw.VpcLink(self, "PublicApiLink", vpc=vpc, security_groups=[link_sg],
+                                 subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS))
         self.http_api = apigw.HttpApi(
             self, "PublicApi",
-            default_integration=apigw_int.HttpAlbIntegration("AlbIntegration", self.service.listener),
+            default_integration=apigw_int.HttpAlbIntegration("AlbIntegration", self.service.listener,
+                                                             vpc_link=vpc_link),
         )
         stage = self.http_api.default_stage.node.default_child  # type: ignore[union-attr]
         stage.default_route_settings = apigw.CfnStage.RouteSettingsProperty(  # type: ignore[union-attr]
